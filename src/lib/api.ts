@@ -7,7 +7,6 @@ import type {
   StrapiRegion,
   StrapiSingleResponse,
 } from "./strapi-types";
-import { getStrapiUrl } from "./strapi-config";
 
 export { getStrapiUrl } from "./strapi-config";
 
@@ -23,9 +22,19 @@ export type {
   StrapiSingleResponse,
 } from "./strapi-types";
 
-const STRAPI_URL = getStrapiUrl();
-
 const REVALIDATE = 60;
+
+/**
+ * Базовый URL для запросов к Strapi: на сервере (Docker) — внутренняя сеть,
+ * в браузере — публичный хост из NEXT_PUBLIC_*.
+ */
+function getStrapiFetchUrl(): string {
+  const strapiUrl =
+    typeof window === "undefined"
+      ? process.env.STRAPI_URL || "http://strapi:1337"
+      : process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+  return strapiUrl.replace(/\/$/, "");
+}
 
 function authHeaders(): HeadersInit {
   const headers: Record<string, string> = {
@@ -40,7 +49,7 @@ function authHeaders(): HeadersInit {
 
 function joinUrl(path: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;
-  return `${STRAPI_URL}${p}`;
+  return `${getStrapiFetchUrl()}${p}`;
 }
 
 async function strapiFetch<T>(
