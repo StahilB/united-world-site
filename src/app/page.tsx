@@ -4,28 +4,93 @@ import { LatestArticlesBlock } from "@/components/blocks/LatestArticlesBlock";
 import { RegionalReviewsBlock } from "@/components/blocks/RegionalReviewsBlock";
 import { ThematicBlock } from "@/components/blocks/ThematicBlock";
 import {
-  getExpertForumInterviewsFromArticles,
-  getExpertForumOpinionsFromArticles,
+  getArticles,
+  getCategories,
+  getGlobalReview,
   getLatestArticles,
-  getRegionalReviewItems,
-  getThematicBlockItems,
-  mockGlobalReviewsMainArticle,
-  mockGlobalReviewsPopularArticles,
-} from "@/lib/mock-data";
+  getPopularArticles,
+  getRegions,
+} from "@/lib/api";
+import {
+  buildRegionalReviewItems,
+  buildThematicBlockItems,
+  formatDateRu,
+  mapStrapiArticleToArticle,
+  toExpertInterviews,
+  toExpertOpinions,
+  toGlobalReviewsMainArticle,
+  toGlobalReviewsPopularArticle,
+} from "@/lib/strapi-mappers";
+import type { StrapiArticle } from "@/lib/strapi-types";
+import type { GlobalReviewsMainArticle } from "@/lib/types";
+import { getStrapiUrl } from "@/lib/strapi-config";
 
-export default function HomePage() {
-  const latestArticles = getLatestArticles(4);
-  const regionalItems = getRegionalReviewItems();
-  const thematicItems = getThematicBlockItems();
-  const expertOpinions = getExpertForumOpinionsFromArticles();
-  const expertInterviews = getExpertForumInterviewsFromArticles();
+export default async function HomePage() {
+  const origin = getStrapiUrl();
+
+  const [latestRes, popularRes, poolRes, regionsRes, categoriesRes] =
+    await Promise.all([
+      getLatestArticles(4),
+      getPopularArticles(7),
+      getArticles({ pageSize: 100, page: 1 }),
+      getRegions(),
+      getCategories(),
+    ]);
+
+  let featured: StrapiArticle | null = null;
+  try {
+    const gr = await getGlobalReview();
+    featured = gr.data?.featured_article ?? null;
+  } catch {
+    featured = null;
+  }
+
+  const latestArticles = latestRes.data.map((a) =>
+    mapStrapiArticleToArticle(a, origin),
+  );
+
+  const poolMapped = poolRes.data.map((a) =>
+    mapStrapiArticleToArticle(a, origin),
+  );
+
+  const mainArticle: GlobalReviewsMainArticle = featured
+    ? toGlobalReviewsMainArticle(featured, origin)
+    : latestRes.data[0]
+      ? toGlobalReviewsMainArticle(latestRes.data[0], origin)
+      : {
+          title: "Материалы появятся в ближайшее время",
+          excerpt:
+            "Добавьте статьи в Strapi или проверьте NEXT_PUBLIC_STRAPI_URL и доступность API.",
+          date: formatDateRu(new Date().toISOString()),
+          dateIso: new Date().toISOString().slice(0, 10),
+          href: "/",
+        };
+
+  const popularArticles = popularRes.data.map((a) =>
+    toGlobalReviewsPopularArticle(a),
+  );
+
+  const regionalItems = buildRegionalReviewItems(
+    regionsRes.data,
+    poolRes.data,
+    origin,
+  );
+
+  const thematicItems = buildThematicBlockItems(
+    categoriesRes.data,
+    poolRes.data,
+    origin,
+  );
+
+  const expertOpinions = toExpertOpinions(poolMapped);
+  const expertInterviews = toExpertInterviews(poolMapped);
 
   return (
     <main className="flex min-h-screen flex-col">
       <section className="py-12 md:py-16">
         <GlobalReviewsBlock
-          mainArticle={mockGlobalReviewsMainArticle}
-          popularArticles={mockGlobalReviewsPopularArticles}
+          mainArticle={mainArticle}
+          popularArticles={popularArticles}
         />
       </section>
 

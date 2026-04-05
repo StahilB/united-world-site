@@ -1,9 +1,9 @@
-import type { Article } from "./types";
-import {
-  getArticleBySlug,
-  getArticlesByCategory,
-  mockArticles,
-} from "./mock-data";
+import type { Article, TocHeading } from "./types";
+import { getArticlesByCategory, getArticlesByRegion } from "./api";
+import { mapStrapiArticleToArticle } from "./strapi-mappers";
+import { getStrapiUrl } from "./strapi-config";
+import { strapiBlocksToHtml } from "./strapi-blocks-html";
+import { getArticlesByCategory as mockGetByCategory, mockArticles } from "./mock-data";
 
 function sortByDateDesc(articles: Article[]): Article[] {
   return [...articles].sort(
@@ -12,11 +12,7 @@ function sortByDateDesc(articles: Article[]): Article[] {
   );
 }
 
-export type TocHeading = {
-  id: string;
-  text: string;
-  level: 2 | 3;
-};
+export type { TocHeading };
 
 /** Парсинг h2/h3 с id из HTML (если body задан вручную) */
 function parseHeadingsFromHtml(html: string): TocHeading[] {
@@ -36,8 +32,13 @@ function paragraph(text: string): string {
   return `<p>${text}</p>`;
 }
 
-/** Текст статьи по умолчанию: оглавление + типографика */
-export function getArticleRenderedContent(article: Article): {
+/**
+ * Renders article body: optional Strapi Blocks, else static template from excerpt.
+ */
+export function getArticleRenderedContent(
+  article: Article,
+  strapiBlocks?: unknown,
+): {
   html: string;
   toc: TocHeading[];
 } {
@@ -46,6 +47,10 @@ export function getArticleRenderedContent(article: Article): {
       html: article.body,
       toc: parseHeadingsFromHtml(article.body),
     };
+  }
+
+  if (Array.isArray(strapiBlocks) && strapiBlocks.length > 0) {
+    return strapiBlocksToHtml(strapiBlocks);
   }
 
   const toc: TocHeading[] = [];
@@ -98,16 +103,57 @@ export function getArticleRenderedContent(article: Article): {
   return { html: blocks.join("\n"), toc };
 }
 
+/** Related articles from Strapi (same category). */
+export async function fetchReadAlsoArticles(
+  article: Article,
+  count: number,
+): Promise<Article[]> {
+  const primary = article.categories[0];
+  if (!primary) return [];
+  const origin = getStrapiUrl();
+  const res = await getArticlesByCategory(primary.slug, count + 8);
+  return sortByDateDesc(
+    res.data
+      .map((a) => mapStrapiArticleToArticle(a, origin))
+      .filter((a) => a.slug !== article.slug),
+  ).slice(0, count);
+}
+
+/** Similar: merge category + region lists from Strapi, dedupe. */
+export async function fetchSimilarArticles(
+  article: Article,
+  count: number,
+): Promise<Article[]> {
+  const origin = getStrapiUrl();
+  const catSlug = article.categories[0]?.slug;
+  const [catRes, regRes] = await Promise.all([
+    catSlug
+      ? getArticlesByCategory(catSlug, 24)
+      : Promise.resolve({ data: [] }),
+    getArticlesByRegion(article.region.slug, 24),
+  ]);
+  const merged: Article[] = [];
+  const seen = new Set<string>();
+  for (const a of [...catRes.data, ...regRes.data]) {
+    const m = mapStrapiArticleToArticle(a, origin);
+    if (m.slug === article.slug || seen.has(m.slug)) continue;
+    seen.add(m.slug);
+    merged.push(m);
+  }
+  return sortByDateDesc(merged).slice(0, count);
+}
+
+/** Mock-only helpers (local stories without CMS). */
 export function getReadAlsoArticles(article: Article, count: number): Article[] {
   const primary = article.categories[0];
   if (!primary) return [];
   return sortByDateDesc(
-    getArticlesByCategory(primary.slug).filter((a) => a.slug !== article.slug),
+    mockGetByCategory(primary.slug).filter((a) => a.slug !== article.slug),
   ).slice(0, count);
 }
 
 export function getSimilarArticles(article: Article, count: number): Article[] {
-  const byCat = getArticlesByCategory(article.categories[0]?.slug ?? "").filter(
+  const byCat = mockGetByCategory(article.categories[0]?.slug ?? "").filter(
     (a) => a.slug !== article.slug,
   );
   const byRegion = mockArticles.filter(
@@ -132,6 +178,3 @@ export function getArticleTags(article: Article): string[] {
   return [...tags];
 }
 
-export function resolveArticle(slug: string): Article | undefined {
-  return getArticleBySlug(slug);
-}

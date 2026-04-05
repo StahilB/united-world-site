@@ -82,6 +82,13 @@ export interface RegionalReviewItem {
   };
 }
 
+/** Table of contents entry (article page sidebar). */
+export type TocHeading = {
+  id: string;
+  text: string;
+  level: 2 | 3;
+};
+
 export interface Article {
   id: string;
   title: string;
