@@ -1,0 +1,20 @@
+{
+  "kind": "singleType",
+  "collectionName": "global_reviews",
+  "info": {
+    "singularName": "global-review",
+    "pluralName": "global-reviews",
+    "displayName": "Global Review",
+    "description": "Синглтон: главный глобальный обзор"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "featured_article": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::article.article"
+    }
+  }
+}

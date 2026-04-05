@@ -206,7 +206,7 @@ export const mockArticles: Article[] = [
     author: A[0],
     categories: [C[0], C[5]],
     region: R[11],
-    format: "Аналитика",
+    format: "Мнение",
     publishedAt: "2026-04-04T09:15:00.000Z",
     viewsCount: 18420,
     readingTime: 12,
@@ -222,7 +222,7 @@ export const mockArticles: Article[] = [
     author: A[4],
     categories: [C[2], C[1]],
     region: R[11],
-    format: "Обзор",
+    format: "Интервью",
     publishedAt: "2026-04-02T14:40:00.000Z",
     viewsCount: 22105,
     readingTime: 14,
@@ -238,7 +238,7 @@ export const mockArticles: Article[] = [
     author: A[1],
     categories: [C[1], C[0]],
     region: R[0],
-    format: "Аналитика",
+    format: "Мнение",
     publishedAt: "2026-03-30T11:00:00.000Z",
     viewsCount: 9870,
     readingTime: 11,
@@ -254,7 +254,7 @@ export const mockArticles: Article[] = [
     author: A[2],
     categories: [C[6], C[0]],
     region: R[8],
-    format: "Комментарий",
+    format: "Интервью",
     publishedAt: "2026-03-28T08:20:00.000Z",
     viewsCount: 31200,
     readingTime: 9,
@@ -270,7 +270,7 @@ export const mockArticles: Article[] = [
     author: A[3],
     categories: [C[3], C[5]],
     region: R[11],
-    format: "Аналитика",
+    format: "Мнение",
     publishedAt: "2026-03-25T16:45:00.000Z",
     viewsCount: 15340,
     readingTime: 13,
@@ -286,7 +286,7 @@ export const mockArticles: Article[] = [
     author: A[0],
     categories: [C[5], C[0]],
     region: R[11],
-    format: "Обзор",
+    format: "Интервью",
     publishedAt: "2026-03-22T10:05:00.000Z",
     viewsCount: 26780,
     readingTime: 10,
@@ -302,7 +302,7 @@ export const mockArticles: Article[] = [
     author: A[2],
     categories: [C[6], C[0]],
     region: R[3],
-    format: "Аналитика",
+    format: "Мнение",
     publishedAt: "2026-03-19T13:30:00.000Z",
     viewsCount: 19850,
     readingTime: 11,
@@ -334,7 +334,7 @@ export const mockArticles: Article[] = [
     author: A[0],
     categories: [C[0], C[6]],
     region: R[12],
-    format: "Аналитика",
+    format: "Мнение",
     publishedAt: "2026-03-12T15:10:00.000Z",
     viewsCount: 14490,
     readingTime: 15,
@@ -366,7 +366,7 @@ export const mockArticles: Article[] = [
     author: A[2],
     categories: [C[6], C[1]],
     region: R[6],
-    format: "Аналитика",
+    format: "Мнение",
     publishedAt: "2026-03-05T08:35:00.000Z",
     viewsCount: 25600,
     readingTime: 12,
@@ -398,7 +398,7 @@ export const mockArticles: Article[] = [
     author: A[0],
     categories: [C[0], C[6]],
     region: R[7],
-    format: "Аналитика",
+    format: "Мнение",
     publishedAt: "2026-02-26T11:15:00.000Z",
     viewsCount: 17320,
     readingTime: 11,
@@ -548,6 +548,35 @@ export function getArticleBySlug(slug: string): Article | undefined {
   return mockArticles.find((article) => article.slug === slug);
 }
 
+/** Мнения для блока «Экспертный форум» — материалы с форматом «Мнение» */
+export function getExpertForumOpinionsFromArticles(): ExpertForumOpinion[] {
+  return sortByPublishedAtDesc(
+    mockArticles.filter((a) => /мнение/i.test(a.format)),
+  )
+    .slice(0, 6)
+    .map((a) => ({
+      title: a.title,
+      href: `/articles/${a.slug}`,
+      author: {
+        name: a.author.name,
+        avatarUrl: a.author.avatarUrl,
+      },
+    }));
+}
+
+/** Интервью для блока «Экспертный форум» — материалы с форматом «Интервью» */
+export function getExpertForumInterviewsFromArticles(): ExpertForumInterview[] {
+  return sortByPublishedAtDesc(
+    mockArticles.filter((a) => /интервью/i.test(a.format)),
+  )
+    .slice(0, 3)
+    .map((a) => ({
+      title: a.title,
+      href: `/articles/${a.slug}`,
+      coverImage: a.coverImage,
+    }));
+}
+
 /** По одному материалу на каждый из 13 регионов — для блока на главной */
 export function getRegionalReviewItems(): RegionalReviewItem[] {
   return mockRegions.map((region) => {
@@ -627,73 +656,3 @@ export const mockGlobalReviewsPopularArticles: GlobalReviewsPopularArticle[] =
       href: "/articles/latinskaya-amerika-vybory",
     },
   ];
-
-export const mockExpertForumOpinions: ExpertForumOpinion[] = [
-  {
-    title: "О расширении БРИКС и новой геополитике",
-    href: "/articles/briks-v-novoy-geopoliticheskoy-realnosti",
-    author: {
-      name: "Алексей Иванов",
-      avatarUrl: "https://picsum.photos/200/200?random=201",
-    },
-  },
-  {
-    title: "Энергопереход Европы: что теряет промышленность",
-    href: "/articles/energeticheskiy-perekhod-evropy-i-tsepochki-postavok",
-    author: {
-      name: "Мария Смирнова",
-      avatarUrl: "https://picsum.photos/200/200?random=202",
-    },
-  },
-  {
-    title: "Тихоокеанская зона: баланс сил без иллюзий",
-    href: "/articles/tikhookeanskiy-region-ssha-i-kitay-2026",
-    author: {
-      name: "Дмитрий Козлов",
-      avatarUrl: "https://picsum.photos/200/200?random=203",
-    },
-  },
-  {
-    title: "Климат после COP: как измерять обязательства",
-    href: "/articles/klimaticheskie-sammiti-posle-cop",
-    author: {
-      name: "Анна Петрова",
-      avatarUrl: "https://picsum.photos/200/200?random=204",
-    },
-  },
-  {
-    title: "Реформа СБ ООН: реалистичные сценарии",
-    href: "/articles/oon-i-reformirovanie-sb",
-    author: {
-      name: "Алексей Иванов",
-      avatarUrl: "https://picsum.photos/200/200?random=201",
-    },
-  },
-  {
-    title: "Центральная Азия: вода, транзит, соседи",
-    href: "/articles/tsentralnaya-aziya-transit-i-voda",
-    author: {
-      name: "Михаил Соколов",
-      avatarUrl: "https://picsum.photos/200/200?random=205",
-    },
-  },
-];
-
-export const mockExpertForumInterviews: ExpertForumInterview[] = [
-  {
-    title:
-      "Ближний Восток: региональная безопасность после смены элит и новые союзы",
-    href: "/articles/blizhniy-vostok-bezopasnost-i-soyuzy",
-    coverImage: "https://picsum.photos/800/450?random=701",
-  },
-  {
-    title: "Арктика: сотрудничество и конкуренция на льду",
-    href: "/articles/arktika-pravo-i-shelf",
-    coverImage: "https://picsum.photos/800/450?random=702",
-  },
-  {
-    title: "Россия в мировой политике: институты и доверие",
-    href: "/articles/rossiya-i-globalnyy-yug",
-    coverImage: "https://picsum.photos/800/450?random=703",
-  },
-];
