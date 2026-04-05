@@ -1,0 +1,16 @@
+{
+  "name": "united-world-migration",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "migrate": "node migrate.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.0"
+  }
+}
