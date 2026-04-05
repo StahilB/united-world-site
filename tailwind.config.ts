@@ -9,10 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#0F1B2D",
-        secondary: "#1E3A5F",
-        accent: "#C4A35A",
-        surface: "#FFF8F0",
+        primary: "#162A50",
+        secondary: "#1E4D8C",
+        accent: "#C6A862",
+        surface: "#F7FAFD",
+        sky: "#6BAFE0",
+        text: "#1C2B3D",
       },
       fontFamily: {
         sans: ["var(--font-source-sans-3)", "system-ui", "sans-serif"],

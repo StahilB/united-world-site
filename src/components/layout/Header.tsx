@@ -184,7 +184,7 @@ export function Header() {
                 ЕДИНЫЙ МИР
               </span>
             </Link>
-            <p className="mt-1 max-w-xl text-[11px] leading-snug text-neutral-600 md:text-xs">
+            <p className="mt-1 max-w-xl text-[11px] leading-snug text-secondary/70 md:text-xs">
               Центр мониторинга и оценки проблем современности
             </p>
           </div>

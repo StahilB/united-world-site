@@ -82,7 +82,7 @@ export function MobileMenu({
                 <Link
                   href={`/region/${r.slug}`}
                   onClick={onClose}
-                  className="block py-1 text-sm text-[#333]"
+                  className="block py-1 text-sm text-text"
                 >
                   {r.name}
                 </Link>
@@ -111,7 +111,7 @@ export function MobileMenu({
                 <Link
                   href={`/category/${c.slug}`}
                   onClick={onClose}
-                  className="block py-1 text-sm text-[#333]"
+                  className="block py-1 text-sm text-text"
                 >
                   {c.name}
                 </Link>
@@ -139,7 +139,7 @@ export function MobileMenu({
               <Link
                 href="/analytics/situational"
                 onClick={onClose}
-                className="block py-1 text-sm text-[#333]"
+                className="block py-1 text-sm text-text"
               >
                 Ситуативный анализ
               </Link>
@@ -148,7 +148,7 @@ export function MobileMenu({
               <Link
                 href="/analytics/global"
                 onClick={onClose}
-                className="block py-1 text-sm text-[#333]"
+                className="block py-1 text-sm text-text"
               >
                 Глобальные обзоры
               </Link>
@@ -157,7 +157,7 @@ export function MobileMenu({
               <Link
                 href="/about"
                 onClick={onClose}
-                className="block py-1 text-sm text-[#333]"
+                className="block py-1 text-sm text-text"
               >
                 О центре
               </Link>

@@ -8,6 +8,6 @@
   }
 
   body {
-    @apply bg-surface text-[#333333];
+    @apply bg-surface text-text;
   }
 }

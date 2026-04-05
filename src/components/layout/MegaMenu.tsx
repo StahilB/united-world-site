@@ -24,7 +24,7 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
                 <li key={r.id}>
                   <Link
                     href={`/region/${r.slug}`}
-                    className="text-sm text-[#333] transition-colors hover:text-accent"
+                    className="text-sm text-text transition-colors hover:text-secondary"
                   >
                     {r.name}
                   </Link>
@@ -36,7 +36,7 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
                 <li key={r.id}>
                   <Link
                     href={`/region/${r.slug}`}
-                    className="text-sm text-[#333] transition-colors hover:text-accent"
+                    className="text-sm text-text transition-colors hover:text-secondary"
                   >
                     {r.name}
                   </Link>
@@ -54,7 +54,7 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
               <li key={c.id}>
                 <Link
                   href={`/category/${c.slug}`}
-                  className="text-sm text-[#333] transition-colors hover:text-accent"
+                  className="text-sm text-text transition-colors hover:text-secondary"
                 >
                   {c.name}
                 </Link>
@@ -67,13 +67,13 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
         <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
           <Link
             href="/analytics/situational"
-            className="text-xs font-semibold uppercase tracking-wide text-primary transition-colors hover:text-accent"
+            className="text-xs font-semibold uppercase tracking-wide text-primary transition-colors hover:text-secondary"
           >
             Ситуативный анализ
           </Link>
           <Link
             href="/analytics/global"
-            className="text-xs font-semibold uppercase tracking-wide text-primary transition-colors hover:text-accent"
+            className="text-xs font-semibold uppercase tracking-wide text-primary transition-colors hover:text-secondary"
           >
             Глобальные обзоры
           </Link>

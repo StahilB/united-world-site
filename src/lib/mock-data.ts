@@ -86,7 +86,7 @@ export const mockCategories: Category[] = [
     id: "cat-politics",
     name: "Политика и дипломатия",
     slug: "politika-i-diplomatiya",
-    color: "#1E3A5F",
+    color: "#1E4D8C",
     description: "Внешняя политика, переговоры и двусторонние отношения",
   },
   {
@@ -135,7 +135,7 @@ export const mockCategories: Category[] = [
     id: "cat-events",
     name: "Международные мероприятия",
     slug: "mezhdunarodnye-meropriyatiya",
-    color: "#C4A35A",
+    color: "#C6A862",
     description: "Саммиты, форумы и дипломатические события",
   },
 ];
