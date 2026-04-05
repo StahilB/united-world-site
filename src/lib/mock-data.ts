@@ -1,4 +1,11 @@
-import type { Article, Author, Category, Region } from "./types";
+import type {
+  Article,
+  Author,
+  Category,
+  GlobalReviewsMainArticle,
+  GlobalReviewsPopularArticle,
+  Region,
+} from "./types";
 
 export const mockRegions: Region[] = [
   {
@@ -536,3 +543,46 @@ export function getArticlesByCategory(categorySlug: string): Article[] {
 export function getArticleBySlug(slug: string): Article | undefined {
   return mockArticles.find((article) => article.slug === slug);
 }
+
+/** Заглушки для блока «Глобальные обзоры» на главной */
+export const mockGlobalReviewsMainArticle: GlobalReviewsMainArticle = {
+  title:
+    "Мировая экономика в 2026 году: разрыв между прогнозами и реальностью",
+  excerpt:
+    "Центральные банки смягчают политику, но инвесторы остаются осторожными. Обзор ключевых рисков и сценариев на ближайшие месяцы — без иллюзий относительно волатильности сырья и долга.",
+  date: "28 марта 2026",
+  dateIso: "2026-03-28",
+  href: "/articles/mirovaya-ekonomika-2026",
+};
+
+export const mockGlobalReviewsPopularArticles: GlobalReviewsPopularArticle[] =
+  [
+    {
+      title: "Тихоокеанская безопасность: новые союзы и старые противоречия",
+      href: "/articles/tihookeanskaya-bezopasnost",
+    },
+    {
+      title: "Климат и торговля: как меняются правила игры в ВТО",
+      href: "/articles/klimat-i-torgovlya",
+    },
+    {
+      title: "Энергопереход в Европе: цена стабильности сетей",
+      href: "/articles/energoperehod-evropa",
+    },
+    {
+      title: "Цифровой суверенитет: границы данных и облака",
+      href: "/articles/cifrovoy-suverenitet",
+    },
+    {
+      title: "Ближний Восток после сделок: что остаётся за кадром",
+      href: "/articles/blizhniy-vostok-posle-sdelok",
+    },
+    {
+      title: "Африка и инфраструктура: кто финансирует завтрашние проекты",
+      href: "/articles/afrika-infrastruktura",
+    },
+    {
+      title: "Латинская Америка на выборах: экономика против популизма",
+      href: "/articles/latinskaya-amerika-vybory",
+    },
+  ];

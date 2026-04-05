@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   useCallback,
@@ -12,7 +13,43 @@ import { mockCategories, mockRegions } from "@/lib/mock-data";
 import { MegaMenu } from "./MegaMenu";
 import { MobileMenu } from "./MobileMenu";
 
-const SCROLL_THRESHOLD_PX = 150;
+/** Collapse when scroll passes this (exclusive) */
+const SCROLL_COLLAPSE_Y = 150;
+/** Expand only when scroll is above this */
+const SCROLL_EXPAND_Y = 50;
+
+const rowTransition = "overflow-hidden transition-all duration-300 ease";
+
+const LOGO_SRC = "/images/logo_1.png";
+
+function LogoMark({
+  heightPx,
+  className,
+  priority,
+  alt,
+}: {
+  heightPx: 92 | 28;
+  className?: string;
+  priority?: boolean;
+  alt: string;
+}) {
+  const h = heightPx === 92 ? "h-[92px]" : "h-[28px]";
+  return (
+    <Image
+      src={LOGO_SRC}
+      alt={alt}
+      width={400}
+      height={heightPx}
+      priority={priority}
+      className={`${h} w-auto max-w-full ${className ?? ""}`}
+      sizes={
+        heightPx === 92
+          ? "(max-width: 768px) 50vw, 320px"
+          : "120px"
+      }
+    />
+  );
+}
 
 function TelegramIcon() {
   return (
@@ -68,13 +105,14 @@ export function Header() {
   const regions = mockRegions;
   const categories = mockCategories;
 
-  const [scrolled, setScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaTop, setMegaTop] = useState(0);
 
   const row3Ref = useRef<HTMLDivElement>(null);
   const megaLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
 
   const clearMegaLeaveTimer = useCallback(() => {
     if (megaLeaveTimerRef.current) {
@@ -107,17 +145,35 @@ export function Header() {
 
   useLayoutEffect(() => {
     updateMegaTop();
-  }, [updateMegaTop, scrolled, megaOpen]);
+  }, [updateMegaTop, isScrolled, megaOpen]);
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > SCROLL_THRESHOLD_PX);
+    const handleScrollTick = () => {
+      scrollRafRef.current = null;
+      const y = window.scrollY;
+      setIsScrolled((prev) => {
+        if (y > SCROLL_COLLAPSE_Y) return true;
+        if (y < SCROLL_EXPAND_Y) return false;
+        return prev;
+      });
       setMegaOpen(false);
       updateMegaTop();
     };
-    onScroll();
+
+    const onScroll = () => {
+      if (scrollRafRef.current != null) return;
+      scrollRafRef.current = window.requestAnimationFrame(handleScrollTick);
+    };
+
+    handleScrollTick();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollRafRef.current != null) {
+        cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
   }, [updateMegaTop]);
 
   useEffect(() => {
@@ -132,16 +188,15 @@ export function Header() {
   }, [megaOpen, updateMegaTop]);
 
   return (
-    <header className="relative z-50">
-      {/* Row 1 + 2 — collapse on scroll */}
+    <header className="sticky top-0 z-50">
+      {/* Row 1 */}
       <div
-        className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
-          scrolled ? "max-h-0 opacity-0" : "max-h-[200px] opacity-100"
+        className={`${rowTransition} ${
+          isScrolled ? "max-h-0 opacity-0 p-0" : "max-h-8 opacity-100"
         }`}
-        aria-hidden={scrolled}
+        aria-hidden={isScrolled}
       >
-        {/* Row 1 */}
-        <div className="flex h-8 items-center justify-between bg-primary px-3 text-white md:px-6">
+        <div className="flex h-8 shrink-0 items-center justify-between bg-primary px-3 text-white md:px-6">
           <time
             dateTime="2026-04-04"
             className="text-[11px] text-white/95 md:text-xs"
@@ -175,38 +230,77 @@ export function Header() {
             </Link>
           </div>
         </div>
+      </div>
 
-        {/* Row 2 */}
-        <div className="flex min-h-[72px] items-center justify-center bg-white px-3 py-3 md:min-h-[80px]">
-          <div className="text-center">
-            <Link href="/" className="block">
-              <span className="font-heading text-2xl font-normal tracking-[0.15em] text-primary md:text-[36px] md:leading-tight">
-                ЕДИНЫЙ МИР
-              </span>
-            </Link>
-            <p className="mt-1 max-w-xl text-[11px] leading-snug text-muted md:text-xs">
-              Центр мониторинга и оценки проблем современности
-            </p>
+      {/* Row 2 */}
+      <div
+        className={`${rowTransition} ${
+          isScrolled ? "max-h-0 opacity-0 p-0" : "max-h-[160px] opacity-100"
+        }`}
+        aria-hidden={isScrolled}
+      >
+        <div className="bg-white">
+          <div className="mx-auto flex max-w-6xl items-center px-3 py-2.5 md:px-6 md:py-3">
+            <div className="flex min-w-0 flex-1 items-center justify-start">
+              <Link href="/" className="inline-flex shrink-0">
+                <LogoMark
+                  heightPx={92}
+                  priority
+                  alt="АНО «Единый Мир»"
+                />
+              </Link>
+            </div>
+            <div className="mx-2 flex min-w-0 shrink flex-col items-center justify-center px-1 text-center sm:mx-4">
+              <Link href="/" className="group block no-underline">
+                <span className="font-heading text-[32px] font-normal uppercase leading-tight tracking-[0.12em] text-primary">
+                  ЕДИНЫЙ МИР
+                </span>
+                <span className="mt-1 block text-xs leading-snug text-muted">
+                  Центр мониторинга и оценки проблем современности
+                </span>
+              </Link>
+            </div>
+            <div
+              className="flex min-w-0 flex-1 items-center justify-end"
+              aria-hidden
+            >
+              <LogoMark
+                heightPx={92}
+                alt=""
+                className="pointer-events-none opacity-0 select-none"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Row 3 — sticky */}
+      {/* Row 3 */}
       <div
         ref={row3Ref}
-        className="sticky top-0 z-50 border-y border-accent bg-surface"
+        className={`transition-all duration-300 ease ${
+          isScrolled
+            ? "h-[38px] min-h-[38px] border-b border-accent border-t-0 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+            : "h-11 min-h-[44px] border-y border-accent bg-surface"
+        }`}
       >
-        <div className="mx-auto grid h-11 max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 md:px-6">
-          <div className="flex min-h-[28px] items-center justify-self-start">
-            {scrolled && (
-              <Link
-                href="/"
-                className="font-heading text-lg font-semibold leading-none text-primary md:text-[18px]"
-                aria-label="Единый мир — на главную"
-              >
-                ЕМ
-              </Link>
-            )}
+        <div className="mx-auto grid h-full w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 md:px-6">
+          <div
+            className={`flex items-center justify-self-start overflow-hidden transition-all duration-300 ease ${
+              isScrolled
+                ? "max-w-[200px] opacity-100"
+                : "max-w-0 opacity-0"
+            }`}
+          >
+            <Link
+              href="/"
+              aria-label="Единый мир — на главную"
+              className={`inline-flex shrink-0 ${
+                isScrolled ? "pointer-events-auto" : "pointer-events-none"
+              }`}
+              tabIndex={isScrolled ? 0 : -1}
+            >
+              <LogoMark heightPx={28} alt="" />
+            </Link>
           </div>
 
           <nav
@@ -243,7 +337,7 @@ export function Header() {
           <div className="justify-self-end md:min-w-0">
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center text-primary md:hidden"
+              className="flex h-10 w-10 shrink-0 items-center justify-center text-primary md:hidden"
               aria-expanded={mobileOpen}
               aria-controls="mobile-menu"
               aria-label="Открыть меню"
