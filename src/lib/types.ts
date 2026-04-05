@@ -39,6 +39,49 @@ export interface GlobalReviewsPopularArticle {
   href: string;
 }
 
+/** Мнение в блоке «Экспертный форум» */
+export interface ExpertForumOpinion {
+  title: string;
+  href: string;
+  author: {
+    name: string;
+    avatarUrl: string;
+  };
+}
+
+/** Интервью в блоке «Экспертный форум» */
+export interface ExpertForumInterview {
+  title: string;
+  href: string;
+  coverImage: string;
+}
+
+/** Карточка блока «Тематика» на главной */
+export interface ThematicBlockItem {
+  category: {
+    name: string;
+    slug: string;
+    color: string;
+  };
+  article: {
+    title: string;
+    slug: string;
+    coverImage: string;
+    /** Рубрика / формат материала */
+    format: string;
+  };
+}
+
+/** Карточка блока «Ежемесячные обзоры по регионам» */
+export interface RegionalReviewItem {
+  region: { name: string; slug: string };
+  article: {
+    title: string;
+    slug: string;
+    coverImage: string;
+  };
+}
+
 export interface Article {
   id: string;
   title: string;

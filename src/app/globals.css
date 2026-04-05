@@ -12,3 +12,25 @@
     color: #14213d;
   }
 }
+
+@layer components {
+  .article-body {
+    @apply max-w-[700px] font-sans text-[18px] leading-[1.7] text-text;
+  }
+
+  .article-body p {
+    @apply mb-5 last:mb-0;
+  }
+
+  .article-lead {
+    @apply mb-8 text-[19px] font-normal leading-[1.65] text-primary;
+  }
+
+  .article-h2 {
+    @apply mt-10 mb-4 scroll-mt-28 font-heading text-2xl font-normal tracking-tight text-primary md:text-[28px];
+  }
+
+  .article-h3 {
+    @apply mt-8 mb-3 scroll-mt-28 font-heading text-xl font-normal text-primary;
+  }
+}

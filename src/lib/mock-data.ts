@@ -3,8 +3,12 @@ import type {
   Author,
   Category,
   GlobalReviewsMainArticle,
+  ExpertForumInterview,
+  ExpertForumOpinion,
   GlobalReviewsPopularArticle,
+  RegionalReviewItem,
   Region,
+  ThematicBlockItem,
 } from "./types";
 
 export const mockRegions: Region[] = [
@@ -544,6 +548,43 @@ export function getArticleBySlug(slug: string): Article | undefined {
   return mockArticles.find((article) => article.slug === slug);
 }
 
+/** По одному материалу на каждый из 13 регионов — для блока на главной */
+export function getRegionalReviewItems(): RegionalReviewItem[] {
+  return mockRegions.map((region) => {
+    const list = getArticlesByRegion(region.slug);
+    const article = list[0] ?? mockArticles[0];
+    return {
+      region: { name: region.name, slug: region.slug },
+      article: {
+        title: article.title,
+        slug: article.slug,
+        coverImage: article.coverImage,
+      },
+    };
+  });
+}
+
+/** По одной свежей статье на каждую из 8 тематик (категорий) */
+export function getThematicBlockItems(): ThematicBlockItem[] {
+  return mockCategories.map((category) => {
+    const list = sortByPublishedAtDesc(getArticlesByCategory(category.slug));
+    const article = list[0] ?? mockArticles[0];
+    return {
+      category: {
+        name: category.name,
+        slug: category.slug,
+        color: category.color,
+      },
+      article: {
+        title: article.title,
+        slug: article.slug,
+        coverImage: article.coverImage,
+        format: article.format,
+      },
+    };
+  });
+}
+
 /** Заглушки для блока «Глобальные обзоры» на главной */
 export const mockGlobalReviewsMainArticle: GlobalReviewsMainArticle = {
   title:
@@ -586,3 +627,73 @@ export const mockGlobalReviewsPopularArticles: GlobalReviewsPopularArticle[] =
       href: "/articles/latinskaya-amerika-vybory",
     },
   ];
+
+export const mockExpertForumOpinions: ExpertForumOpinion[] = [
+  {
+    title: "О расширении БРИКС и новой геополитике",
+    href: "/articles/briks-v-novoy-geopoliticheskoy-realnosti",
+    author: {
+      name: "Алексей Иванов",
+      avatarUrl: "https://picsum.photos/200/200?random=201",
+    },
+  },
+  {
+    title: "Энергопереход Европы: что теряет промышленность",
+    href: "/articles/energeticheskiy-perekhod-evropy-i-tsepochki-postavok",
+    author: {
+      name: "Мария Смирнова",
+      avatarUrl: "https://picsum.photos/200/200?random=202",
+    },
+  },
+  {
+    title: "Тихоокеанская зона: баланс сил без иллюзий",
+    href: "/articles/tikhookeanskiy-region-ssha-i-kitay-2026",
+    author: {
+      name: "Дмитрий Козлов",
+      avatarUrl: "https://picsum.photos/200/200?random=203",
+    },
+  },
+  {
+    title: "Климат после COP: как измерять обязательства",
+    href: "/articles/klimaticheskie-sammiti-posle-cop",
+    author: {
+      name: "Анна Петрова",
+      avatarUrl: "https://picsum.photos/200/200?random=204",
+    },
+  },
+  {
+    title: "Реформа СБ ООН: реалистичные сценарии",
+    href: "/articles/oon-i-reformirovanie-sb",
+    author: {
+      name: "Алексей Иванов",
+      avatarUrl: "https://picsum.photos/200/200?random=201",
+    },
+  },
+  {
+    title: "Центральная Азия: вода, транзит, соседи",
+    href: "/articles/tsentralnaya-aziya-transit-i-voda",
+    author: {
+      name: "Михаил Соколов",
+      avatarUrl: "https://picsum.photos/200/200?random=205",
+    },
+  },
+];
+
+export const mockExpertForumInterviews: ExpertForumInterview[] = [
+  {
+    title:
+      "Ближний Восток: региональная безопасность после смены элит и новые союзы",
+    href: "/articles/blizhniy-vostok-bezopasnost-i-soyuzy",
+    coverImage: "https://picsum.photos/800/450?random=701",
+  },
+  {
+    title: "Арктика: сотрудничество и конкуренция на льду",
+    href: "/articles/arktika-pravo-i-shelf",
+    coverImage: "https://picsum.photos/800/450?random=702",
+  },
+  {
+    title: "Россия в мировой политике: институты и доверие",
+    href: "/articles/rossiya-i-globalnyy-yug",
+    coverImage: "https://picsum.photos/800/450?random=703",
+  },
+];
