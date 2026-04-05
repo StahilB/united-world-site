@@ -21,21 +21,47 @@ import {
   toGlobalReviewsMainArticle,
   toGlobalReviewsPopularArticle,
 } from "@/lib/strapi-mappers";
-import type { StrapiArticle } from "@/lib/strapi-types";
+import type {
+  StrapiArticle,
+  StrapiCategory,
+  StrapiCollectionResponse,
+  StrapiRegion,
+} from "@/lib/strapi-types";
 import type { GlobalReviewsMainArticle } from "@/lib/types";
 import { getStrapiUrl } from "@/lib/strapi-config";
+
+/** No static fetch to Strapi at build time (CMS may be down). */
+export const dynamic = "force-dynamic";
+
+const emptyArticles: StrapiCollectionResponse<StrapiArticle> = { data: [] };
+const emptyRegions: StrapiCollectionResponse<StrapiRegion> = { data: [] };
+const emptyCategories: StrapiCollectionResponse<StrapiCategory> = { data: [] };
 
 export default async function HomePage() {
   const origin = getStrapiUrl();
 
-  const [latestRes, popularRes, poolRes, regionsRes, categoriesRes] =
-    await Promise.all([
+  let latestRes = emptyArticles;
+  let popularRes = emptyArticles;
+  let poolRes = emptyArticles;
+  let regionsRes = emptyRegions;
+  let categoriesRes = emptyCategories;
+
+  try {
+    const results = await Promise.all([
       getLatestArticles(4),
       getPopularArticles(7),
       getArticles({ pageSize: 100, page: 1 }),
       getRegions(),
       getCategories(),
     ]);
+    latestRes = results[0];
+    popularRes = results[1];
+    poolRes = results[2];
+    regionsRes = results[3];
+    categoriesRes = results[4];
+  } catch (e) {
+    console.error("[HomePage] Strapi fetch failed:", e);
+  }
 
   let featured: StrapiArticle | null = null;
   try {

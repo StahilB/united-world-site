@@ -1,4 +1,4 @@
-# Next.js 14 — multi-stage; в рантайме есть исходники и dev-зависимости для `npm run build` (deploy.sh)
+# Next.js 14 — standalone output (see next.config.mjs `output: "standalone"`)
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -16,17 +16,16 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/package-lock.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.mjs ./
-COPY --from=builder /app/tsconfig.json ./
-COPY --from=builder /app/postcss.config.mjs ./
-COPY --from=builder /app/tailwind.config.ts ./
-COPY --from=builder /app/src ./src
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+USER nextjs
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]
