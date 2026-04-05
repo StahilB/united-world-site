@@ -41,7 +41,7 @@ function authHeaders(): HeadersInit {
     "Content-Type": "application/json",
   };
   const token = process.env.STRAPI_TOKEN;
-  if (token) {
+  if (token && token.length > 0) {
     headers.Authorization = `Bearer ${token}`;
   }
   return headers;
