@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+strapi/node_modules
+strapi/.tmp
+strapi/dist
+strapi/build
+telegram-bot/node_modules
+*.md
+.env
+.env.*
+!.env.example

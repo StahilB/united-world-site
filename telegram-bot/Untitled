@@ -1,2 +1,0 @@
-cd telegram-bot
-copy .env.example .env
