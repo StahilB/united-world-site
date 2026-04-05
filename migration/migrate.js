@@ -9,6 +9,7 @@ const fs = require("fs");
 const path = require("path");
 const cheerio = require("cheerio");
 const FormData = require("form-data");
+const { slugFromTitle } = require(path.join(__dirname, "../telegram-bot/utils.js"));
 
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -56,6 +57,83 @@ const REGION_SLUG_HINTS = new Set([
   "europe",
   "arctic",
 ]);
+
+/**
+ * PROJECT_SPEC.md § маппинг хэштегов → категории и регионы (названия и алиасы slug из WP).
+ */
+const SPEC_CATEGORIES = [
+  {
+    name: "Международная безопасность",
+    wpSlugs: ["bezopasnost", "mezhdunarodnaya-bezopasnost"],
+  },
+  {
+    name: "Политика и дипломатия",
+    wpSlugs: ["politika"],
+  },
+  {
+    name: "Экономика и развитие",
+    wpSlugs: ["ekonomika"],
+  },
+  {
+    name: "Энергетика и ресурсы",
+    wpSlugs: ["energetika"],
+  },
+  {
+    name: "Экология и климат",
+    wpSlugs: ["ekologiya"],
+  },
+  {
+    name: "Образование и культура",
+    wpSlugs: ["obrazovanie"],
+  },
+  {
+    name: "Международные организации",
+    wpSlugs: ["organizatsii"],
+  },
+  {
+    name: "Международные мероприятия",
+    wpSlugs: ["meropriyatiya"],
+  },
+];
+
+const SPEC_REGIONS = [
+  { name: "Россия", wpSlugs: ["rossiya", "russia"] },
+  { name: "Европа", wpSlugs: ["evropa", "europe"] },
+  { name: "Ближний Восток", wpSlugs: ["blizhniy-vostok", "blizhniy_vostok", "middle-east"] },
+  { name: "Африка", wpSlugs: ["afrika", "africa"] },
+  {
+    name: "Латинская Америка",
+    wpSlugs: ["latam", "latinskaya-amerika", "latin-america"],
+  },
+  { name: "Кавказ", wpSlugs: ["kavkaz", "caucasus"] },
+  {
+    name: "Центральная Азия",
+    wpSlugs: ["tsentralnaya-aziya", "tsentralnaya_aziya", "central-asia"],
+  },
+  {
+    name: "Южная Азия",
+    wpSlugs: ["yuzhnaya-aziya", "yuzhnaya_aziya", "south-asia"],
+  },
+  {
+    name: "Юго-Восточная Азия",
+    wpSlugs: ["yuva", "yugo-vostochnaya-aziya", "southeast-asia", "yugo-vostochnaya_aziya"],
+  },
+  {
+    name: "Восточная Азия и АТР",
+    wpSlugs: ["va-atr", "va_atr", "vostochnaya-aziya-i-atr", "east-asia"],
+  },
+  {
+    name: "Северная Америка",
+    wpSlugs: ["severnaya-amerika", "severnaya_amerika", "north-america"],
+  },
+  {
+    name: "Австралия и Океания",
+    wpSlugs: ["okeaniya", "avstraliya-i-okeaniya", "australia-oceania"],
+  },
+  { name: "Арктика", wpSlugs: ["arktika", "arctic"] },
+];
+
+const SKIP_WP_CATEGORY_SLUGS = new Set(["bez-rubriki", "uncategorized", "bez-rubriki-2"]);
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -135,7 +213,18 @@ function normalizeSlug(s) {
   return String(s || "")
     .toLowerCase()
     .trim()
+    .replace(/_/g, "-")
     .replace(/\s+/g, "-");
+}
+
+/** Strapi uid: /^[A-Za-z0-9-_.~]*$/ — оставляем латинский slug как есть, иначе транслитерация из utils.js */
+const STRAPI_SLUG_SAFE = /^[A-Za-z0-9\-_.~]+$/;
+
+function strapiSafeSlug(input) {
+  const s = String(input ?? "").trim();
+  if (!s) return "article";
+  if (STRAPI_SLUG_SAFE.test(s)) return s;
+  return slugFromTitle(s);
 }
 
 /**
@@ -220,56 +309,6 @@ function readingTimeMinutes(text) {
   return Math.max(1, Math.ceil(n / 200));
 }
 
-function slugFromTitle(title) {
-  const map = {
-    а: "a",
-    б: "b",
-    в: "v",
-    г: "g",
-    д: "d",
-    е: "e",
-    ё: "yo",
-    ж: "zh",
-    з: "z",
-    и: "i",
-    й: "y",
-    к: "k",
-    л: "l",
-    м: "m",
-    н: "n",
-    о: "o",
-    п: "p",
-    р: "r",
-    с: "s",
-    т: "t",
-    у: "u",
-    ф: "f",
-    х: "h",
-    ц: "ts",
-    ч: "ch",
-    ш: "sh",
-    щ: "sch",
-    ъ: "",
-    ы: "y",
-    ь: "",
-    э: "e",
-    ю: "yu",
-    я: "ya",
-  };
-  let out = "";
-  for (const ch of title.toLowerCase()) {
-    if (map[ch] !== undefined) out += map[ch];
-    else if (/[a-z0-9]/.test(ch)) out += ch;
-    else if (ch === " " || ch === "-") out += "-";
-  }
-  return (
-    out
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 96) || "article"
-  );
-}
-
 async function uploadImage(buffer, filename) {
   const form = new FormData();
   form.append("files", buffer, { filename });
@@ -335,6 +374,117 @@ async function ensureAuthorId(displayName) {
     }
   }
   return null;
+}
+
+async function findStrapiCategoryBySlug(slug) {
+  const q = new URLSearchParams();
+  q.set("filters[slug][$eq]", slug);
+  q.set("pagination[pageSize]", "1");
+  const res = await strapiFetch(`/api/categories?${q.toString()}`);
+  return res?.data?.[0] ?? null;
+}
+
+async function findStrapiRegionBySlug(slug) {
+  const q = new URLSearchParams();
+  q.set("filters[slug][$eq]", slug);
+  q.set("pagination[pageSize]", "1");
+  const res = await strapiFetch(`/api/regions?${q.toString()}`);
+  return res?.data?.[0] ?? null;
+}
+
+/**
+ * Создаёт в Strapi категории и регионы по PROJECT_SPEC и дополняет из WP, обновляет карты slug → document.
+ */
+async function ensureStrapiTaxonomiesFromWordPress(
+  wpCategories,
+  strapiCatsBySlug,
+  strapiRegsBySlug,
+) {
+  async function upsertCategory(name, canonicalSlug) {
+    let row =
+      strapiCatsBySlug.get(normalizeSlug(canonicalSlug)) ||
+      (await findStrapiCategoryBySlug(canonicalSlug));
+    if (!row) {
+      try {
+        const res = await strapiFetch("/api/categories", {
+          method: "POST",
+          body: JSON.stringify({
+            data: {
+              name,
+              slug: canonicalSlug,
+              color: "#14213D",
+            },
+          }),
+        });
+        row = res?.data;
+      } catch (e) {
+        row = await findStrapiCategoryBySlug(canonicalSlug);
+        if (!row) throw e;
+      }
+    }
+    if (row?.id != null) {
+      strapiCatsBySlug.set(normalizeSlug(canonicalSlug), row);
+    }
+    return row;
+  }
+
+  async function upsertRegion(name, canonicalSlug) {
+    let row =
+      strapiRegsBySlug.get(normalizeSlug(canonicalSlug)) ||
+      (await findStrapiRegionBySlug(canonicalSlug));
+    if (!row) {
+      try {
+        const res = await strapiFetch("/api/regions", {
+          method: "POST",
+          body: JSON.stringify({
+            data: { name, slug: canonicalSlug },
+          }),
+        });
+        row = res?.data;
+      } catch (e) {
+        row = await findStrapiRegionBySlug(canonicalSlug);
+        if (!row) throw e;
+      }
+    }
+    if (row?.id != null) {
+      strapiRegsBySlug.set(normalizeSlug(canonicalSlug), row);
+    }
+    return row;
+  }
+
+  for (const spec of SPEC_CATEGORIES) {
+    const canonicalSlug = slugFromTitle(spec.name);
+    const row = await upsertCategory(spec.name, canonicalSlug);
+    for (const alias of spec.wpSlugs || []) {
+      strapiCatsBySlug.set(normalizeSlug(alias), row);
+    }
+    await sleep(80);
+  }
+
+  for (const spec of SPEC_REGIONS) {
+    const canonicalSlug = slugFromTitle(spec.name);
+    const row = await upsertRegion(spec.name, canonicalSlug);
+    for (const alias of spec.wpSlugs || []) {
+      strapiRegsBySlug.set(normalizeSlug(alias), row);
+    }
+    await sleep(80);
+  }
+
+  for (const wc of wpCategories) {
+    const ns = normalizeSlug(wc.slug);
+    if (SKIP_WP_CATEGORY_SLUGS.has(ns)) continue;
+    if (strapiCatsBySlug.has(ns) || strapiRegsBySlug.has(ns)) continue;
+
+    const name = stripHtml(wc.name || "") || wc.slug;
+    let canonicalSlug = strapiSafeSlug(wc.slug);
+    if (!canonicalSlug || canonicalSlug === "article") {
+      canonicalSlug = slugFromTitle(name);
+    }
+
+    let row = await upsertCategory(name, canonicalSlug);
+    strapiCatsBySlug.set(ns, row);
+    await sleep(80);
+  }
 }
 
 /**
@@ -494,6 +644,16 @@ async function main() {
   );
   console.log(`  Strapi categories: ${strapiCats.length}, regions: ${strapiRegs.length}`);
 
+  console.log("Ensuring Strapi categories & regions from WordPress + PROJECT_SPEC…");
+  await ensureStrapiTaxonomiesFromWordPress(
+    wpCategories,
+    strapiCatsBySlug,
+    strapiRegsBySlug,
+  );
+  console.log(
+    `  after seed: categories map: ${strapiCatsBySlug.size}, regions map: ${strapiRegsBySlug.size}`,
+  );
+
   const redirects = [];
   const mapping = [];
 
@@ -520,7 +680,9 @@ async function main() {
     if (!oldPath.startsWith("/")) oldPath = `/${oldPath}`;
     oldPath = oldPath.replace(/\/{2,}/g, "/") || "/";
 
-    const baseSlug = normalizeSlug(post.slug) || slugFromTitle(title);
+    const baseSlug = strapiSafeSlug(
+      normalizeSlug(post.slug) || title,
+    );
 
     const { categoryId, regionId } = resolveTaxonomy(
       post.categories,
@@ -538,8 +700,9 @@ async function main() {
         await sleep(100);
       }
     } catch (e) {
-      console.warn(`  [post ${post.id}] cover image: ${e.message}`);
-      errors.push({ postId: post.id, step: "cover", error: e.message });
+      console.warn(
+        `  [post ${post.id}] cover image skipped (upload failed): ${e.message}`,
+      );
     }
 
     let authorId = null;
