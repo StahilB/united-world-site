@@ -169,7 +169,7 @@ export function Header() {
             </a>
             <Link
               href="/support"
-              className="rounded-sm bg-accent px-2.5 py-1 text-[11px] font-semibold text-white transition-opacity hover:opacity-90 md:text-xs"
+              className="rounded-sm bg-accent px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-accentLight md:text-xs"
             >
               Поддержать
             </Link>
@@ -177,14 +177,14 @@ export function Header() {
         </div>
 
         {/* Row 2 */}
-        <div className="flex min-h-[72px] items-center justify-center bg-surface px-3 py-3 md:min-h-[80px]">
+        <div className="flex min-h-[72px] items-center justify-center bg-white px-3 py-3 md:min-h-[80px]">
           <div className="text-center">
             <Link href="/" className="block">
               <span className="font-heading text-2xl font-normal tracking-[0.15em] text-primary md:text-[36px] md:leading-tight">
                 ЕДИНЫЙ МИР
               </span>
             </Link>
-            <p className="mt-1 max-w-xl text-[11px] leading-snug text-secondary/70 md:text-xs">
+            <p className="mt-1 max-w-xl text-[11px] leading-snug text-muted md:text-xs">
               Центр мониторинга и оценки проблем современности
             </p>
           </div>
@@ -218,7 +218,11 @@ export function Header() {
               onMouseEnter={openMegaMenu}
               onMouseLeave={scheduleCloseMegaMenu}
             >
-              <Link href="/articles" className={navLinkClass}>
+              <Link
+                href="/articles"
+                className={`${navLinkClass}${megaOpen ? " text-accent" : ""}`}
+                aria-current={megaOpen ? "true" : undefined}
+              >
                 Аналитика
               </Link>
             </div>
@@ -253,7 +257,7 @@ export function Header() {
 
       {megaOpen && (
         <div
-          className="fixed left-0 right-0 z-[60] hidden border-t border-accent bg-white shadow-lg md:block"
+          className="fixed left-0 right-0 z-[60] hidden border-t-2 border-accent bg-white shadow-lg md:block"
           style={{ top: megaTop }}
           onMouseEnter={openMegaMenu}
           onMouseLeave={scheduleCloseMegaMenu}

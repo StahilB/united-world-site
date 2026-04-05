@@ -6,6 +6,9 @@ type MegaMenuProps = {
   categories: Category[];
 };
 
+const linkClass =
+  "text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline";
+
 export function MegaMenu({ regions, categories }: MegaMenuProps) {
   const mid = Math.ceil(regions.length / 2);
   const colA = regions.slice(0, mid);
@@ -22,10 +25,7 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
             <ul className="space-y-2">
               {colA.map((r) => (
                 <li key={r.id}>
-                  <Link
-                    href={`/region/${r.slug}`}
-                    className="text-sm text-text transition-colors hover:text-secondary"
-                  >
+                  <Link href={`/region/${r.slug}`} className={linkClass}>
                     {r.name}
                   </Link>
                 </li>
@@ -34,10 +34,7 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
             <ul className="space-y-2">
               {colB.map((r) => (
                 <li key={r.id}>
-                  <Link
-                    href={`/region/${r.slug}`}
-                    className="text-sm text-text transition-colors hover:text-secondary"
-                  >
+                  <Link href={`/region/${r.slug}`} className={linkClass}>
                     {r.name}
                   </Link>
                 </li>
@@ -52,10 +49,7 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
           <ul className="space-y-2">
             {categories.map((c) => (
               <li key={c.id}>
-                <Link
-                  href={`/category/${c.slug}`}
-                  className="text-sm text-text transition-colors hover:text-secondary"
-                >
+                <Link href={`/category/${c.slug}`} className={linkClass}>
                   {c.name}
                 </Link>
               </li>
@@ -63,17 +57,17 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
           </ul>
         </div>
       </div>
-      <div className="border-t border-neutral-200 bg-surface/80">
+      <div className="border-t border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
           <Link
             href="/analytics/situational"
-            className="text-xs font-semibold uppercase tracking-wide text-primary transition-colors hover:text-secondary"
+            className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
           >
             Ситуативный анализ
           </Link>
           <Link
             href="/analytics/global"
-            className="text-xs font-semibold uppercase tracking-wide text-primary transition-colors hover:text-secondary"
+            className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
           >
             Глобальные обзоры
           </Link>
