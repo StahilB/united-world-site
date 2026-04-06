@@ -108,6 +108,8 @@ export type GetArticlesParams = {
   sort?: string;
   /** Article format enum value */
   format?: string;
+  /** Глобальные обзоры (флаг в Strapi) */
+  isGlobalReview?: boolean;
 };
 
 /**
@@ -123,6 +125,7 @@ export async function getArticles(
     region,
     sort,
     format,
+    isGlobalReview,
   } = params;
 
   const search = new URLSearchParams();
@@ -138,6 +141,9 @@ export async function getArticles(
   }
   if (format) {
     search.set("filters[format][$eq]", format);
+  }
+  if (isGlobalReview === true) {
+    search.set("filters[is_global_review][$eq]", "true");
   }
 
   if (sort) {

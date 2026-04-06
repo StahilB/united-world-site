@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { mockCategories, mockRegions } from "@/lib/mock-data";
+import type { Category, Region } from "@/lib/types";
 import { MegaMenu } from "./MegaMenu";
 import { MobileMenu } from "./MobileMenu";
 
@@ -101,9 +101,12 @@ const navLinkClass =
 
 const navSepClass = "text-[13px] text-neutral-400 select-none";
 
-export function Header() {
-  const regions = mockRegions;
-  const categories = mockCategories;
+export type HeaderProps = {
+  regions: Region[];
+  categories: Category[];
+};
+
+export function Header({ regions, categories }: HeaderProps) {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);

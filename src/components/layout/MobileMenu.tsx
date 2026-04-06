@@ -165,14 +165,52 @@ export function MobileMenu({
           </ul>
         </details>
 
+        <details className="group border-b border-neutral-200 py-3">
+          <summary className="cursor-pointer list-none font-sans text-sm font-semibold uppercase tracking-wide text-primary [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center justify-between">
+              Экспертиза
+              <svg
+                className="h-4 w-4 transition group-open:rotate-180"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path d="M7 10l5 5 5-5H7z" />
+              </svg>
+            </span>
+          </summary>
+          <ul className="mt-3 space-y-2 pl-1">
+            <li>
+              <Link
+                href="/expertise/opinions"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Мнения
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/expertise/interviews"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Интервью
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/expertise/columns"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Авторские колонки
+              </Link>
+            </li>
+          </ul>
+        </details>
+
         <nav className="mt-6 flex flex-col gap-4">
-          <Link
-            href="/expertise"
-            onClick={onClose}
-            className="font-sans text-sm font-semibold uppercase tracking-wide text-primary"
-          >
-            Экспертиза
-          </Link>
           <Link
             href="/about"
             onClick={onClose}

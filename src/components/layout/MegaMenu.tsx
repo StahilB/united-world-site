@@ -73,6 +73,28 @@ export function MegaMenu({ regions, categories }: MegaMenuProps) {
           </Link>
         </div>
       </div>
+      <div className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
+          <Link
+            href="/expertise/opinions"
+            className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
+          >
+            Мнения
+          </Link>
+          <Link
+            href="/expertise/interviews"
+            className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
+          >
+            Интервью
+          </Link>
+          <Link
+            href="/expertise/columns"
+            className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
+          >
+            Авторские колонки
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
