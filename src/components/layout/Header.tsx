@@ -2,23 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Category, Region } from "@/lib/types";
 import { MegaMenu } from "./MegaMenu";
 import { MobileMenu } from "./MobileMenu";
 
-/** Collapse when scroll passes this (exclusive) */
+/** Сжать шапку при scrollY > 150 */
 const SCROLL_COLLAPSE_Y = 150;
-/** Expand only when scroll is above this */
+/** Развернуть при scrollY < 50 */
 const SCROLL_EXPAND_Y = 50;
 
-const rowTransition = "overflow-hidden transition-all duration-300 ease";
+/** Строки 1+2: collapse — translateY(-100%) + max-height: 0 + transition (см. ТЗ) */
+const topRowsCollapsed =
+  "max-h-0 -translate-y-full opacity-0 pointer-events-none";
+/** Достаточно большой max-height для анимации раскрытия (контент строк 1–2) */
+const topRowsExpanded = "max-h-[560px] translate-y-0 opacity-100";
 
 const LOGO_SRC = "/images/logo_1.png";
 
@@ -107,15 +105,16 @@ export type HeaderProps = {
 };
 
 export function Header({ regions, categories }: HeaderProps) {
-
   const [isScrolled, setIsScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [megaTop, setMegaTop] = useState(0);
+  /** Высота шапки в развёрнутом виде (1+2+3) — для spacer, не зависит от скролла */
+  const [spacerHeight, setSpacerHeight] = useState(220);
 
-  const row3Ref = useRef<HTMLDivElement>(null);
   const megaLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isScrolledRef = useRef(false);
   const scrollRafRef = useRef<number | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   const clearMegaLeaveTimer = useCallback(() => {
     if (megaLeaveTimerRef.current) {
@@ -139,229 +138,244 @@ export function Header({ regions, categories }: HeaderProps) {
 
   useEffect(() => () => clearMegaLeaveTimer(), [clearMegaLeaveTimer]);
 
-  const updateMegaTop = useCallback(() => {
-    const el = row3Ref.current;
-    if (el) {
-      setMegaTop(el.getBoundingClientRect().bottom);
-    }
+  /** Spacer = полная высота развёрнутой шапки; обновляем только в развёрнутом состоянии */
+  const captureExpandedHeaderHeight = useCallback(() => {
+    const el = headerRef.current;
+    if (!el || isScrolledRef.current) return;
+    const h = el.offsetHeight;
+    if (h > 0) setSpacerHeight(h);
   }, []);
 
   useLayoutEffect(() => {
-    updateMegaTop();
-  }, [updateMegaTop, isScrolled, megaOpen]);
+    captureExpandedHeaderHeight();
+  }, [captureExpandedHeaderHeight]);
+
+  useLayoutEffect(() => {
+    if (isScrolled) return;
+    captureExpandedHeaderHeight();
+  }, [isScrolled, captureExpandedHeaderHeight]);
+
+  useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      if (!isScrolledRef.current) captureExpandedHeaderHeight();
+    });
+    ro.observe(el);
+    window.addEventListener("resize", captureExpandedHeaderHeight);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", captureExpandedHeaderHeight);
+    };
+  }, [captureExpandedHeaderHeight]);
 
   useEffect(() => {
-    const handleScrollTick = () => {
+    const tick = () => {
       scrollRafRef.current = null;
       const y = window.scrollY;
-      setIsScrolled((prev) => {
-        if (y > SCROLL_COLLAPSE_Y) return true;
-        if (y < SCROLL_EXPAND_Y) return false;
-        return prev;
-      });
+      let next: boolean;
+      if (y > SCROLL_COLLAPSE_Y) next = true;
+      else if (y < SCROLL_EXPAND_Y) next = false;
+      else next = isScrolledRef.current;
+
+      if (next !== isScrolledRef.current) {
+        isScrolledRef.current = next;
+        setIsScrolled(next);
+      }
       setMegaOpen(false);
-      updateMegaTop();
     };
 
     const onScroll = () => {
-      if (scrollRafRef.current != null) return;
-      scrollRafRef.current = window.requestAnimationFrame(handleScrollTick);
+      if (scrollRafRef.current !== null) return;
+      scrollRafRef.current = window.requestAnimationFrame(() => {
+        tick();
+      });
     };
 
-    handleScrollTick();
+    tick();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
-      if (scrollRafRef.current != null) {
+      if (scrollRafRef.current !== null) {
         cancelAnimationFrame(scrollRafRef.current);
         scrollRafRef.current = null;
       }
     };
-  }, [updateMegaTop]);
-
-  useEffect(() => {
-    window.addEventListener("resize", updateMegaTop);
-    return () => window.removeEventListener("resize", updateMegaTop);
-  }, [updateMegaTop]);
-
-  useEffect(() => {
-    if (!megaOpen) return;
-    const id = window.requestAnimationFrame(updateMegaTop);
-    return () => cancelAnimationFrame(id);
-  }, [megaOpen, updateMegaTop]);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50">
-      {/* Row 1 */}
-      <div
-        className={`${rowTransition} ${
-          isScrolled ? "max-h-0 opacity-0 p-0" : "max-h-8 opacity-100"
-        }`}
-        aria-hidden={isScrolled}
+    <>
+      {/*
+        fixed: шапка не меняет высоту потока — отступ задаёт spacer.
+        Визуально эквивалентно sticky у верха экрана.
+      */}
+      <header
+        ref={headerRef}
+        className="fixed left-0 right-0 top-0 z-50 bg-white"
       >
-        <div className="flex h-8 shrink-0 items-center justify-between bg-primary px-3 text-white md:px-6">
-          <time
-            dateTime="2026-04-04"
-            className="text-[11px] text-white/95 md:text-xs"
-          >
-            4 апреля 2026
-          </time>
-          <div className="flex items-center gap-3 md:gap-4">
-            <a
-              href="https://t.me/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white transition-opacity hover:opacity-80"
-              aria-label="Telegram"
+        <div
+          className={`overflow-hidden transition-all duration-[300ms] [transition-timing-function:ease] ${
+            isScrolled ? topRowsCollapsed : topRowsExpanded
+          }`}
+          aria-hidden={isScrolled}
+        >
+          {/* Row 1 */}
+          <div className="flex h-8 shrink-0 items-center justify-between bg-primary px-3 text-white md:px-6">
+            <time
+              dateTime="2026-04-04"
+              className="text-[11px] text-white/95 md:text-xs"
             >
-              <TelegramIcon />
-            </a>
-            <a
-              href="https://vk.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white transition-opacity hover:opacity-80"
-              aria-label="ВКонтакте"
-            >
-              <VkIcon />
-            </a>
-            <Link
-              href="/support"
-              className="rounded-sm bg-accent px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-accentLight md:text-xs"
-            >
-              Поддержать
-            </Link>
+              4 апреля 2026
+            </time>
+            <div className="flex items-center gap-3 md:gap-4">
+              <a
+                href="https://t.me/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white transition-opacity hover:opacity-80"
+                aria-label="Telegram"
+              >
+                <TelegramIcon />
+              </a>
+              <a
+                href="https://vk.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white transition-opacity hover:opacity-80"
+                aria-label="ВКонтакте"
+              >
+                <VkIcon />
+              </a>
+              <Link
+                href="/support"
+                className="rounded-sm bg-accent px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-accentLight md:text-xs"
+              >
+                Поддержать
+              </Link>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Row 2 */}
-      <div
-        className={`${rowTransition} ${
-          isScrolled ? "max-h-0 opacity-0 p-0" : "max-h-[160px] opacity-100"
-        }`}
-        aria-hidden={isScrolled}
-      >
-        <div className="bg-white">
-          <div className="mx-auto flex max-w-6xl items-center px-3 py-2.5 md:px-6 md:py-3">
-            <div className="flex min-w-0 flex-1 items-center justify-start">
-              <Link href="/" className="inline-flex shrink-0">
+          {/* Row 2 */}
+          <div className="bg-white">
+            <div className="mx-auto flex max-w-6xl items-center px-3 py-2.5 md:px-6 md:py-3">
+              <div className="flex min-w-0 flex-1 items-center justify-start">
+                <Link href="/" className="inline-flex shrink-0">
+                  <LogoMark
+                    heightPx={92}
+                    priority
+                    alt="АНО «Единый Мир»"
+                  />
+                </Link>
+              </div>
+              <div className="mx-2 flex min-w-0 shrink flex-col items-center justify-center px-1 text-center sm:mx-4">
+                <Link href="/" className="group block no-underline">
+                  <span className="font-heading text-[32px] font-normal uppercase leading-tight tracking-[0.12em] text-primary">
+                    ЕДИНЫЙ МИР
+                  </span>
+                  <span className="mt-1 block text-xs leading-snug text-muted">
+                    Центр мониторинга и оценки проблем современности
+                  </span>
+                </Link>
+              </div>
+              <div
+                className="flex min-w-0 flex-1 items-center justify-end"
+                aria-hidden
+              >
                 <LogoMark
                   heightPx={92}
-                  priority
-                  alt="АНО «Единый Мир»"
+                  alt=""
+                  className="pointer-events-none opacity-0 select-none"
                 />
-              </Link>
-            </div>
-            <div className="mx-2 flex min-w-0 shrink flex-col items-center justify-center px-1 text-center sm:mx-4">
-              <Link href="/" className="group block no-underline">
-                <span className="font-heading text-[32px] font-normal uppercase leading-tight tracking-[0.12em] text-primary">
-                  ЕДИНЫЙ МИР
-                </span>
-                <span className="mt-1 block text-xs leading-snug text-muted">
-                  Центр мониторинга и оценки проблем современности
-                </span>
-              </Link>
-            </div>
-            <div
-              className="flex min-w-0 flex-1 items-center justify-end"
-              aria-hidden
-            >
-              <LogoMark
-                heightPx={92}
-                alt=""
-                className="pointer-events-none opacity-0 select-none"
-              />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Row 3 */}
-      <div
-        ref={row3Ref}
-        className={`transition-all duration-300 ease ${
-          isScrolled
-            ? "h-[38px] min-h-[38px] border-b border-accent border-t-0 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-            : "h-11 min-h-[44px] border-y border-accent bg-surface"
-        }`}
-      >
-        <div className="mx-auto grid h-full w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 md:px-6">
-          <div
-            className={`flex items-center justify-self-start overflow-hidden transition-all duration-300 ease ${
-              isScrolled
-                ? "max-w-[200px] opacity-100"
-                : "max-w-0 opacity-0"
-            }`}
-          >
-            <Link
-              href="/"
-              aria-label="Единый мир — на главную"
-              className={`inline-flex shrink-0 ${
-                isScrolled ? "pointer-events-auto" : "pointer-events-none"
+        {/* Row 3 — фиксированная высота, без анимации от скролла */}
+        <div className="relative border-y border-accent bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="mx-auto grid h-11 min-h-[44px] w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 md:px-6">
+            <div
+              className={`flex items-center justify-self-start overflow-hidden transition-all duration-[300ms] [transition-timing-function:ease] ${
+                isScrolled
+                  ? "max-w-[200px] opacity-100"
+                  : "max-w-0 opacity-0"
               }`}
-              tabIndex={isScrolled ? 0 : -1}
             >
-              <LogoMark heightPx={28} alt="" />
-            </Link>
+              <Link
+                href="/"
+                aria-label="Единый мир — на главную"
+                className={`inline-flex shrink-0 ${
+                  isScrolled ? "pointer-events-auto" : "pointer-events-none"
+                }`}
+                tabIndex={isScrolled ? 0 : -1}
+              >
+                <LogoMark heightPx={28} alt="" />
+              </Link>
+            </div>
+
+            <nav
+              className="hidden items-center justify-center gap-2 md:flex"
+              aria-label="Основное меню"
+            >
+              <div
+                className="relative"
+                onMouseEnter={openMegaMenu}
+                onMouseLeave={scheduleCloseMegaMenu}
+              >
+                <Link
+                  href="/articles"
+                  className={`${navLinkClass}${megaOpen ? " text-accent" : ""}`}
+                  aria-current={megaOpen ? "true" : undefined}
+                >
+                  Аналитика
+                </Link>
+              </div>
+              <span className={navSepClass}>|</span>
+              <Link href="/expertise" className={navLinkClass}>
+                Экспертиза
+              </Link>
+              <span className={navSepClass}>|</span>
+              <Link href="/about" className={navLinkClass}>
+                О центре
+              </Link>
+              <span className={navSepClass}>|</span>
+              <Link href="/en" className={navLinkClass}>
+                EN
+              </Link>
+            </nav>
+
+            <div className="justify-self-end md:min-w-0">
+              <button
+                type="button"
+                className="flex h-10 w-10 shrink-0 items-center justify-center text-primary md:hidden"
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-menu"
+                aria-label="Открыть меню"
+                onClick={() => setMobileOpen(true)}
+              >
+                <BurgerIcon />
+              </button>
+            </div>
           </div>
 
-          <nav
-            className="hidden items-center justify-center gap-2 md:flex"
-            aria-label="Основное меню"
-          >
+          {megaOpen && (
             <div
-              className="relative"
+              className="absolute left-0 right-0 top-full z-[60] hidden w-full border-t-2 border-accent bg-white shadow-lg md:block"
               onMouseEnter={openMegaMenu}
               onMouseLeave={scheduleCloseMegaMenu}
             >
-              <Link
-                href="/articles"
-                className={`${navLinkClass}${megaOpen ? " text-accent" : ""}`}
-                aria-current={megaOpen ? "true" : undefined}
-              >
-                Аналитика
-              </Link>
+              <MegaMenu regions={regions} categories={categories} />
             </div>
-            <span className={navSepClass}>|</span>
-            <Link href="/expertise" className={navLinkClass}>
-              Экспертиза
-            </Link>
-            <span className={navSepClass}>|</span>
-            <Link href="/about" className={navLinkClass}>
-              О центре
-            </Link>
-            <span className={navSepClass}>|</span>
-            <Link href="/en" className={navLinkClass}>
-              EN
-            </Link>
-          </nav>
-
-          <div className="justify-self-end md:min-w-0">
-            <button
-              type="button"
-              className="flex h-10 w-10 shrink-0 items-center justify-center text-primary md:hidden"
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-menu"
-              aria-label="Открыть меню"
-              onClick={() => setMobileOpen(true)}
-            >
-              <BurgerIcon />
-            </button>
-          </div>
+          )}
         </div>
-      </div>
+      </header>
 
-      {megaOpen && (
-        <div
-          className="fixed left-0 right-0 z-[60] hidden border-t-2 border-accent bg-white shadow-lg md:block"
-          style={{ top: megaTop }}
-          onMouseEnter={openMegaMenu}
-          onMouseLeave={scheduleCloseMegaMenu}
-        >
-          <MegaMenu regions={regions} categories={categories} />
-        </div>
-      )}
+      {/* Фиксированный отступ: контент не прыгает при сжатии строк 1–2 */}
+      <div
+        aria-hidden
+        className="w-full shrink-0 pointer-events-none"
+        style={{ height: spacerHeight }}
+      />
 
       <div id="mobile-menu">
         <MobileMenu
@@ -371,6 +385,6 @@ export function Header({ regions, categories }: HeaderProps) {
           categories={categories}
         />
       </div>
-    </header>
+    </>
   );
 }
