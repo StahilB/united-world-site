@@ -17,9 +17,18 @@ export type ArticleRubricGridProps = {
   /** Заголовок страницы рубрики (Playfair Display) */
   heading: string;
   articles: Article[];
+  /** Временная диагностика Strapi (URL + число записей в ответе) */
+  debug?: { requestUrl: string; rawCount: number };
+  /** Текст при пустом списке (по умолчанию — общий для рубрик) */
+  emptyMessage?: string;
 };
 
-export function ArticleRubricGrid({ heading, articles }: ArticleRubricGridProps) {
+export function ArticleRubricGrid({
+  heading,
+  articles,
+  debug,
+  emptyMessage = "В этой рубрике пока нет материалов",
+}: ArticleRubricGridProps) {
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
@@ -27,10 +36,21 @@ export function ArticleRubricGrid({ heading, articles }: ArticleRubricGridProps)
           {heading}
         </h1>
 
+        {debug ? (
+          <div className="mt-6 rounded-md border border-dashed border-neutral-300 bg-surface px-4 py-3 font-mono text-xs text-secondary break-all">
+            <div>
+              <span className="font-semibold text-primary">Запрос:</span>{" "}
+              {debug.requestUrl}
+            </div>
+            <div className="mt-2">
+              <span className="font-semibold text-primary">Статей в ответе:</span>{" "}
+              {debug.rawCount}
+            </div>
+          </div>
+        ) : null}
+
         {articles.length === 0 ? (
-          <p className="mt-10 font-sans text-base text-muted">
-            В этой рубрике пока нет материалов
-          </p>
+          <p className="mt-10 font-sans text-base text-muted">{emptyMessage}</p>
         ) : (
           <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {articles.map((article) => {

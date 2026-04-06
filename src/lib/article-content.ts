@@ -111,7 +111,7 @@ export async function fetchReadAlsoArticles(
   const primary = article.categories[0];
   if (!primary) return [];
   const origin = getStrapiUrl();
-  const res = await getArticlesByCategory(primary.slug, count + 8);
+  const res = await getArticlesByCategory(Number(primary.id), count + 8);
   return sortByDateDesc(
     res.data
       .map((a) => mapStrapiArticleToArticle(a, origin))
@@ -125,12 +125,11 @@ export async function fetchSimilarArticles(
   count: number,
 ): Promise<Article[]> {
   const origin = getStrapiUrl();
-  const catSlug = article.categories[0]?.slug;
   const [catRes, regRes] = await Promise.all([
-    catSlug
-      ? getArticlesByCategory(catSlug, 24)
+    article.categories[0]
+      ? getArticlesByCategory(Number(article.categories[0].id), 24)
       : Promise.resolve({ data: [] }),
-    getArticlesByRegion(article.region.slug, 24),
+    getArticlesByRegion(Number(article.region.id), 24),
   ]);
   const merged: Article[] = [];
   const seen = new Set<string>();

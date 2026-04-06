@@ -52,6 +52,11 @@ function joinUrl(path: string): string {
   return `${getStrapiFetchUrl()}${p}`;
 }
 
+/** Полный URL запроса к Strapi (для логов / диагностики). */
+export function strapiAbsoluteUrl(path: string): string {
+  return joinUrl(path);
+}
+
 async function strapiFetch<T>(
   path: string,
   init?: RequestInit & { next?: { revalidate?: number | false } },
@@ -203,33 +208,52 @@ export async function getLatestArticles(
   );
 }
 
-export async function getArticlesByRegion(
-  regionSlug: string,
-  limit: number,
-): Promise<StrapiCollectionResponse<StrapiArticle>> {
+/** Путь `/api/articles?...` для списка по региону (совпадает с телом запроса). */
+export function articlesByRegionRequestPath(regionId: number, limit: number): string {
   const search = new URLSearchParams();
-  search.set("filters[region][slug][$eq]", regionSlug);
+  search.set("filters[region][id][$eq]", String(regionId));
   search.set("sort[0]", "publishedAt:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
+  return `/api/articles?${search.toString()}`;
+}
+
+/** Путь `/api/articles?...` для списка по категории (совпадает с телом запроса). */
+export function articlesByCategoryRequestPath(
+  categoryId: number,
+  limit: number,
+): string {
+  const search = new URLSearchParams();
+  search.set("filters[categories][id][$eq]", String(categoryId));
+  search.set("sort[0]", "publishedAt:desc");
+  search.set("pagination[pageSize]", String(limit));
+  search.set("pagination[page]", "1");
+  appendArticleListPopulate(search);
+  return `/api/articles?${search.toString()}`;
+}
+
+/**
+ * Статьи по региону. Фильтр по `region.id` (manyToOne) — надёжнее, чем вложенный `slug` в REST.
+ */
+export async function getArticlesByRegion(
+  regionId: number,
+  limit: number,
+): Promise<StrapiCollectionResponse<StrapiArticle>> {
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
-    `/api/articles?${search.toString()}`,
+    articlesByRegionRequestPath(regionId, limit),
   );
 }
 
+/**
+ * Статьи по категории. Фильтр по `categories.id` (manyToMany).
+ */
 export async function getArticlesByCategory(
-  categorySlug: string,
+  categoryId: number,
   limit: number,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
-  const search = new URLSearchParams();
-  search.set("filters[categories][slug][$eq]", categorySlug);
-  search.set("sort[0]", "publishedAt:desc");
-  search.set("pagination[pageSize]", String(limit));
-  search.set("pagination[page]", "1");
-  appendArticleListPopulate(search);
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
-    `/api/articles?${search.toString()}`,
+    articlesByCategoryRequestPath(categoryId, limit),
   );
 }
 
