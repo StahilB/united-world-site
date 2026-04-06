@@ -5,15 +5,14 @@ import { RegionalReviewsBlock } from "@/components/blocks/RegionalReviewsBlock";
 import { ThematicBlock } from "@/components/blocks/ThematicBlock";
 import {
   getArticles,
-  getCategories,
   getGlobalReview,
   getLatestArticles,
   getPopularArticles,
   getRegions,
 } from "@/lib/api";
+import { THEMATIC_BLOCK_THEMES } from "@/lib/thematic-block";
 import {
   buildRegionalReviewItems,
-  buildThematicBlockItems,
   formatDateRu,
   mapStrapiArticleToArticle,
   toExpertInterviews,
@@ -23,11 +22,10 @@ import {
 } from "@/lib/strapi-mappers";
 import type {
   StrapiArticle,
-  StrapiCategory,
   StrapiCollectionResponse,
   StrapiRegion,
 } from "@/lib/strapi-types";
-import type { GlobalReviewsMainArticle } from "@/lib/types";
+import type { GlobalReviewsMainArticle, ThematicBlockItem } from "@/lib/types";
 import { getStrapiUrl } from "@/lib/strapi-config";
 
 /** No static fetch to Strapi at build time (CMS may be down). */
@@ -35,8 +33,6 @@ export const dynamic = "force-dynamic";
 
 const emptyArticles: StrapiCollectionResponse<StrapiArticle> = { data: [] };
 const emptyRegions: StrapiCollectionResponse<StrapiRegion> = { data: [] };
-const emptyCategories: StrapiCollectionResponse<StrapiCategory> = { data: [] };
-
 export default async function HomePage() {
   const origin = getStrapiUrl();
 
@@ -44,7 +40,6 @@ export default async function HomePage() {
   let popularRes = emptyArticles;
   let poolRes = emptyArticles;
   let regionsRes = emptyRegions;
-  let categoriesRes = emptyCategories;
 
   try {
     const results = await Promise.all([
@@ -52,15 +47,76 @@ export default async function HomePage() {
       getPopularArticles(7),
       getArticles({ pageSize: 100, page: 1 }),
       getRegions(),
-      getCategories(),
     ]);
     latestRes = results[0];
     popularRes = results[1];
     poolRes = results[2];
     regionsRes = results[3];
-    categoriesRes = results[4];
   } catch (e) {
     console.error("[HomePage] Strapi fetch failed:", e);
+  }
+
+  const PLACEHOLDER_COVER =
+    "https://picsum.photos/seed/united-world/1200/800";
+
+  let thematicItems: ThematicBlockItem[] = [];
+  try {
+    const thematicResponses = await Promise.all(
+      THEMATIC_BLOCK_THEMES.map((theme) =>
+        getArticles({
+          category: theme.slug,
+          pageSize: 1,
+          page: 1,
+        }),
+      ),
+    );
+    thematicItems = THEMATIC_BLOCK_THEMES.map((theme, i) => {
+      const raw = thematicResponses[i]?.data?.[0];
+      if (!raw) {
+        return {
+          category: {
+            name: theme.name,
+            slug: theme.slug,
+            color: theme.color,
+          },
+          article: {
+            title: "Материалы скоро",
+            slug: theme.slug,
+            coverImage: PLACEHOLDER_COVER,
+            format: "—",
+          },
+        };
+      }
+      const a = mapStrapiArticleToArticle(raw, origin);
+      return {
+        category: {
+          name: theme.name,
+          slug: theme.slug,
+          color: theme.color,
+        },
+        article: {
+          title: a.title,
+          slug: a.slug,
+          coverImage: a.coverImage,
+          format: a.format,
+        },
+      };
+    });
+  } catch (e) {
+    console.error("[HomePage] thematic block fetch failed:", e);
+    thematicItems = THEMATIC_BLOCK_THEMES.map((theme) => ({
+      category: {
+        name: theme.name,
+        slug: theme.slug,
+        color: theme.color,
+      },
+      article: {
+        title: "Материалы скоро",
+        slug: theme.slug,
+        coverImage: PLACEHOLDER_COVER,
+        format: "—",
+      },
+    }));
   }
 
   let featured: StrapiArticle | null = null;
@@ -98,12 +154,6 @@ export default async function HomePage() {
 
   const regionalItems = buildRegionalReviewItems(
     regionsRes.data,
-    poolRes.data,
-    origin,
-  );
-
-  const thematicItems = buildThematicBlockItems(
-    categoriesRes.data,
     poolRes.data,
     origin,
   );
