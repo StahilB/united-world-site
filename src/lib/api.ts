@@ -261,6 +261,35 @@ export async function getAuthors(): Promise<
   );
 }
 
+/** Author by slug (first match). */
+export async function getAuthorBySlug(
+  slug: string,
+): Promise<StrapiAuthor | null> {
+  const search = new URLSearchParams();
+  search.set("filters[slug][$eq]", slug);
+  search.set("pagination[pageSize]", "1");
+  search.set("populate[0]", "photo");
+  const res = await strapiFetch<StrapiCollectionResponse<StrapiAuthor>>(
+    `/api/authors?${search.toString()}`,
+  );
+  return res.data[0] ?? null;
+}
+
+export async function getArticlesByAuthor(
+  authorSlug: string,
+  limit: number,
+): Promise<StrapiCollectionResponse<StrapiArticle>> {
+  const search = new URLSearchParams();
+  search.set("filters[author][slug][$eq]", authorSlug);
+  search.set("sort[0]", "publishedAt:desc");
+  search.set("pagination[pageSize]", String(limit));
+  search.set("pagination[page]", "1");
+  appendArticleListPopulate(search);
+  return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
+    `/api/articles?${search.toString()}`,
+  );
+}
+
 /** Homepage singleton: featured article for «Глобальные обзоры». */
 export async function getGlobalReview(): Promise<
   StrapiSingleResponse<StrapiGlobalReview>
