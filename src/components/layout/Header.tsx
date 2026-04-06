@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { Category, Region } from "@/lib/types";
 import { MegaMenu } from "./MegaMenu";
 import { MobileMenu } from "./MobileMenu";
 
@@ -99,19 +98,16 @@ const navLinkClass =
 
 const navSepClass = "text-[13px] text-neutral-400 select-none";
 
-export type HeaderProps = {
-  regions: Region[];
-  categories: Category[];
-};
-
-export function Header({ regions, categories }: HeaderProps) {
+export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
+  const [expertiseOpen, setExpertiseOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   /** Высота шапки в развёрнутом виде (1+2+3) — для spacer, не зависит от скролла */
   const [spacerHeight, setSpacerHeight] = useState(220);
 
   const megaLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const expertiseLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isScrolledRef = useRef(false);
   const scrollRafRef = useRef<number | null>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -120,6 +116,13 @@ export function Header({ regions, categories }: HeaderProps) {
     if (megaLeaveTimerRef.current) {
       clearTimeout(megaLeaveTimerRef.current);
       megaLeaveTimerRef.current = null;
+    }
+  }, []);
+
+  const clearExpertiseLeaveTimer = useCallback(() => {
+    if (expertiseLeaveTimerRef.current) {
+      clearTimeout(expertiseLeaveTimerRef.current);
+      expertiseLeaveTimerRef.current = null;
     }
   }, []);
 
@@ -137,6 +140,21 @@ export function Header({ regions, categories }: HeaderProps) {
   }, [clearMegaLeaveTimer]);
 
   useEffect(() => () => clearMegaLeaveTimer(), [clearMegaLeaveTimer]);
+
+  const openExpertiseMenu = useCallback(() => {
+    clearExpertiseLeaveTimer();
+    setExpertiseOpen(true);
+  }, [clearExpertiseLeaveTimer]);
+
+  const scheduleCloseExpertiseMenu = useCallback(() => {
+    clearExpertiseLeaveTimer();
+    expertiseLeaveTimerRef.current = setTimeout(() => {
+      setExpertiseOpen(false);
+      expertiseLeaveTimerRef.current = null;
+    }, 200);
+  }, [clearExpertiseLeaveTimer]);
+
+  useEffect(() => () => clearExpertiseLeaveTimer(), [clearExpertiseLeaveTimer]);
 
   /** Spacer = полная высота развёрнутой шапки; обновляем только в развёрнутом состоянии */
   const captureExpandedHeaderHeight = useCallback(() => {
@@ -183,6 +201,7 @@ export function Header({ regions, categories }: HeaderProps) {
         setIsScrolled(next);
       }
       setMegaOpen(false);
+      setExpertiseOpen(false);
     };
 
     const onScroll = () => {
@@ -331,9 +350,55 @@ export function Header({ regions, categories }: HeaderProps) {
                 </Link>
               </div>
               <span className={navSepClass}>|</span>
-              <Link href="/expertise" className={navLinkClass}>
-                Экспертиза
-              </Link>
+              <div
+                className="relative"
+                onMouseEnter={openExpertiseMenu}
+                onMouseLeave={scheduleCloseExpertiseMenu}
+              >
+                <Link
+                  href="/expertise"
+                  className={`${navLinkClass}${expertiseOpen ? " text-accent" : ""}`}
+                  aria-current={expertiseOpen ? "true" : undefined}
+                >
+                  Экспертиза
+                </Link>
+
+                {expertiseOpen && (
+                  <div className="absolute left-0 right-0 top-full z-[60] hidden w-[260px] border-t-2 border-accent bg-white shadow-lg md:block">
+                    <div className="px-4 py-4">
+                      <p className="mb-3 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+                        ЭКСПЕРТИЗА
+                      </p>
+                      <ul className="space-y-2">
+                        <li>
+                          <Link
+                            href="/expertise/opinions"
+                            className="text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline"
+                          >
+                            Мнения
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/expertise/interviews"
+                            className="text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline"
+                          >
+                            Интервью
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/expertise/columns"
+                            className="text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline"
+                          >
+                            Авторские колонки
+                          </Link>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
               <span className={navSepClass}>|</span>
               <Link href="/about" className={navLinkClass}>
                 О центре
@@ -364,7 +429,7 @@ export function Header({ regions, categories }: HeaderProps) {
               onMouseEnter={openMegaMenu}
               onMouseLeave={scheduleCloseMegaMenu}
             >
-              <MegaMenu regions={regions} categories={categories} />
+              <MegaMenu />
             </div>
           )}
         </div>
@@ -381,8 +446,6 @@ export function Header({ regions, categories }: HeaderProps) {
         <MobileMenu
           isOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
-          regions={regions}
-          categories={categories}
         />
       </div>
     </>

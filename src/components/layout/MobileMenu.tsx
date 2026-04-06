@@ -2,20 +2,15 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import type { Category, Region } from "@/lib/types";
 
 type MobileMenuProps = {
   isOpen: boolean;
   onClose: () => void;
-  regions: Region[];
-  categories: Category[];
 };
 
 export function MobileMenu({
   isOpen,
   onClose,
-  regions,
-  categories,
 }: MobileMenuProps) {
   useEffect(() => {
     if (isOpen) {
@@ -77,17 +72,123 @@ export function MobileMenu({
             </span>
           </summary>
           <ul className="mt-3 space-y-2 pl-1">
-            {regions.map((r) => (
-              <li key={r.id}>
-                <Link
-                  href={`/region/${r.slug}`}
-                  onClick={onClose}
-                  className="block py-1 text-sm text-text"
-                >
-                  {r.name}
-                </Link>
-              </li>
-            ))}
+            <li>
+              <Link
+                href="/region/rossiya"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Россия
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/evropa"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Европа
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/blizhnij-vostok"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Ближний Восток
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/afrika"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Африка
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/latinskaya-amerika"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Латинская Америка
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/kavkaz"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Кавказ
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/tsentralnaya-aziya"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Центральная Азия
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/yuzhnaya-aziya"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Южная Азия
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/yugo-vostochnaya-aziya"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Юго-Восточная Азия
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/vostochnaya-aziya-i-atr"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Восточная Азия и АТР
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/severnaya-amerika"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Северная Америка
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/avstraliya-i-okeaniya"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Австралия и Океания
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/region/arktika"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Арктика
+              </Link>
+            </li>
           </ul>
         </details>
 
@@ -106,17 +207,78 @@ export function MobileMenu({
             </span>
           </summary>
           <ul className="mt-3 space-y-2 pl-1">
-            {categories.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/category/${c.slug}`}
-                  onClick={onClose}
-                  className="block py-1 text-sm text-text"
-                >
-                  {c.name}
-                </Link>
-              </li>
-            ))}
+            <li>
+              <Link
+                href="/category/mezhdunarodnaya-bezopasnost"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Международная безопасность
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/category/politika-i-diplomatiya"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Политика и дипломатия
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/category/ekonomika-i-razvitie"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Экономика и развитие
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/category/energetika-i-resursy"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Энергетика и ресурсы
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/category/ekologiya-i-klimat"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Экология и климат
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/category/obrazovanie-i-kultura"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Образование и культура
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/category/mezhdunarodnye-organizatsii"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Международные организации
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/category/mezhdunarodnye-meropriyatiya"
+                onClick={onClose}
+                className="block py-1 text-sm text-text"
+              >
+                Международные мероприятия
+              </Link>
+            </li>
           </ul>
         </details>
 
