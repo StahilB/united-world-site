@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { Category, Region } from "@/lib/types";
 import { MegaMenu } from "./MegaMenu";
 import { MobileMenu } from "./MobileMenu";
 
@@ -98,7 +99,13 @@ const navLinkClass =
 
 const navSepClass = "text-[13px] text-neutral-400 select-none";
 
-export function Header() {
+export type HeaderProps = {
+  regions: Region[];
+  categories: Category[];
+};
+
+/** Пропсы `regions` / `categories` передаёт `SiteHeader` (данные Strapi); текущая вёрстка меню — статическая. */
+export function Header({ regions: _regions, categories: _categories }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [expertiseOpen, setExpertiseOpen] = useState(false);

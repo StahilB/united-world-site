@@ -34,7 +34,7 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${sourceSans3.variable} h-full antialiased`}
     >
       <body className={`${sourceSans3.className} min-h-full`}>
-        <Header />
+        <Header regions={[]} categories={[]} />
         {children}
         <Footer />
       </body>
