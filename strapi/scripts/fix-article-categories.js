@@ -3,16 +3,18 @@
  * Миграция: убрать категорию «Авторские колонки», выставить Section по format / region / тематикам.
  * Только поля categories и sections статьи; author, region, format не меняются.
  *
- * Env: STRAPI_URL, STRAPI_TOKEN (токен с правами update article, read/write как нужно, delete category)
+ * Читает `strapi/.env` и опционально `strapi/.env.local`.
+ * Env: STRAPI_URL (в Docker-сети часто http://strapi:1337), STRAPI_TOKEN
  *
- * Запуск из корня репозитория: node scripts/fix-article-categories.js
+ * Запуск из каталога strapi/: npm run fix-article-categories
  * Идемпотентен: повторный запуск пересчитывает те же привязки.
  */
 
 const fs = require("fs");
 const path = require("path");
 
-const ROOT = path.join(__dirname, "..");
+/** Корень приложения Strapi (каталог `strapi/`) */
+const STRAPI_ROOT = path.join(__dirname, "..");
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
@@ -36,13 +38,12 @@ function loadEnvFile(filePath) {
   }
 }
 
-loadEnvFile(path.join(ROOT, ".env.local"));
-loadEnvFile(path.join(ROOT, ".env"));
+loadEnvFile(path.join(STRAPI_ROOT, ".env.local"));
+loadEnvFile(path.join(STRAPI_ROOT, ".env"));
 
-const STRAPI = (process.env.STRAPI_URL || "http://localhost:1337").replace(
-  /\/$/,
-  "",
-);
+const STRAPI = (
+  process.env.STRAPI_URL || "http://strapi:1337"
+).replace(/\/$/, "");
 const TOKEN = process.env.STRAPI_TOKEN || "";
 
 /** Slug категории «Авторские колонки» (и возможные варианты) — удаляются из статей и из коллекции Category */
