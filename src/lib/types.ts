@@ -89,6 +89,12 @@ export type TocHeading = {
   level: 2 | 3;
 };
 
+/** Навигационный раздел (Section) в карточке / крошках */
+export type ArticleSectionNav = {
+  name: string;
+  slug: string;
+};
+
 export interface Article {
   id: string;
   title: string;
@@ -97,6 +103,8 @@ export interface Article {
   coverImage: string;
   author: Author;
   categories: Category[];
+  /** Разделы сайта (Strapi Section), порядок как в CMS */
+  sections?: ArticleSectionNav[];
   region: Region;
   /** Display format label, e.g. analytics, review */
   format: string;

@@ -88,12 +88,19 @@ export function ArticlePageView({
   tags,
 }: ArticlePageViewProps) {
   const primaryCategory = article.categories[0];
-  const breadcrumbCategoryLabel = primaryCategory?.name ?? article.format;
+  const firstSection = article.sections?.[0];
+  const breadcrumbSectionLabel =
+    firstSection?.name ?? primaryCategory?.name ?? article.format;
+  const breadcrumbSectionHref = firstSection
+    ? `/section/${firstSection.slug}`
+    : primaryCategory
+      ? `/category/${primaryCategory.slug}`
+      : "/articles";
 
   return (
     <main className="bg-surface pb-20 pt-6 md:pt-10">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        {/* Хлебные крошки */}
+        {/* Хлебные крошки: Главная → раздел (Section) → статья */}
         <nav
           className="font-sans text-[12px] text-muted"
           aria-label="Навигация по разделам"
@@ -108,26 +115,8 @@ export function ArticlePageView({
               /
             </li>
             <li>
-              <Link
-                href={
-                  primaryCategory
-                    ? `/category/${primaryCategory.slug}`
-                    : "/articles"
-                }
-                className="hover:text-accent"
-              >
-                {breadcrumbCategoryLabel}
-              </Link>
-            </li>
-            <li aria-hidden className="text-primary/35">
-              /
-            </li>
-            <li>
-              <Link
-                href={`/region/${article.region.slug}`}
-                className="hover:text-accent"
-              >
-                {article.region.name}
+              <Link href={breadcrumbSectionHref} className="hover:text-accent">
+                {breadcrumbSectionLabel}
               </Link>
             </li>
             <li aria-hidden className="text-primary/35">

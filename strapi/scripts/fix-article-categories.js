@@ -83,12 +83,23 @@ const REGION_SLUG_TO_BASE = {
   "avstraliya-i-okeaniya": "avstraliya-i-okeaniya",
 };
 
+/** Раздел «Авторские колонки» в API фильтрах (slug Section) */
+const AVTORSKIE_SECTION_SLUG = "avtorskie-kolonki";
+
 const SECTION_FORMAT = {
-  колонка: "avtorskie-kolonki-ekspertiza",
   мнение: "mneniya-ekspertiza",
   интервью: "intervyu-ekspertiza",
   анализ: "analitika",
 };
+
+/** Slug раздела «Авторские колонки» в БД (после seed может быть avtorskie-kolonki-ekspertiza) */
+function resolveAvtorskieSectionSlug(sectionBySlug) {
+  if (sectionBySlug.has(AVTORSKIE_SECTION_SLUG)) return AVTORSKIE_SECTION_SLUG;
+  if (sectionBySlug.has("avtorskie-kolonki-ekspertiza")) {
+    return "avtorskie-kolonki-ekspertiza";
+  }
+  return null;
+}
 
 function authHeaders() {
   const h = { "Content-Type": "application/json" };
@@ -191,8 +202,21 @@ function normalizeCategories(categories, stripIds) {
 function computeSectionSlugs(article, sectionBySlug) {
   const slugs = new Set();
   const fmt = article.format;
-  const g = SECTION_FORMAT[fmt];
-  if (g) slugs.add(g);
+  const avtorskieResolved = resolveAvtorskieSectionSlug(sectionBySlug);
+
+  if (fmt === "колонка" && avtorskieResolved) {
+    slugs.add(avtorskieResolved);
+  } else {
+    const g = SECTION_FORMAT[fmt];
+    if (g && sectionBySlug.has(g)) {
+      slugs.add(g);
+    }
+  }
+
+  /** Все статьи — связь с разделом «Авторские колонки» (slug из БД) */
+  if (avtorskieResolved) {
+    slugs.add(avtorskieResolved);
+  }
 
   if (fmt === "обзор" && article.is_global_review === true) {
     if (sectionBySlug.has("globalnye-obzory")) {

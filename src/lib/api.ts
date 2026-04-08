@@ -319,6 +319,15 @@ export type GetArticlesByAuthorOptions = {
   sectionSlug?: string;
 };
 
+/**
+ * Slug раздела «Авторские колонки» в Strapi (основной и fallback из seed).
+ * Запросы объединяют статьи, привязанные к любому из этих slug.
+ */
+export const COLUMNS_SECTION_SLUGS = [
+  "avtorskie-kolonki",
+  "avtorskie-kolonki-ekspertiza",
+] as const;
+
 export async function getArticlesByAuthor(
   authorSlug: string,
   limit: number,
@@ -375,6 +384,73 @@ export async function getAuthorsForArticleFormat(
   return Array.from(byId.values()).sort((a, b) =>
     a.name.localeCompare(b.name, "ru"),
   );
+}
+
+/**
+ * Авторы, у которых есть статьи в разделе «Авторские колонки» (по Section.slug).
+ */
+export async function getAuthorsForColumnsSection(
+  pageSize = 100,
+): Promise<StrapiAuthor[]> {
+  const byId = new Map<number, StrapiAuthor>();
+  for (const sectionSlug of COLUMNS_SECTION_SLUGS) {
+    let page = 1;
+    let pageCount = 1;
+    do {
+      const search = new URLSearchParams();
+      search.set("filters[sections][slug][$eq]", sectionSlug);
+      search.set("sort[0]", "publishedAt:desc");
+      search.set("pagination[pageSize]", String(pageSize));
+      search.set("pagination[page]", String(page));
+      search.set("populate[0]", "author");
+      search.set("populate[author][populate][0]", "photo");
+      const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
+        `/api/articles?${search.toString()}`,
+      );
+      for (const row of res.data ?? []) {
+        const a = row.author;
+        if (a?.id != null) {
+          byId.set(a.id, a);
+        }
+      }
+      pageCount = res.meta?.pagination?.pageCount ?? 1;
+      page += 1;
+    } while (page <= pageCount);
+  }
+  return Array.from(byId.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, "ru"),
+  );
+}
+
+/** Статьи автора в колонках: объединение по всем slug из {@link COLUMNS_SECTION_SLUGS}. */
+export async function getArticlesByAuthorColumns(
+  authorSlug: string,
+  limit: number,
+): Promise<StrapiCollectionResponse<StrapiArticle>> {
+  const byId = new Map<number, StrapiArticle>();
+  for (const sectionSlug of COLUMNS_SECTION_SLUGS) {
+    const res = await getArticlesByAuthor(authorSlug, limit, { sectionSlug });
+    for (const a of res.data ?? []) {
+      byId.set(a.id, a);
+    }
+  }
+  const merged = Array.from(byId.values()).sort((a, b) => {
+    const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    return tb - ta;
+  });
+  const data = merged.slice(0, limit);
+  return {
+    data,
+    meta: {
+      pagination: {
+        page: 1,
+        pageSize: limit,
+        pageCount: 1,
+        total: data.length,
+      },
+    },
+  };
 }
 
 /** Homepage singleton: featured article for «Глобальные обзоры». */

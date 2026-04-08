@@ -1,4 +1,4 @@
-import { getAuthorsForArticleFormat } from "@/lib/api";
+import { getAuthorsForColumnsSection } from "@/lib/api";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import type { StrapiAuthor, StrapiMedia } from "@/lib/strapi-types";
 import Image from "next/image";
@@ -79,7 +79,7 @@ export default async function ExpertiseColumnsPage() {
   let authors: StrapiAuthor[] = [];
 
   try {
-    authors = await getAuthorsForArticleFormat("колонка", 100);
+    authors = await getAuthorsForColumnsSection(100);
   } catch (e) {
     console.error("[ExpertiseColumnsPage] fetch failed:", e);
   }

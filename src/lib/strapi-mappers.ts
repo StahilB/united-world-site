@@ -4,6 +4,7 @@ import type {
   StrapiCategory,
   StrapiMedia,
   StrapiRegion,
+  StrapiSection,
 } from "./strapi-types";
 import type {
   Article,
@@ -95,6 +96,13 @@ export function mapStrapiArticleToArticle(
     .filter(Boolean)
     .map((c) => categoryFromStrapi(c as StrapiCategory));
 
+  const sections = (a.sections ?? [])
+    .filter(Boolean)
+    .map((s) => {
+      const x = s as StrapiSection;
+      return { name: x.name, slug: x.slug };
+    });
+
   return {
     id: String(a.id),
     title: a.title,
@@ -103,6 +111,7 @@ export function mapStrapiArticleToArticle(
     coverImage: mediaUrl(origin, a.cover_image ?? undefined),
     author: authorFromStrapi(origin, a.author),
     categories: cats,
+    sections: sections.length > 0 ? sections : undefined,
     region: regionFromStrapi(a.region),
     format: a.format ?? "анализ",
     publishedAt: publishedIso(a),

@@ -1,7 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getArticlesByAuthor, getAuthorBySlug } from "@/lib/api";
+import {
+  getArticlesByAuthor,
+  getArticlesByAuthorColumns,
+  getAuthorBySlug,
+} from "@/lib/api";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import { formatDateRu, mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { StrapiMedia } from "@/lib/strapi-types";
@@ -91,9 +95,9 @@ export default async function AuthorPage({
 
   let articles: Article[] = [];
   try {
-    const res = await getArticlesByAuthor(slug, LIST_LIMIT, {
-      ...(fromColumns ? { format: "колонка" } : {}),
-    });
+    const res = fromColumns
+      ? await getArticlesByAuthorColumns(slug, LIST_LIMIT)
+      : await getArticlesByAuthor(slug, LIST_LIMIT);
     articles = res.data.map((a) => mapStrapiArticleToArticle(a, origin));
   } catch (e) {
     console.error("[AuthorPage] articles fetch failed:", e);
