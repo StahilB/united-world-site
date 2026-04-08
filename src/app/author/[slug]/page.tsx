@@ -75,18 +75,25 @@ function ArticleCard({ article }: { article: Article }) {
 
 type AuthorPageProps = {
   params: { slug: string };
+  searchParams?: { from?: string };
 };
 
-export default async function AuthorPage({ params }: AuthorPageProps) {
+export default async function AuthorPage({
+  params,
+  searchParams,
+}: AuthorPageProps) {
   const origin = getStrapiUrl();
   const slug = params.slug;
+  const fromColumns = searchParams?.from === "columns";
 
   const author = await getAuthorBySlug(slug).catch(() => null);
   if (!author) notFound();
 
   let articles: Article[] = [];
   try {
-    const res = await getArticlesByAuthor(slug, LIST_LIMIT);
+    const res = await getArticlesByAuthor(slug, LIST_LIMIT, {
+      ...(fromColumns ? { format: "колонка" } : {}),
+    });
     articles = res.data.map((a) => mapStrapiArticleToArticle(a, origin));
   } catch (e) {
     console.error("[AuthorPage] articles fetch failed:", e);

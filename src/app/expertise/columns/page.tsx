@@ -1,5 +1,5 @@
+import { getAuthorsForArticleFormat } from "@/lib/api";
 import { getStrapiUrl } from "@/lib/strapi-config";
-import { getAuthors } from "@/lib/api";
 import type { StrapiAuthor, StrapiMedia } from "@/lib/strapi-types";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,7 +32,7 @@ function hueFromString(s: string): number {
 }
 
 function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
-  const href = `/author/${a.slug}`;
+  const href = `/author/${a.slug}?from=columns`;
   const photo = mediaUrl(origin, a.photo ?? undefined);
   const bgHue = hueFromString(a.slug || a.name || "");
   return (
@@ -79,8 +79,7 @@ export default async function ExpertiseColumnsPage() {
   let authors: StrapiAuthor[] = [];
 
   try {
-    const res = await getAuthors();
-    authors = res.data;
+    authors = await getAuthorsForArticleFormat("колонка", 100);
   } catch (e) {
     console.error("[ExpertiseColumnsPage] fetch failed:", e);
   }
@@ -94,7 +93,7 @@ export default async function ExpertiseColumnsPage() {
 
         {authors.length === 0 ? (
           <p className="mt-10 font-sans text-base text-muted">
-            Пока нет авторов
+            Пока нет авторов с колонками
           </p>
         ) : (
           <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">

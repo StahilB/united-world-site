@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "node migration/migrate.js"
+    "migrate": "node migration/migrate.js",
+    "fix-article-categories": "node scripts/fix-article-categories.js"
   },
   "dependencies": {
     "next": "14.2.35",

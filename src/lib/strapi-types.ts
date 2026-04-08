@@ -129,6 +129,7 @@ export interface StrapiArticle {
   cover_image?: StrapiMedia | null;
   author?: StrapiAuthor | null;
   categories?: StrapiCategory[] | null;
+  sections?: StrapiSection[] | null;
   region?: StrapiRegion | null;
   format?: ArticleFormat | null;
   is_global_review?: boolean | null;

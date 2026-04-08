@@ -112,6 +112,7 @@ function appendArticleListPopulate(params: URLSearchParams): void {
   params.set("populate[1]", "author");
   params.set("populate[2]", "categories");
   params.set("populate[3]", "region");
+  params.set("populate[4]", "sections");
 }
 
 export type GetArticlesParams = {
@@ -311,18 +312,68 @@ export async function getAuthorBySlug(
   return res.data[0] ?? null;
 }
 
+export type GetArticlesByAuthorOptions = {
+  /** Напр. «колонка» для раздела «Авторские колонки» */
+  format?: string;
+  /** Slug раздела Section (many-to-many) */
+  sectionSlug?: string;
+};
+
 export async function getArticlesByAuthor(
   authorSlug: string,
   limit: number,
+  options?: GetArticlesByAuthorOptions,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const search = new URLSearchParams();
   search.set("filters[author][slug][$eq]", authorSlug);
+  if (options?.format) {
+    search.set("filters[format][$eq]", options.format);
+  }
+  if (options?.sectionSlug) {
+    search.set("filters[sections][slug][$eq]", options.sectionSlug);
+  }
   search.set("sort[0]", "publishedAt:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
     `/api/articles?${search.toString()}`,
+  );
+}
+
+/**
+ * Авторы, у которых есть хотя бы одна статья с данным format (для «Авторские колонки»).
+ */
+export async function getAuthorsForArticleFormat(
+  format: string,
+  pageSize = 100,
+): Promise<StrapiAuthor[]> {
+  const byId = new Map<number, StrapiAuthor>();
+  let page = 1;
+  let pageCount = 1;
+  do {
+    const search = new URLSearchParams();
+    search.set("filters[format][$eq]", format);
+    search.set("sort[0]", "publishedAt:desc");
+    search.set("pagination[pageSize]", String(pageSize));
+    search.set("pagination[page]", String(page));
+    search.set("populate[0]", "author");
+    search.set("populate[author][populate][0]", "photo");
+    const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
+      `/api/articles?${search.toString()}`,
+    );
+    for (const row of res.data ?? []) {
+      const a = row.author;
+      if (a?.id != null) {
+        byId.set(a.id, a);
+      }
+    }
+    pageCount = res.meta?.pagination?.pageCount ?? 1;
+    page += 1;
+  } while (page <= pageCount);
+
+  return Array.from(byId.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, "ru"),
   );
 }
 
