@@ -10,6 +10,8 @@ const PUBLIC_ACTIONS = [
   'api::category.category.findOne',
   'api::region.region.find',
   'api::region.region.findOne',
+  'api::section.section.find',
+  'api::section.section.findOne',
   'api::global-review.global-review.find',
   'plugin::upload.content-api.find',
   'plugin::upload.content-api.findOne',

@@ -50,6 +50,12 @@
       "target": "api::region.region",
       "inversedBy": "articles"
     },
+    "sections": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::section.section",
+      "inversedBy": "articles"
+    },
     "format": {
       "type": "enumeration",
       "enum": ["анализ", "мнение", "интервью", "колонка", "обзор"],

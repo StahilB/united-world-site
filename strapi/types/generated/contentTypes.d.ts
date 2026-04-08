@@ -485,6 +485,7 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
         number
       >;
     region: Schema.Attribute.Relation<'manyToOne', 'api::region.region'>;
+    sections: Schema.Attribute.Relation<'manyToMany', 'api::section.section'>;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
     telegram_message_id: Schema.Attribute.BigInteger;
     title: Schema.Attribute.String & Schema.Attribute.Required;
@@ -626,6 +627,43 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     name: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiSectionSection extends Struct.CollectionTypeSchema {
+  collectionName: 'sections';
+  info: {
+    description: '\u0420\u0443\u0431\u0440\u0438\u043A\u0430 / \u0440\u0430\u0437\u0434\u0435\u043B \u043D\u0430\u0432\u0438\u0433\u0430\u0446\u0438\u0438 \u0441\u0430\u0439\u0442\u0430 (\u0434\u0435\u0440\u0435\u0432\u043E \u043C\u0435\u043D\u044E)';
+    displayName: 'Section';
+    pluralName: 'sections';
+    singularName: 'section';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    articles: Schema.Attribute.Relation<'manyToMany', 'api::article.article'>;
+    children: Schema.Attribute.Relation<'oneToMany', 'api::section.section'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    is_visible_in_menu: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::section.section'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    order: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    parent: Schema.Attribute.Relation<'manyToOne', 'api::section.section'>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
@@ -1150,6 +1188,7 @@ declare module '@strapi/strapi' {
       'api::category.category': ApiCategoryCategory;
       'api::global-review.global-review': ApiGlobalReviewGlobalReview;
       'api::region.region': ApiRegionRegion;
+      'api::section.section': ApiSectionSection;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
