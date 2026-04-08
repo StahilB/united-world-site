@@ -14,30 +14,43 @@ function rubricLabel(article: Article): string {
 }
 
 export type ArticleRubricGridProps = {
-  /** Заголовок страницы рубрики (Playfair Display) */
-  heading: string;
+  /** Заголовок страницы рубрики (Playfair Display), можно пустым при hideHeading */
+  heading?: string;
   articles: Article[];
   /** Временная диагностика Strapi (URL + число записей в ответе) */
   debug?: { requestUrl: string; rawCount: number };
   /** Текст при пустом списке (по умолчанию — общий для рубрик) */
   emptyMessage?: string;
+  /** Только сетка карточек + заголовок, без внешнего `<main>` (вложенная страница) */
+  embedded?: boolean;
+  /** Не выводить H1 (заголовок страницы задаётся снаружи) */
+  hideHeading?: boolean;
 };
 
 export function ArticleRubricGrid({
-  heading,
   articles,
   debug,
   emptyMessage = "В этой рубрике пока нет материалов",
+  embedded = false,
+  hideHeading = false,
+  heading = "",
 }: ArticleRubricGridProps) {
-  return (
-    <main className="min-h-screen bg-white py-10 md:py-14">
-      <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl lg:text-[2.75rem]">
-          {heading}
-        </h1>
+  const inner = (
+    <div
+      className={
+        embedded
+          ? "mx-auto max-w-6xl"
+          : "mx-auto max-w-6xl px-4 md:px-6"
+      }
+    >
+        {!hideHeading ? (
+          <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl lg:text-[2.75rem]">
+            {heading}
+          </h1>
+        ) : null}
 
         {debug ? (
-          <div className="mt-6 rounded-md border border-dashed border-neutral-300 bg-surface px-4 py-3 font-mono text-xs text-secondary break-all">
+          <div className={`rounded-md border border-dashed border-neutral-300 bg-surface px-4 py-3 font-mono text-xs text-secondary break-all ${hideHeading ? "mt-0" : "mt-6"}`}>
             <div>
               <span className="font-semibold text-primary">Запрос:</span>{" "}
               {debug.requestUrl}
@@ -50,9 +63,19 @@ export function ArticleRubricGrid({
         ) : null}
 
         {articles.length === 0 ? (
-          <p className="mt-10 font-sans text-base text-muted">{emptyMessage}</p>
+          <p
+            className={`font-sans text-base text-muted ${
+              hideHeading ? "mt-0" : "mt-10"
+            }`}
+          >
+            {emptyMessage}
+          </p>
         ) : (
-          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+          <div
+            className={`grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8 ${
+              hideHeading ? "mt-0" : "mt-10"
+            }`}
+          >
             {articles.map((article) => {
               const href = `/articles/${article.slug}`;
               return (
@@ -95,6 +118,13 @@ export function ArticleRubricGrid({
           </div>
         )}
       </div>
-    </main>
+  );
+
+  if (embedded) {
+    return inner;
+  }
+
+  return (
+    <main className="min-h-screen bg-white py-10 md:py-14">{inner}</main>
   );
 }

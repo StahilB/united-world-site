@@ -5,8 +5,17 @@ import type {
   StrapiCollectionResponse,
   StrapiGlobalReview,
   StrapiRegion,
+  StrapiSection,
   StrapiSingleResponse,
 } from "./strapi-types";
+
+export type Section = {
+  id: number;
+  name: string;
+  slug: string;
+  order: number;
+  children: Section[];
+};
 
 export { getStrapiUrl } from "./strapi-config";
 
@@ -19,10 +28,13 @@ export type {
   StrapiMedia,
   StrapiPagination,
   StrapiRegion,
+  StrapiSection,
   StrapiSingleResponse,
 } from "./strapi-types";
 
 const REVALIDATE = 60;
+/** Кэш дерева разделов и списков по разделу */
+const REVALIDATE_SECTIONS = 300;
 
 /**
  * Базовый URL для запросов к Strapi: на сервере (Docker) — внутренняя сеть,
@@ -68,7 +80,7 @@ async function strapiFetch<T>(
       ...authHeaders(),
       ...(rest.headers as Record<string, string> | undefined),
     },
-    next: next ?? { revalidate: REVALIDATE },
+    next: next !== undefined ? next : { revalidate: REVALIDATE },
   });
   if (!res.ok) {
     const body = await res.text();
@@ -385,4 +397,130 @@ export async function getRegionBySlug(
     `/api/regions?${search.toString()}`,
   );
   return res.data[0] ?? null;
+}
+
+function buildSectionTreeFromFlat(
+  rows: StrapiSection[],
+  menuOnly: boolean,
+): Section[] {
+  const filtered = menuOnly
+    ? rows.filter((s) => s.is_visible_in_menu !== false)
+    : rows;
+  const byId = new Map<number, Section>();
+  const parentOf = new Map<number, number | null>();
+
+  for (const s of filtered) {
+    const pid = s.parent?.id ?? null;
+    parentOf.set(s.id, pid);
+    byId.set(s.id, {
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      order: s.order ?? 0,
+      children: [],
+    });
+  }
+
+  const roots: Section[] = [];
+  for (const s of filtered) {
+    const node = byId.get(s.id)!;
+    const pid = parentOf.get(s.id) ?? null;
+    if (pid === null) {
+      roots.push(node);
+    } else {
+      const parent = byId.get(pid);
+      if (parent) parent.children.push(node);
+      else roots.push(node);
+    }
+  }
+
+  const sortDeep = (n: Section) => {
+    n.children.sort((a, b) => a.order - b.order);
+    n.children.forEach(sortDeep);
+  };
+  roots.sort((a, b) => a.order - b.order);
+  roots.forEach(sortDeep);
+  return roots;
+}
+
+/**
+ * Плоский список разделов из Strapi → дерево.
+ * GET с populate parent, сортировка по order.
+ * @param menuOnly если true — только пункты с `is_visible_in_menu !== false` (для шапки).
+ */
+export async function getSections(menuOnly = true): Promise<Section[]> {
+  const search = new URLSearchParams();
+  search.set("populate[0]", "parent");
+  search.set("sort[0]", "order:asc");
+  search.set("pagination[pageSize]", "100");
+  search.set("pagination[page]", "1");
+
+  const res = await strapiFetch<StrapiCollectionResponse<StrapiSection>>(
+    `/api/sections?${search.toString()}`,
+    { next: { revalidate: REVALIDATE_SECTIONS } },
+  );
+  return buildSectionTreeFromFlat(res.data ?? [], menuOnly);
+}
+
+/**
+ * Цепочка от корня до раздела с данным slug (включая целевой узел).
+ */
+export function findSectionPath(
+  tree: Section[],
+  slug: string,
+): Section[] | null {
+  function walk(nodes: Section[], ancestors: Section[]): Section[] | null {
+    for (const n of nodes) {
+      if (n.slug === slug) return [...ancestors, n];
+      const hit = walk(n.children, [...ancestors, n]);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  return walk(tree, []);
+}
+
+/**
+ * Один раздел с родителем и детьми (как в Strapi).
+ */
+export async function getSectionBySlug(
+  slug: string,
+): Promise<StrapiSection | null> {
+  const search = new URLSearchParams();
+  search.set("filters[slug][$eq]", slug);
+  search.set("pagination[pageSize]", "1");
+  search.set("populate[0]", "parent");
+  search.set("populate[1]", "children");
+  const res = await strapiFetch<StrapiCollectionResponse<StrapiSection>>(
+    `/api/sections?${search.toString()}`,
+    { next: { revalidate: REVALIDATE_SECTIONS } },
+  );
+  const row = res.data[0] ?? null;
+  if (row?.children?.length) {
+    row.children = [...row.children].sort(
+      (a, b) => (a.order ?? 0) - (b.order ?? 0),
+    );
+  }
+  return row;
+}
+
+/**
+ * Статьи раздела (many-to-many `sections`) с пагинацией.
+ */
+export async function getArticlesBySection(
+  sectionSlug: string,
+  page: number,
+  pageSize: number,
+): Promise<StrapiCollectionResponse<StrapiArticle>> {
+  const search = new URLSearchParams();
+  search.set("filters[sections][slug][$eq]", sectionSlug);
+  search.set("pagination[page]", String(page));
+  search.set("pagination[pageSize]", String(pageSize));
+  appendArticleListPopulate(search);
+  search.set("sort[0]", "publishedAt:desc");
+
+  return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
+    `/api/articles?${search.toString()}`,
+    { next: { revalidate: REVALIDATE_SECTIONS } },
+  );
 }

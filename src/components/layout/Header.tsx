@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { Category, Region } from "@/lib/types";
-import { MegaMenu } from "./MegaMenu";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { Section } from "@/lib/api";
+import { getSectionHref } from "@/lib/navigation";
 import { MobileMenu } from "./MobileMenu";
 
 /** Сжать шапку при scrollY > 150 */
@@ -99,69 +99,118 @@ const navLinkClass =
 
 const navSepClass = "text-[13px] text-neutral-400 select-none";
 
+const dropLinkClass =
+  "text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline";
+
+function SectionMegaPanel({ root }: { root: Section }) {
+  const cols = root.children.filter((c) => c.children.length > 0);
+  const leaves = root.children.filter((c) => c.children.length === 0);
+
+  if (root.children.length === 0) return null;
+
+  const colCount = Math.min(cols.length, 4);
+  const gridColsClass =
+    colCount <= 1
+      ? "md:grid-cols-1"
+      : colCount === 2
+        ? "md:grid-cols-2"
+        : colCount === 3
+          ? "md:grid-cols-3"
+          : "md:grid-cols-4";
+
+  return (
+    <div className="bg-white">
+      {cols.length > 0 ? (
+        <div
+          className={`mx-auto grid max-w-6xl gap-8 px-6 py-8 ${gridColsClass}`}
+        >
+          {cols.map((col) => (
+            <div key={col.id}>
+              <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+                {col.name}
+              </p>
+              <ul className="space-y-2">
+                {col.children.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={getSectionHref(item.slug)}
+                      className={dropLinkClass}
+                    >
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {cols.length > 0 && leaves.length > 0 ? (
+        <div className="mx-auto max-w-6xl border-t border-neutral-200" />
+      ) : null}
+
+      {leaves.length > 0 ? <MegaLeavesRow leaves={leaves} /> : null}
+    </div>
+  );
+}
+
+function MegaLeavesRow({ leaves }: { leaves: Section[] }) {
+  return (
+    <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
+      {leaves.map((l) => (
+        <Link
+          key={l.id}
+          href={getSectionHref(l.slug)}
+          className="text-xs font-semibold uppercase tracking-[0.06em] text-primary transition-colors hover:text-accent hover:underline"
+        >
+          {l.name}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export type HeaderProps = {
-  regions: Region[];
-  categories: Category[];
+  sections: Section[];
 };
 
-/** Пропсы `regions` / `categories` передаёт `SiteHeader` (данные Strapi); текущая вёрстка меню — статическая. */
-export function Header({ regions: _regions, categories: _categories }: HeaderProps) {
+export function Header({ sections }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [megaOpen, setMegaOpen] = useState(false);
-  const [expertiseOpen, setExpertiseOpen] = useState(false);
+  const [activeRoot, setActiveRoot] = useState<Section | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   /** Высота шапки в развёрнутом виде (1+2+3) — для spacer, не зависит от скролла */
   const [spacerHeight, setSpacerHeight] = useState(220);
 
-  const megaLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const expertiseLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isScrolledRef = useRef(false);
   const scrollRafRef = useRef<number | null>(null);
   const headerRef = useRef<HTMLElement>(null);
 
-  const clearMegaLeaveTimer = useCallback(() => {
-    if (megaLeaveTimerRef.current) {
-      clearTimeout(megaLeaveTimerRef.current);
-      megaLeaveTimerRef.current = null;
+  const clearNavLeaveTimer = useCallback(() => {
+    if (navLeaveTimerRef.current) {
+      clearTimeout(navLeaveTimerRef.current);
+      navLeaveTimerRef.current = null;
     }
   }, []);
 
-  const clearExpertiseLeaveTimer = useCallback(() => {
-    if (expertiseLeaveTimerRef.current) {
-      clearTimeout(expertiseLeaveTimerRef.current);
-      expertiseLeaveTimerRef.current = null;
-    }
-  }, []);
+  const openRootMenu = useCallback(
+    (root: Section | null) => {
+      clearNavLeaveTimer();
+      setActiveRoot(root);
+    },
+    [clearNavLeaveTimer],
+  );
 
-  const openMegaMenu = useCallback(() => {
-    clearMegaLeaveTimer();
-    setMegaOpen(true);
-  }, [clearMegaLeaveTimer]);
-
-  const scheduleCloseMegaMenu = useCallback(() => {
-    clearMegaLeaveTimer();
-    megaLeaveTimerRef.current = setTimeout(() => {
-      setMegaOpen(false);
-      megaLeaveTimerRef.current = null;
+  const scheduleCloseNavMenu = useCallback(() => {
+    clearNavLeaveTimer();
+    navLeaveTimerRef.current = setTimeout(() => {
+      setActiveRoot(null);
+      navLeaveTimerRef.current = null;
     }, 200);
-  }, [clearMegaLeaveTimer]);
+  }, [clearNavLeaveTimer]);
 
-  useEffect(() => () => clearMegaLeaveTimer(), [clearMegaLeaveTimer]);
-
-  const openExpertiseMenu = useCallback(() => {
-    clearExpertiseLeaveTimer();
-    setExpertiseOpen(true);
-  }, [clearExpertiseLeaveTimer]);
-
-  const scheduleCloseExpertiseMenu = useCallback(() => {
-    clearExpertiseLeaveTimer();
-    expertiseLeaveTimerRef.current = setTimeout(() => {
-      setExpertiseOpen(false);
-      expertiseLeaveTimerRef.current = null;
-    }, 200);
-  }, [clearExpertiseLeaveTimer]);
-
-  useEffect(() => () => clearExpertiseLeaveTimer(), [clearExpertiseLeaveTimer]);
+  useEffect(() => () => clearNavLeaveTimer(), [clearNavLeaveTimer]);
 
   /** Spacer = полная высота развёрнутой шапки; обновляем только в развёрнутом состоянии */
   const captureExpandedHeaderHeight = useCallback(() => {
@@ -178,7 +227,7 @@ export function Header({ regions: _regions, categories: _categories }: HeaderPro
   useLayoutEffect(() => {
     if (isScrolled) return;
     captureExpandedHeaderHeight();
-  }, [isScrolled, captureExpandedHeaderHeight]);
+  }, [isScrolled, captureExpandedHeaderHeight, sections, activeRoot]);
 
   useLayoutEffect(() => {
     const el = headerRef.current;
@@ -207,8 +256,7 @@ export function Header({ regions: _regions, categories: _categories }: HeaderPro
         isScrolledRef.current = next;
         setIsScrolled(next);
       }
-      setMegaOpen(false);
-      setExpertiseOpen(false);
+      setActiveRoot(null);
     };
 
     const onScroll = () => {
@@ -318,7 +366,10 @@ export function Header({ regions: _regions, categories: _categories }: HeaderPro
         </div>
 
         {/* Row 3 — фиксированная высота, без анимации от скролла */}
-        <div className="relative border-y border-accent bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div
+          className="relative border-y border-accent bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+          onMouseLeave={scheduleCloseNavMenu}
+        >
           <div className="mx-auto grid h-11 min-h-[44px] w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 md:px-6">
             <div
               className={`flex items-center justify-self-start overflow-hidden transition-all duration-[300ms] [transition-timing-function:ease] ${
@@ -343,77 +394,40 @@ export function Header({ regions: _regions, categories: _categories }: HeaderPro
               className="hidden items-center justify-center gap-2 md:flex"
               aria-label="Основное меню"
             >
-              <div
-                className="relative"
-                onMouseEnter={openMegaMenu}
-                onMouseLeave={scheduleCloseMegaMenu}
-              >
-                <Link
-                  href="/articles"
-                  className={`${navLinkClass}${megaOpen ? " text-accent" : ""}`}
-                  aria-current={megaOpen ? "true" : undefined}
-                >
-                  Аналитика
-                </Link>
-              </div>
-              <span className={navSepClass}>|</span>
-              <div
-                className="relative"
-                onMouseEnter={openExpertiseMenu}
-                onMouseLeave={scheduleCloseExpertiseMenu}
-              >
-                <Link
-                  href="/expertise"
-                  className={`${navLinkClass}${expertiseOpen ? " text-accent" : ""}`}
-                  aria-current={expertiseOpen ? "true" : undefined}
-                >
-                  Экспертиза
-                </Link>
-
-                {expertiseOpen && (
-                  <div className="absolute left-0 right-0 top-full z-[60] hidden w-[260px] border-t-2 border-accent bg-white shadow-lg md:block">
-                    <div className="px-4 py-4">
-                      <p className="mb-3 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-                        ЭКСПЕРТИЗА
-                      </p>
-                      <ul className="space-y-2">
-                        <li>
-                          <Link
-                            href="/expertise/opinions"
-                            className="text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline"
-                          >
-                            Мнения
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            href="/expertise/interviews"
-                            className="text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline"
-                          >
-                            Интервью
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            href="/expertise/columns"
-                            className="text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline"
-                          >
-                            Авторские колонки
-                          </Link>
-                        </li>
-                      </ul>
-                    </div>
+              {sections.map((root, i) => (
+                <Fragment key={root.id}>
+                  {i > 0 ? <span className={navSepClass}>|</span> : null}
+                  <div
+                    className="relative"
+                    onMouseEnter={() =>
+                      openRootMenu(root.children.length > 0 ? root : null)
+                    }
+                  >
+                    {root.slug === "en" ? (
+                      <a
+                        href="#"
+                        className={`${navLinkClass}${activeRoot?.id === root.id ? " text-accent" : ""}`}
+                        onClick={(e) => e.preventDefault()}
+                        aria-current={
+                          activeRoot?.id === root.id ? "true" : undefined
+                        }
+                      >
+                        {root.name}
+                      </a>
+                    ) : (
+                      <Link
+                        href={getSectionHref(root.slug)}
+                        className={`${navLinkClass}${activeRoot?.id === root.id ? " text-accent" : ""}`}
+                        aria-current={
+                          activeRoot?.id === root.id ? "true" : undefined
+                        }
+                      >
+                        {root.name}
+                      </Link>
+                    )}
                   </div>
-                )}
-              </div>
-              <span className={navSepClass}>|</span>
-              <Link href="/about" className={navLinkClass}>
-                О центре
-              </Link>
-              <span className={navSepClass}>|</span>
-              <Link href="/en" className={navLinkClass}>
-                EN
-              </Link>
+                </Fragment>
+              ))}
             </nav>
 
             <div className="justify-self-end md:min-w-0">
@@ -430,15 +444,14 @@ export function Header({ regions: _regions, categories: _categories }: HeaderPro
             </div>
           </div>
 
-          {megaOpen && (
+          {activeRoot && activeRoot.children.length > 0 ? (
             <div
               className="absolute left-0 right-0 top-full z-[60] hidden w-full border-t-2 border-accent bg-white shadow-lg md:block"
-              onMouseEnter={openMegaMenu}
-              onMouseLeave={scheduleCloseMegaMenu}
+              onMouseEnter={clearNavLeaveTimer}
             >
-              <MegaMenu />
+              <SectionMegaPanel root={activeRoot} />
             </div>
-          )}
+          ) : null}
         </div>
       </header>
 
@@ -451,6 +464,7 @@ export function Header({ regions: _regions, categories: _categories }: HeaderPro
 
       <div id="mobile-menu">
         <MobileMenu
+          sections={sections}
           isOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
         />

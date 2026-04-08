@@ -100,6 +100,24 @@ export interface StrapiRegion {
   publishedAt?: string | null;
 }
 
+/**
+ * Section (навигация), как приходит из `/api/sections` с populate parent / children.
+ */
+export interface StrapiSection {
+  id: number;
+  documentId?: string;
+  name: string;
+  slug: string;
+  order?: number | null;
+  description?: string | null;
+  is_visible_in_menu?: boolean | null;
+  parent?: { id: number; name?: string; slug?: string } | null;
+  children?: StrapiSection[] | null;
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string | null;
+}
+
 /** Article document as returned by Content API (populate controls relation depth). */
 export interface StrapiArticle {
   id: number;
