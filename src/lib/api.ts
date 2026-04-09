@@ -328,6 +328,36 @@ export const COLUMNS_SECTION_SLUGS = [
   "avtorskie-kolonki-ekspertiza",
 ] as const;
 
+function flattenSections(tree: Section[]): Section[] {
+  const out: Section[] = [];
+  const stack = [...tree];
+  while (stack.length) {
+    const n = stack.shift();
+    if (!n) continue;
+    out.push(n);
+    if (n.children?.length) {
+      stack.push(...n.children);
+    }
+  }
+  return out;
+}
+
+/** Находим реальный slug секции «Авторские колонки» в Strapi (если доступен Section API). */
+export async function getColumnsSectionSlugs(): Promise<string[]> {
+  const out = new Set<string>(COLUMNS_SECTION_SLUGS);
+  try {
+    const tree = await getSections(false);
+    for (const s of flattenSections(tree)) {
+      if (String(s.name).trim().toLowerCase() === "авторские колонки") {
+        out.add(s.slug);
+      }
+    }
+  } catch {
+    // Если /api/sections недоступен (permissions), остаёмся на известных slug.
+  }
+  return Array.from(out.values());
+}
+
 export async function getArticlesByAuthor(
   authorSlug: string,
   limit: number,
@@ -393,7 +423,8 @@ export async function getAuthorsForColumnsSection(
   pageSize = 100,
 ): Promise<StrapiAuthor[]> {
   const byId = new Map<number, StrapiAuthor>();
-  for (const sectionSlug of COLUMNS_SECTION_SLUGS) {
+  const sectionSlugs = await getColumnsSectionSlugs();
+  for (const sectionSlug of sectionSlugs) {
     let page = 1;
     let pageCount = 1;
     do {
@@ -422,13 +453,52 @@ export async function getAuthorsForColumnsSection(
   );
 }
 
+/**
+ * Статьи для страницы «Авторские колонки».
+ * Запрос соответствует спецификации: filter по `sections.slug`, populate `author,cover_image`, sort по дате.
+ */
+export async function getArticlesForColumnsSection(
+  pageSize = 100,
+): Promise<StrapiArticle[]> {
+  const byId = new Map<number, StrapiArticle>();
+  const sectionSlugs = await getColumnsSectionSlugs();
+  for (const sectionSlug of sectionSlugs) {
+    let page = 1;
+    let pageCount = 1;
+    do {
+      const search = new URLSearchParams();
+      search.set("filters[sections][slug][$eq]", sectionSlug);
+      search.set("sort[0]", "publishedAt:desc");
+      search.set("pagination[pageSize]", String(pageSize));
+      search.set("pagination[page]", String(page));
+      search.set("populate[0]", "author");
+      search.set("populate[author][populate][0]", "photo");
+      search.set("populate[1]", "cover_image");
+      const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
+        `/api/articles?${search.toString()}`,
+      );
+      for (const row of res.data ?? []) {
+        byId.set(row.id, row);
+      }
+      pageCount = res.meta?.pagination?.pageCount ?? 1;
+      page += 1;
+    } while (page <= pageCount);
+  }
+  return Array.from(byId.values()).sort((a, b) => {
+    const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    return tb - ta;
+  });
+}
+
 /** Статьи автора в колонках: объединение по всем slug из {@link COLUMNS_SECTION_SLUGS}. */
 export async function getArticlesByAuthorColumns(
   authorSlug: string,
   limit: number,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const byId = new Map<number, StrapiArticle>();
-  for (const sectionSlug of COLUMNS_SECTION_SLUGS) {
+  const sectionSlugs = await getColumnsSectionSlugs();
+  for (const sectionSlug of sectionSlugs) {
     const res = await getArticlesByAuthor(authorSlug, limit, { sectionSlug });
     for (const a of res.data ?? []) {
       byId.set(a.id, a);

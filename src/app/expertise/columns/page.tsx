@@ -1,6 +1,6 @@
-import { getAuthorsForColumnsSection } from "@/lib/api";
+import { getArticlesForColumnsSection } from "@/lib/api";
 import { getStrapiUrl } from "@/lib/strapi-config";
-import type { StrapiAuthor, StrapiMedia } from "@/lib/strapi-types";
+import type { StrapiAuthor, StrapiArticle, StrapiMedia } from "@/lib/strapi-types";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -79,7 +79,18 @@ export default async function ExpertiseColumnsPage() {
   let authors: StrapiAuthor[] = [];
 
   try {
-    authors = await getAuthorsForColumnsSection(100);
+    // Загружаем статьи по `sections.slug = авторские колонки`, затем группируем по автору.
+    const articles: StrapiArticle[] = await getArticlesForColumnsSection(100);
+    const byId = new Map<number, StrapiAuthor>();
+    for (const row of articles) {
+      const a = row.author;
+      if (a?.id != null) {
+        byId.set(a.id, a);
+      }
+    }
+    authors = Array.from(byId.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, "ru"),
+    );
   } catch (e) {
     console.error("[ExpertiseColumnsPage] fetch failed:", e);
   }
