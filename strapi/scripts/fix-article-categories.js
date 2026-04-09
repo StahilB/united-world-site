@@ -263,6 +263,7 @@ async function fetchAllArticles() {
     q.set("populate[1]", "sections");
     q.set("populate[2]", "region");
     const data = await apiGet(`/api/articles?${q}`);
+    // В Strapi 5 обновления/удаления делаются по `documentId`, поэтому сохраняем его.
     out.push(...(data.data || []));
     pageCount = data.meta?.pagination?.pageCount ?? 1;
     page += 1;
@@ -325,15 +326,23 @@ async function main() {
       continue;
     }
 
+    const articleDocumentId = article.documentId || null;
+    if (!articleDocumentId) {
+      throw new Error(
+        `Article ${article.id} slug=${article.slug} has no documentId; cannot update via Strapi 5 REST API.`,
+      );
+    }
+
     console.log(
-      "[fix-article-categories] article id=%s slug=%s → categories %j sections %j",
+      "[fix-article-categories] article id=%s documentId=%s slug=%s → categories %j sections %j",
       article.id,
+      articleDocumentId,
       article.slug,
       newCategoryIds,
       newSectionIds,
     );
 
-    await apiPut(`/api/articles/${article.id}`, {
+    await apiPut(`/api/articles/${articleDocumentId}`, {
       data: {
         categories: newCategoryIds,
         sections: newSectionIds,
@@ -354,12 +363,19 @@ async function main() {
       (c.name && String(c.name).trim() === "Авторские колонки")
     ) {
       try {
+        const categoryDocumentId = c.documentId || null;
+        if (!categoryDocumentId) {
+          throw new Error(
+            `Category ${c.id} slug=${c.slug} has no documentId; cannot delete via Strapi 5 REST API.`,
+          );
+        }
         console.log(
-          "[fix-article-categories] DELETE category id=%s slug=%s",
+          "[fix-article-categories] DELETE category id=%s documentId=%s slug=%s",
           c.id,
+          categoryDocumentId,
           c.slug,
         );
-        await apiDelete(`/api/categories/${c.id}`);
+        await apiDelete(`/api/categories/${categoryDocumentId}`);
       } catch (e) {
         console.error(
           "[fix-article-categories] не удалось удалить category %s: %s",
