@@ -42,34 +42,29 @@
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::category.category",
-      "inversedBy": "articles",
-      "description": "Тематические теги (можно несколько)"
+      "inversedBy": "articles"
     },
     "region": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::region.region",
-      "inversedBy": "articles",
-      "description": "Основной макрорегион статьи (один)"
+      "inversedBy": "articles"
     },
     "sections": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::section.section",
-      "inversedBy": "articles",
-      "description": "Разделы сайта. Удобный выбор — панель «Классификация (дерево разделов)» справа; это поле можно сжать или скрыть в «Настроить вид»"
+      "inversedBy": "articles"
     },
     "format": {
       "type": "enumeration",
       "enum": ["анализ", "мнение", "интервью", "колонка", "обзор"],
       "required": true,
-      "default": "анализ",
-      "description": "Тип материала"
+      "default": "анализ"
     },
     "is_global_review": {
       "type": "boolean",
-      "default": false,
-      "description": "TRUE если это ежемесячный глобальный обзор"
+      "default": false
     },
     "views_count": {
       "type": "integer",
