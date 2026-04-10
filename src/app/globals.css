@@ -33,4 +33,31 @@
   .article-h3 {
     @apply mt-8 mb-3 scroll-mt-28 font-heading text-xl font-normal text-primary;
   }
+
+  .article-body img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .article-body figure {
+    margin: 1.5em 0;
+  }
+
+  .article-body figcaption {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.5em;
+  }
+
+  .article-body table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+  }
+
+  .article-body table td,
+  .article-body table th {
+    border: 1px solid #e5e7eb;
+    padding: 0.5em 0.75em;
+  }
 }

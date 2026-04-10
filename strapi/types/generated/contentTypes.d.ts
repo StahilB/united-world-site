@@ -448,6 +448,13 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
       'api::category.category'
     >;
     content: Schema.Attribute.Blocks;
+    content_html: Schema.Attribute.RichText &
+      Schema.Attribute.CustomField<
+        'plugin::ckeditor5.CKEditor',
+        {
+          preset: 'defaultHtml';
+        }
+      >;
     cover_image: Schema.Attribute.Media<'images'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

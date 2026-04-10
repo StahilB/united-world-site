@@ -14,16 +14,62 @@ function sortByDateDesc(articles: Article[]): Article[] {
 
 export type { TocHeading };
 
-/** Парсинг h2/h3 с id из HTML (если body задан вручную) */
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9\u0400-\u04ff-]/gi, "")
+    .slice(0, 80);
+}
+
+function escapeHtmlAttr(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;");
+}
+
+/** Добавляет id к h2/h3 без атрибута id (для якорей оглавления). */
+function ensureHeadingIdsInHtml(html: string): string {
+  const re = /<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi;
+  let seq = 0;
+  const usedIds = new Set<string>();
+  function uniqueId(base: string): string {
+    let id = base || `heading-${++seq}`;
+    if (!usedIds.has(id)) {
+      usedIds.add(id);
+      return id;
+    }
+    let n = 2;
+    while (usedIds.has(`${id}-${n}`)) n += 1;
+    const out = `${id}-${n}`;
+    usedIds.add(out);
+    return out;
+  }
+  return html.replace(re, (_full, level: string, attrs: string, inner: string) => {
+    if (/\bid\s*=/.test(attrs)) {
+      const idMatch = attrs.match(/\bid\s*=\s*["']([^"']+)["']/i);
+      if (idMatch) usedIds.add(idMatch[1]);
+      return `<h${level}${attrs}>${inner}</h${level}>`;
+    }
+    const text = inner.replace(/<[^>]+>/g, "").trim();
+    const id = uniqueId(slugify(text));
+    const safe = escapeHtmlAttr(id);
+    return `<h${level} id="${safe}"${attrs}>${inner}</h${level}>`;
+  });
+}
+
+/** h2/h3 с id или без (CKEditor часто без id — генерируем slug из текста) */
 function parseHeadingsFromHtml(html: string): TocHeading[] {
   const headings: TocHeading[] = [];
-  const re = /<h([23])[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/h\1>/gi;
+  const re = /<h([23])(?:[^>]*\bid="([^"]+)")?[^>]*>([\s\S]*?)<\/h\1>/gi;
   let m: RegExpExecArray | null;
+  let seq = 0;
   while ((m = re.exec(html)) !== null) {
     const level = Number(m[1]) as 2 | 3;
-    const id = m[2];
     const text = m[3].replace(/<[^>]+>/g, "").trim();
-    if (id && text) headings.push({ id, text, level });
+    const id = m[2] || slugify(text) || `heading-${++seq}`;
+    if (text) headings.push({ id, text, level });
   }
   return headings;
 }
@@ -33,24 +79,33 @@ function paragraph(text: string): string {
 }
 
 /**
- * Renders article body: optional Strapi Blocks, else static template from excerpt.
+ * Renders article body: CKEditor HTML → Blocks (legacy) → mock body → excerpt template.
  */
 export function getArticleRenderedContent(
   article: Article,
   strapiBlocks?: unknown,
+  contentHtml?: string | null,
 ): {
   html: string;
   toc: TocHeading[];
 } {
-  if (article.body) {
+  if (contentHtml && typeof contentHtml === "string" && contentHtml.trim()) {
+    const htmlWithIds = ensureHeadingIdsInHtml(contentHtml);
     return {
-      html: article.body,
-      toc: parseHeadingsFromHtml(article.body),
+      html: htmlWithIds,
+      toc: parseHeadingsFromHtml(htmlWithIds),
     };
   }
 
   if (Array.isArray(strapiBlocks) && strapiBlocks.length > 0) {
     return strapiBlocksToHtml(strapiBlocks);
+  }
+
+  if (article.body) {
+    return {
+      html: article.body,
+      toc: parseHeadingsFromHtml(article.body),
+    };
   }
 
   const toc: TocHeading[] = [];

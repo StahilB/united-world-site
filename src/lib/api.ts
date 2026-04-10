@@ -180,6 +180,8 @@ export async function getArticles(
 
 /**
  * Single article by slug with deep populate.
+ * Скалярные поля (`content`, `content_html`, `excerpt`, …) приходят в корне документа
+ * при соответствующих правах роли (populate касается только связей).
  */
 export async function getArticleBySlug(
   slug: string,

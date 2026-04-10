@@ -125,6 +125,8 @@ export interface StrapiArticle {
   title: string;
   slug: string;
   content?: unknown;
+  /** HTML из CKEditor (custom field), если разрешено в Public → Article */
+  content_html?: string | null;
   excerpt?: string | null;
   cover_image?: StrapiMedia | null;
   author?: StrapiAuthor | null;

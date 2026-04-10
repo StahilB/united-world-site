@@ -63,7 +63,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const origin = getStrapiUrl();
   const article = mapStrapiArticleToArticle(raw, origin);
 
-  const { html, toc } = getArticleRenderedContent(article, raw.content);
+  const { html, toc } = getArticleRenderedContent(
+    article,
+    raw.content,
+    raw.content_html,
+  );
 
   let readAlso: Article[] = [];
   let similar: Article[] = [];

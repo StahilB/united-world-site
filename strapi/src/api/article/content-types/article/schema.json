@@ -10,6 +10,7 @@
   "options": {
     "draftAndPublish": false
   },
+  "pluginOptions": {},
   "attributes": {
     "title": {
       "type": "string",
@@ -30,7 +31,9 @@
     "cover_image": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": ["images"]
+      "allowedTypes": [
+        "images"
+      ]
     },
     "author": {
       "type": "relation",
@@ -58,9 +61,15 @@
     },
     "format": {
       "type": "enumeration",
-      "enum": ["анализ", "мнение", "интервью", "колонка", "обзор"],
       "required": true,
-      "default": "анализ"
+      "default": "анализ",
+      "enum": [
+        "анализ",
+        "мнение",
+        "интервью",
+        "колонка",
+        "обзор"
+      ]
     },
     "is_global_review": {
       "type": "boolean",
@@ -76,11 +85,17 @@
       "min": 0
     },
     "publication_date": {
-      "type": "datetime",
-      "description": "Дата публикации на сайте (не путать с системным published_at Strapi при D&P)"
+      "type": "datetime"
     },
     "telegram_message_id": {
       "type": "biginteger"
+    },
+    "content_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
     }
   }
 }

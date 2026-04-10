@@ -23,7 +23,9 @@
     "cover_image": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": ["images"]
+      "allowedTypes": [
+        "images"
+      ]
     },
     "articles": {
       "type": "relation",
