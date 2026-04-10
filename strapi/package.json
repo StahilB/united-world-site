@@ -15,7 +15,8 @@
     "upgrade:dry": "npx @strapi/upgrade latest --dry",
     "cleanup-categories": "node ./scripts/cleanup-categories.js",
     "seed-sections": "node ./scripts/seed-sections.js",
-    "fix-article-categories": "node ./scripts/fix-article-categories.js"
+    "fix-article-categories": "node ./scripts/fix-article-categories.js",
+    "reassign-sections": "node ./scripts/reassign-sections.js"
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.41.1",
