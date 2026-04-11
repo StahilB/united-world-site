@@ -122,7 +122,7 @@ export type GetArticlesParams = {
   category?: string;
   /** Region slug */
   region?: string;
-  /** e.g. `publishedAt:desc` or `views_count:desc` */
+  /** e.g. `publication_date:desc` or `views_count:desc` */
   sort?: string;
   /** Article format enum value */
   format?: string;
@@ -170,7 +170,7 @@ export async function getArticles(
       search.set(`sort[${i}]`, part);
     });
   } else {
-    search.set("sort[0]", "publishedAt:desc");
+    search.set("sort[0]", "publication_date:desc");
   }
 
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
@@ -214,7 +214,7 @@ export async function getLatestArticles(
   limit: number,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const search = new URLSearchParams();
-  search.set("sort[0]", "publishedAt:desc");
+  search.set("sort[0]", "publication_date:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
@@ -227,7 +227,7 @@ export async function getLatestArticles(
 export function articlesByRegionRequestPath(regionId: number, limit: number): string {
   const search = new URLSearchParams();
   search.set("filters[region][id][$eq]", String(regionId));
-  search.set("sort[0]", "publishedAt:desc");
+  search.set("sort[0]", "publication_date:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
@@ -241,7 +241,7 @@ export function articlesByCategoryRequestPath(
 ): string {
   const search = new URLSearchParams();
   search.set("filters[categories][id][$eq]", String(categoryId));
-  search.set("sort[0]", "publishedAt:desc");
+  search.set("sort[0]", "publication_date:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
@@ -373,7 +373,7 @@ export async function getArticlesByAuthor(
   if (options?.sectionSlug) {
     search.set("filters[sections][slug][$eq]", options.sectionSlug);
   }
-  search.set("sort[0]", "publishedAt:desc");
+  search.set("sort[0]", "publication_date:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
@@ -395,7 +395,7 @@ export async function getAuthorsForArticleFormat(
   do {
     const search = new URLSearchParams();
     search.set("filters[format][$eq]", format);
-    search.set("sort[0]", "publishedAt:desc");
+    search.set("sort[0]", "publication_date:desc");
     search.set("pagination[pageSize]", String(pageSize));
     search.set("pagination[page]", String(page));
     search.set("populate[0]", "author");
@@ -432,7 +432,7 @@ export async function getAuthorsForColumnsSection(
     do {
       const search = new URLSearchParams();
       search.set("filters[sections][slug][$eq]", sectionSlug);
-      search.set("sort[0]", "publishedAt:desc");
+      search.set("sort[0]", "publication_date:desc");
       search.set("pagination[pageSize]", String(pageSize));
       search.set("pagination[page]", String(page));
       search.set("populate[0]", "author");
@@ -470,7 +470,7 @@ export async function getArticlesForColumnsSection(
     do {
       const search = new URLSearchParams();
       search.set("filters[sections][slug][$eq]", sectionSlug);
-      search.set("sort[0]", "publishedAt:desc");
+      search.set("sort[0]", "publication_date:desc");
       search.set("pagination[pageSize]", String(pageSize));
       search.set("pagination[page]", String(page));
       search.set("populate[0]", "author");
@@ -487,8 +487,10 @@ export async function getArticlesForColumnsSection(
     } while (page <= pageCount);
   }
   return Array.from(byId.values()).sort((a, b) => {
-    const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-    const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    const rawA = a.publication_date ?? a.publishedAt ?? a.createdAt;
+    const rawB = b.publication_date ?? b.publishedAt ?? b.createdAt;
+    const ta = rawA ? new Date(rawA).getTime() : 0;
+    const tb = rawB ? new Date(rawB).getTime() : 0;
     return tb - ta;
   });
 }
@@ -507,8 +509,10 @@ export async function getArticlesByAuthorColumns(
     }
   }
   const merged = Array.from(byId.values()).sort((a, b) => {
-    const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-    const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    const rawA = a.publication_date ?? a.publishedAt ?? a.createdAt;
+    const rawB = b.publication_date ?? b.publishedAt ?? b.createdAt;
+    const ta = rawA ? new Date(rawA).getTime() : 0;
+    const tb = rawB ? new Date(rawB).getTime() : 0;
     return tb - ta;
   });
   const data = merged.slice(0, limit);
@@ -716,7 +720,7 @@ export async function getArticlesBySection(
   search.set("pagination[page]", String(page));
   search.set("pagination[pageSize]", String(pageSize));
   appendArticleListPopulate(search);
-  search.set("sort[0]", "publishedAt:desc");
+  search.set("sort[0]", "publication_date:desc");
 
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
     `/api/articles?${search.toString()}`,
