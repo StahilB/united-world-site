@@ -5,6 +5,9 @@ import type { Core } from '@strapi/strapi';
  * @see https://docs.strapi.io/dev-docs/plugins/upload
  */
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin => ({
+  'section-tree': {
+    enabled: true,
+  },
   upload: {
     config: {
       provider: 'local',

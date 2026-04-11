@@ -59,6 +59,10 @@
       "target": "api::section.section",
       "inversedBy": "articles"
     },
+    "section_tree": {
+      "type": "customField",
+      "customField": "plugin::section-tree.section-tree-field"
+    },
     "format": {
       "type": "enumeration",
       "required": true,

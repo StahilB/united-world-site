@@ -1,0 +1,27 @@
+{
+  "name": "section-tree",
+  "version": "1.0.0",
+  "private": true,
+  "strapi": {
+    "kind": "plugin",
+    "name": "section-tree",
+    "displayName": "Section Tree",
+    "description": "Visual tree selector for sections"
+  },
+  "exports": {
+    "./strapi-admin": {
+      "source": "./admin/src/index.tsx",
+      "import": "./admin/src/index.tsx",
+      "require": "./admin/src/index.tsx",
+      "default": "./admin/src/index.tsx"
+    },
+    "./strapi-server": {
+      "source": "./strapi-server.js",
+      "require": "./strapi-server.js",
+      "default": "./strapi-server.js"
+    }
+  },
+  "peerDependencies": {
+    "@strapi/strapi": "^5.0.0"
+  }
+}

@@ -492,6 +492,8 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
         number
       >;
     region: Schema.Attribute.Relation<'manyToOne', 'api::region.region'>;
+    section_tree: Schema.Attribute.JSON &
+      Schema.Attribute.CustomField<'plugin::section-tree.section-tree-field'>;
     sections: Schema.Attribute.Relation<'manyToMany', 'api::section.section'>;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
     telegram_message_id: Schema.Attribute.BigInteger;

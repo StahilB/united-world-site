@@ -269,6 +269,23 @@ function buildSectionDocumentIdMap(sections: SectionRow[]): Map<string, number> 
   return m;
 }
 
+/** Ручной выбор из дерева рубрик (JSON-массив id). */
+function parseSectionTree(raw: unknown): number[] {
+  if (raw == null) return [];
+  if (Array.isArray(raw)) {
+    return raw.map(Number).filter((n) => Number.isFinite(n));
+  }
+  if (typeof raw === 'string') {
+    try {
+      const p = JSON.parse(raw);
+      return Array.isArray(p) ? p.map(Number).filter((n) => Number.isFinite(n)) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 async function applySectionUnion(
   strapi: Core.Strapi,
   data: Record<string, unknown>,
@@ -284,6 +301,7 @@ async function applySectionUnion(
     region?: unknown;
     categories?: unknown;
     sections?: unknown;
+    section_tree?: unknown;
   } | null = null;
 
   if (opts.isUpdate && opts.where && Object.keys(opts.where).length > 0) {
@@ -319,8 +337,16 @@ async function applySectionUnion(
       ? extractManualSectionIds(existing.sections, sectionDocMap)
       : [];
 
-  const manual =
-    manualFromPayload !== null ? manualFromPayload : manualFromExisting;
+  const hasSectionTreeKey = Object.prototype.hasOwnProperty.call(data, 'section_tree');
+
+  let manual: number[];
+  if (hasSectionTreeKey) {
+    manual = parseSectionTree(data.section_tree);
+  } else if (manualFromPayload !== null) {
+    manual = manualFromPayload;
+  } else {
+    manual = manualFromExisting;
+  }
 
   const automatic = computeAutomaticSectionIds({
     format: format ?? null,
