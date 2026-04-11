@@ -28,10 +28,13 @@ function mediaUrl(origin: string, media: StrapiMedia | null | undefined): string
     return FALLBACK_COVER;
   }
   const u = media.url;
+  // Если URL уже абсолютный — вернуть как есть
   if (u.startsWith("http://") || u.startsWith("https://")) {
     return u;
   }
-  return `${origin}${u.startsWith("/") ? "" : "/"}${u}`;
+  // Для картинок всегда используем публичный URL (который видит браузер)
+  const publicOrigin = process.env.NEXT_PUBLIC_STRAPI_URL || origin;
+  return `${publicOrigin}${u.startsWith("/") ? "" : "/"}${u}`;
 }
 
 function authorFromStrapi(
