@@ -7,6 +7,7 @@ import type { Core } from '@strapi/strapi';
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin => ({
   'section-tree': {
     enabled: true,
+    resolve: './src/plugins/section-tree',
   },
   upload: {
     config: {
