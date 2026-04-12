@@ -45,7 +45,7 @@ async function fetchAllStrapi() {
   let page = 1;
   while (true) {
     const res = await fetch(
-      `${STRAPI}/api/articles?fields[0]=title&fields[1]=slug&populate[cover_image][fields][0]=url&pagination[page]=${page}&pagination[pageSize]=100`,
+      `${STRAPI}/api/articles?fields[0]=title&fields[1]=slug&fields[2]=id&populate[cover_image][fields][0]=url&pagination[page]=${page}&pagination[pageSize]=100`,
       { headers: { Authorization: `Bearer ${TOKEN}` } }
     );
     const json = await res.json();
@@ -73,8 +73,8 @@ async function main() {
   for (const a of strapiArticles) {
     const n = normalize(a.title);
     const hasImage = !!(a.cover_image?.url);
-    byTitle.set(n, { ...a, hasImage });
-    if (n.length >= 30) byPrefix.set(n.slice(0, 30), { ...a, hasImage });
+    byTitle.set(n, { ...a, hasImage, numericId: a.id });
+    if (n.length >= 30) byPrefix.set(n.slice(0, 30), { ...a, hasImage, numericId: a.id });
   }
 
   let uploaded = 0, skipped = 0, noMatch = 0, noImage = 0, errors = 0;
@@ -139,7 +139,7 @@ async function main() {
     parts.push(`Content-Disposition: form-data; name="files"; filename="${filename}"${CRLF}`);
     parts.push(`Content-Type: image/jpeg${CRLF}${CRLF}`);
     const headerBuf = Buffer.from(parts.join(''));
-    const tailBuf = Buffer.from(`${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="ref"${CRLF}${CRLF}api::article.article${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="refId"${CRLF}${CRLF}${article.documentId}${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="field"${CRLF}${CRLF}cover_image${CRLF}--${boundary}--${CRLF}`);
+    const tailBuf = Buffer.from(`${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="ref"${CRLF}${CRLF}api::article.article${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="refId"${CRLF}${CRLF}${article.numericId || article.id}${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="field"${CRLF}${CRLF}cover_image${CRLF}--${boundary}--${CRLF}`);
     
     const body = Buffer.concat([headerBuf, buffer, tailBuf]);
 
