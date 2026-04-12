@@ -125,19 +125,32 @@ async function main() {
       continue;
     }
 
-    // Upload to Strapi
+    // Upload to Strapi using undici or node-fetch compatible FormData
     const filename = path.basename(new URL(imageUrl).pathname) || 'cover.jpg';
-    const form = new FormData();
-    form.append('files', new Blob([buffer]), filename);
-    form.append('ref', 'api::article.article');
-    form.append('refId', article.documentId);
-    form.append('field', 'cover_image');
+    
+    // Strapi 5 upload: use raw multipart boundary approach
+    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+    const CRLF = '\r\n';
+    
+    const parts = [];
+    
+    // File part
+    parts.push(`--${boundary}${CRLF}`);
+    parts.push(`Content-Disposition: form-data; name="files"; filename="${filename}"${CRLF}`);
+    parts.push(`Content-Type: image/jpeg${CRLF}${CRLF}`);
+    const headerBuf = Buffer.from(parts.join(''));
+    const tailBuf = Buffer.from(`${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="ref"${CRLF}${CRLF}api::article.article${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="refId"${CRLF}${CRLF}${article.documentId}${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="field"${CRLF}${CRLF}cover_image${CRLF}--${boundary}--${CRLF}`);
+    
+    const body = Buffer.concat([headerBuf, buffer, tailBuf]);
 
     try {
       const upRes = await fetch(`${STRAPI}/api/upload`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${TOKEN}` },
-        body: form,
+        headers: {
+          Authorization: `Bearer ${TOKEN}`,
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        },
+        body,
       });
       if (upRes.ok) {
         uploaded++;
@@ -145,7 +158,7 @@ async function main() {
       } else {
         errors++;
         const errText = await upRes.text();
-        console.log('✗ Upload failed:', (wp.title?.rendered || '').slice(0, 50), upRes.status, errText.slice(0, 100));
+        console.log('✗ Upload failed:', (wp.title?.rendered || '').slice(0, 50), upRes.status, errText.slice(0, 200));
       }
     } catch (e) {
       errors++;
