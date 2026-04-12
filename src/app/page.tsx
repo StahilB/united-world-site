@@ -5,7 +5,6 @@ import { RegionalReviewsBlock } from "@/components/blocks/RegionalReviewsBlock";
 import { ThematicBlock } from "@/components/blocks/ThematicBlock";
 import {
   getArticles,
-  getGlobalReview,
   getLatestArticles,
   getPopularArticles,
   getRegions,
@@ -119,14 +118,6 @@ export default async function HomePage() {
     }));
   }
 
-  let featured: StrapiArticle | null = null;
-  try {
-    const gr = await getGlobalReview();
-    featured = gr.data?.featured_article ?? null;
-  } catch {
-    featured = null;
-  }
-
   const latestArticles = latestRes.data.map((a) =>
     mapStrapiArticleToArticle(a, origin),
   );
@@ -135,20 +126,17 @@ export default async function HomePage() {
     mapStrapiArticleToArticle(a, origin),
   );
 
-  const mainArticle: GlobalReviewsMainArticle = featured
-    ? toGlobalReviewsMainArticle(featured, origin)
-    : latestRes.data[0]
-      ? toGlobalReviewsMainArticle(latestRes.data[0], origin)
-      : {
-          title: "Материалы появятся в ближайшее время",
-          excerpt:
-            "Добавьте статьи в Strapi или проверьте NEXT_PUBLIC_STRAPI_URL и доступность API.",
-          date: formatDateRu(new Date().toISOString()),
-          dateIso: new Date().toISOString().slice(0, 10),
-          href: "/",
-        };
+  const mainArticle: GlobalReviewsMainArticle = popularRes.data[0]
+    ? toGlobalReviewsMainArticle(popularRes.data[0], origin)
+    : {
+        title: "Материалы появятся в ближайшее время",
+        excerpt: "Добавьте статьи в Strapi.",
+        date: formatDateRu(new Date().toISOString()),
+        dateIso: new Date().toISOString().slice(0, 10),
+        href: "/",
+      };
 
-  const popularArticles = popularRes.data.map((a) =>
+  const popularArticles = popularRes.data.slice(1).map((a) =>
     toGlobalReviewsPopularArticle(a),
   );
 

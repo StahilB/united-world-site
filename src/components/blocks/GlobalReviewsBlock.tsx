@@ -79,7 +79,7 @@ export function GlobalReviewsBlock({
     <section className={`${SECTION_BG} py-10 md:py-12`}>
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <h2 className="border-l-4 border-accent pl-4 font-heading text-lg font-normal uppercase tracking-[0.14em] text-primary md:text-xl">
-          Глобальные обзоры
+          Самое читаемое
         </h2>
 
         {/* Mobile: главная статья, затем весь список популярного */}
