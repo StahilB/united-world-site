@@ -140,9 +140,12 @@ export default async function HomePage() {
     toGlobalReviewsPopularArticle(a),
   );
 
+  const globalReviewArticles = poolRes.data.filter(
+    (a) => a.is_global_review === true,
+  );
   const regionalItems = buildRegionalReviewItems(
     regionsRes.data,
-    poolRes.data,
+    globalReviewArticles.length > 0 ? globalReviewArticles : poolRes.data,
     origin,
   );
 

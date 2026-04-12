@@ -49,7 +49,7 @@ export function RegionalReviewsBlock({ items }: RegionalReviewsBlockProps) {
     <section className="bg-[#0F1B2D] py-10 md:py-12">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <h2 className="border-l-4 border-accent pl-4 font-heading text-lg font-normal uppercase tracking-[0.14em] text-white md:text-xl">
-          Ежемесячные обзоры по регионам
+          ГЛОБАЛЬНЫЕ ОБЗОРЫ ПО РЕГИОНАМ
         </h2>
 
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-5 lg:gap-4">
