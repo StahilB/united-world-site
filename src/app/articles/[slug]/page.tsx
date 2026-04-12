@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticlePageView } from "@/components/articles/ArticlePageView";
+import { ViewCounter } from "@/components/articles/ViewCounter";
 import { ArticleStrapiUnavailable } from "@/components/articles/ArticleStrapiUnavailable";
 import {
   fetchReadAlsoArticles,
@@ -83,13 +84,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const tags = getArticleTags(article);
 
   return (
-    <ArticlePageView
-      article={article}
-      html={html}
-      toc={toc}
-      readAlso={readAlso}
-      similar={similar}
-      tags={tags}
-    />
+    <>
+      <ViewCounter articleId={raw.id} />
+      <ArticlePageView
+        article={article}
+        html={html}
+        toc={toc}
+        readAlso={readAlso}
+        similar={similar}
+        tags={tags}
+      />
+    </>
   );
 }
