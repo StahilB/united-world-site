@@ -1,16 +1,14 @@
 import { getArticlesForColumnsSection } from "@/lib/api";
-import { getStrapiUrl } from "@/lib/strapi-config";
+import { getStrapiUrl, resolveStrapiAssetUrl } from "@/lib/strapi-config";
 import type { StrapiAuthor, StrapiArticle, StrapiMedia } from "@/lib/strapi-types";
 import Image from "next/image";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-function mediaUrl(origin: string, media: StrapiMedia | null | undefined): string | null {
+function columnAuthorPhotoUrl(media: StrapiMedia | null | undefined): string | null {
   if (!media?.url) return null;
-  const u = media.url;
-  if (u.startsWith("http://") || u.startsWith("https://")) return u;
-  return `${origin}${u.startsWith("/") ? "" : "/"}${u}`;
+  return resolveStrapiAssetUrl(media.url);
 }
 
 function initials(name: string): string {
@@ -33,7 +31,7 @@ function hueFromString(s: string): number {
 
 function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
   const href = `/author/${a.slug}?from=columns`;
-  const photo = mediaUrl(origin, a.photo ?? undefined);
+  const photo = columnAuthorPhotoUrl(a.photo ?? undefined);
   const bgHue = hueFromString(a.slug || a.name || "");
   return (
     <Link

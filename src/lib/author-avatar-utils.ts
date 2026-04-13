@@ -1,4 +1,4 @@
-import { getStrapiUrl } from "@/lib/strapi-config";
+import { resolveStrapiAssetUrl } from "@/lib/strapi-config";
 
 export function initials(name: string): string {
   const parts = String(name || "")
@@ -20,7 +20,7 @@ export function hueFromString(s: string): number {
 
 /**
  * URL suitable for the browser, or `null` to show initials (empty, placeholder, or unloadable).
- * Rewrites internal Docker / SSR-only hosts (e.g. http://strapi:1337/...) to the public Strapi origin.
+ * Rewrites internal Docker / loopback hosts to NEXT_PUBLIC_STRAPI_URL (see getPublicStrapiUrl).
  */
 export function normalizeAvatarUrlForBrowser(raw: string | undefined): string | null {
   if (!raw?.trim()) return null;
@@ -30,14 +30,13 @@ export function normalizeAvatarUrlForBrowser(raw: string | undefined): string | 
   try {
     const parsed = new URL(u);
     const host = parsed.hostname;
-    if (host === "strapi") {
-      const publicOrigin = getStrapiUrl();
-      return `${publicOrigin}${parsed.pathname}${parsed.search}`;
+    if (host === "strapi" || host === "localhost") {
+      return resolveStrapiAssetUrl(u);
     }
     return u;
   } catch {
     if (u.startsWith("/")) {
-      return `${getStrapiUrl()}${u}`;
+      return resolveStrapiAssetUrl(u);
     }
     return null;
   }

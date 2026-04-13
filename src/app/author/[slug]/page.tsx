@@ -7,7 +7,7 @@ import {
   getArticlesByAuthorColumns,
   getAuthorBySlug,
 } from "@/lib/api";
-import { getStrapiUrl } from "@/lib/strapi-config";
+import { getStrapiUrl, resolveStrapiAssetUrl } from "@/lib/strapi-config";
 import { formatDateRu, mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { StrapiMedia } from "@/lib/strapi-types";
 import type { Article } from "@/lib/types";
@@ -16,11 +16,9 @@ export const dynamic = "force-dynamic";
 
 const LIST_LIMIT = 100;
 
-function mediaUrl(origin: string, media: StrapiMedia | null | undefined): string | null {
+function authorPhotoPublicUrl(media: StrapiMedia | null | undefined): string | null {
   if (!media?.url) return null;
-  const u = media.url;
-  if (u.startsWith("http://") || u.startsWith("https://")) return u;
-  return `${origin}${u.startsWith("/") ? "" : "/"}${u}`;
+  return resolveStrapiAssetUrl(media.url);
 }
 
 function ArticleCard({ article }: { article: Article }) {
@@ -86,7 +84,7 @@ export default async function AuthorPage({
     console.error("[AuthorPage] articles fetch failed:", e);
   }
 
-  const photo = mediaUrl(origin, author.photo ?? undefined);
+  const photo = authorPhotoPublicUrl(author.photo ?? undefined);
   const avatarUrl = photo ?? "";
 
   return (

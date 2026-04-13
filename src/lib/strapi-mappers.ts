@@ -18,29 +18,19 @@ import type {
   RegionalReviewItem,
   ThematicBlockItem,
 } from "./types";
-import { getStrapiUrl } from "./strapi-config";
+import { getStrapiUrl, resolveStrapiAssetUrl } from "./strapi-config";
 
 const FALLBACK_COVER =
   "https://picsum.photos/seed/united-world/1200/800";
 
-function mediaUrl(origin: string, media: StrapiMedia | null | undefined): string {
+function mediaUrl(media: StrapiMedia | null | undefined): string {
   if (!media?.url) {
     return FALLBACK_COVER;
   }
-  const u = media.url;
-  // Если URL уже абсолютный — вернуть как есть
-  if (u.startsWith("http://") || u.startsWith("https://")) {
-    return u;
-  }
-  // Для картинок всегда используем публичный URL (который видит браузер)
-  const publicOrigin = process.env.NEXT_PUBLIC_STRAPI_URL || origin;
-  return `${publicOrigin}${u.startsWith("/") ? "" : "/"}${u}`;
+  return resolveStrapiAssetUrl(media.url);
 }
 
-function authorFromStrapi(
-  origin: string,
-  a: StrapiAuthor | null | undefined,
-): Author {
+function authorFromStrapi(a: StrapiAuthor | null | undefined): Author {
   if (!a) {
     return {
       id: "0",
@@ -55,7 +45,7 @@ function authorFromStrapi(
     name: a.name,
     slug: a.slug,
     bio: a.bio ?? "",
-    avatarUrl: mediaUrl(origin, a.photo ?? undefined),
+    avatarUrl: mediaUrl(a.photo ?? undefined),
   };
 }
 
@@ -93,7 +83,8 @@ function publishedIso(a: StrapiArticle): string {
 /** Map Strapi article to UI `Article` (for blocks and cards). */
 export function mapStrapiArticleToArticle(
   a: StrapiArticle,
-  origin: string = getStrapiUrl(),
+  /** @deprecated Unused; media URLs use getPublicStrapiUrl(). Kept for call-site compatibility. */
+  _origin: string = getStrapiUrl(),
 ): Article {
   const cats = (a.categories ?? [])
     .filter(Boolean)
@@ -111,8 +102,8 @@ export function mapStrapiArticleToArticle(
     title: a.title,
     slug: a.slug,
     excerpt: a.excerpt ?? "",
-    coverImage: mediaUrl(origin, a.cover_image ?? undefined),
-    author: authorFromStrapi(origin, a.author),
+    coverImage: mediaUrl(a.cover_image ?? undefined),
+    author: authorFromStrapi(a.author),
     categories: cats,
     sections: sections.length > 0 ? sections : undefined,
     region: regionFromStrapi(a.region),
@@ -205,7 +196,7 @@ export function buildRegionalReviewItems(
         article: {
           title: "Материалы скоро",
           slug: region.slug,
-          coverImage: mediaUrl(origin, region.cover_image ?? undefined),
+          coverImage: mediaUrl(region.cover_image ?? undefined),
         },
       };
     }
