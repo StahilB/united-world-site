@@ -139,6 +139,28 @@ export function MobileMenu({ sections, isOpen, onClose }: MobileMenuProps) {
 
       <div className="flex-1 overflow-y-auto px-2 py-2">
         <nav aria-label="Разделы сайта">
+          <Link
+            href="/search"
+            onClick={onClose}
+            className="mb-1 flex items-center gap-3 border-b border-neutral-200 py-3 pl-1 font-sans text-sm font-semibold uppercase tracking-wide text-primary transition-colors hover:text-accent"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0 text-accent"
+              aria-hidden
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.2-4.2" />
+            </svg>
+            Поиск
+          </Link>
           {sections.map((root) => (
             <MobileSectionNode
               key={root.id}

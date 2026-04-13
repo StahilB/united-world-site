@@ -12,6 +12,7 @@ import {
   VkIcon,
   YouTubeIcon,
 } from "@/components/ui/SocialIcons";
+import { HeaderSearch } from "./HeaderSearch";
 import { MobileMenu } from "./MobileMenu";
 
 /** Сжать шапку при scrollY > 150 */
@@ -427,7 +428,8 @@ export function Header({ sections }: HeaderProps) {
               ))}
             </nav>
 
-            <div className="justify-self-end md:min-w-0">
+            <div className="flex justify-self-end items-center gap-1 md:min-w-0 md:gap-2">
+              <HeaderSearch />
               <button
                 type="button"
                 className="flex h-10 w-10 shrink-0 items-center justify-center text-primary md:hidden"

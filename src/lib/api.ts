@@ -769,3 +769,111 @@ export async function getArticlesBySection(
     { next: { revalidate: REVALIDATE_SECTIONS } },
   );
 }
+
+/** Параметры поиска статей (список /api/search и страница /search). */
+export type SearchArticlesParams = {
+  q?: string;
+  /** Несколько значений `format` (enum в Strapi). */
+  formats?: string[];
+  region?: string;
+  /** Категория / тематика (slug). */
+  category?: string;
+  author?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+function normalizeDayStart(isoDate: string): string {
+  const t = isoDate.trim();
+  if (t.includes("T")) return t;
+  return `${t}T00:00:00.000Z`;
+}
+
+function normalizeDayEnd(isoDate: string): string {
+  const t = isoDate.trim();
+  if (t.includes("T")) return t;
+  return `${t}T23:59:59.999Z`;
+}
+
+/**
+ * Поиск статей в Strapi (title + фильтры). Без кэша Next — для API route и актуальных результатов.
+ */
+export async function searchArticles(
+  params: SearchArticlesParams,
+): Promise<StrapiCollectionResponse<StrapiArticle>> {
+  const {
+    q,
+    formats = [],
+    region,
+    category,
+    author,
+    dateFrom,
+    dateTo,
+    page = 1,
+    pageSize = 12,
+  } = params;
+
+  const qTrim = q?.trim() ?? "";
+  const hasQ = qTrim.length > 0;
+  const hasFmt = formats.length > 0;
+  const hasOther =
+    Boolean(region) ||
+    Boolean(category) ||
+    Boolean(author) ||
+    Boolean(dateFrom) ||
+    Boolean(dateTo);
+
+  if (!hasQ && !hasFmt && !hasOther) {
+    return {
+      data: [],
+      meta: {
+        pagination: {
+          page: 1,
+          pageSize,
+          pageCount: 0,
+          total: 0,
+        },
+      },
+    };
+  }
+
+  const search = new URLSearchParams();
+  search.set("pagination[page]", String(page));
+  search.set("pagination[pageSize]", String(pageSize));
+  appendArticleListPopulate(search);
+  search.set("sort[0]", "publication_date:desc");
+
+  if (hasQ) {
+    search.set("filters[title][$containsi]", qTrim);
+  }
+
+  if (formats.length === 1) {
+    search.set("filters[format][$eq]", formats[0]);
+  } else if (formats.length > 1) {
+    formats.forEach((f, i) => {
+      search.set(`filters[format][$in][${i}]`, f);
+    });
+  }
+
+  if (region) {
+    search.set("filters[region][slug][$eq]", region);
+  }
+  if (category) {
+    search.set("filters[categories][slug][$eq]", category);
+  }
+  if (author) {
+    search.set("filters[author][slug][$eq]", author);
+  }
+  if (dateFrom) {
+    search.set("filters[publication_date][$gte]", normalizeDayStart(dateFrom));
+  }
+  if (dateTo) {
+    search.set("filters[publication_date][$lte]", normalizeDayEnd(dateTo));
+  }
+
+  return strapiFetchNoStore<StrapiCollectionResponse<StrapiArticle>>(
+    `/api/articles?${search.toString()}`,
+  );
+}
