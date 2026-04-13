@@ -111,11 +111,11 @@ async function strapiFetchNoStore<T>(path: string, init?: RequestInit): Promise<
 
 /** Populate relations for article list cards (matches spec). */
 function appendArticleListPopulate(params: URLSearchParams): void {
-  params.set("populate[0]", "cover_image");
-  params.set("populate[1]", "author");
-  params.set("populate[2]", "categories");
-  params.set("populate[3]", "region");
-  params.set("populate[4]", "sections");
+  params.set("populate[cover_image]", "true");
+  params.set("populate[author][populate][0]", "photo");
+  params.set("populate[categories]", "true");
+  params.set("populate[region]", "true");
+  params.set("populate[sections]", "true");
 }
 
 export type GetArticlesParams = {
@@ -547,10 +547,26 @@ export async function getGlobalReview(): Promise<
 export async function getStaticPages(): Promise<
   StrapiSingleResponse<StrapiStaticPage>
 > {
-  return strapiFetch<StrapiSingleResponse<StrapiStaticPage>>(
-    "/api/static-page?populate=*",
-    { next: { revalidate: 300 } },
-  );
+  try {
+    const raw = await strapiFetch<Record<string, unknown>>(
+      "/api/static-page?populate=*",
+      { next: { revalidate: 60 } },
+    );
+    if (raw && typeof raw === "object" && "data" in raw && raw.data) {
+      return raw as unknown as StrapiSingleResponse<StrapiStaticPage>;
+    }
+    if (
+      raw &&
+      typeof raw === "object" &&
+      ("about_html" in raw || "cooperation_html" in raw)
+    ) {
+      return { data: raw as unknown as StrapiStaticPage };
+    }
+    return { data: null };
+  } catch (err) {
+    console.error("[getStaticPages] Error:", err);
+    return { data: null };
+  }
 }
 
 /**

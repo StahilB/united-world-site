@@ -13,8 +13,8 @@ export default async function CooperationPage() {
   try {
     const res = await getStaticPages();
     html = res.data?.cooperation_html ?? "";
-  } catch {
-    // ignore
+  } catch (err) {
+    console.error("[CooperationPage] Failed to load static pages:", err);
   }
 
   return (

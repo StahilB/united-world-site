@@ -13,8 +13,8 @@ export default async function SupportPage() {
   try {
     const res = await getStaticPages();
     html = res.data?.support_html ?? "";
-  } catch {
-    // ignore
+  } catch (err) {
+    console.error("[SupportPage] Failed to load static pages:", err);
   }
 
   return (

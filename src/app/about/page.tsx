@@ -13,8 +13,8 @@ export default async function AboutPage() {
   try {
     const res = await getStaticPages();
     html = res.data?.about_html ?? "";
-  } catch {
-    // Strapi недоступен — покажем заглушку из StaticPageContent
+  } catch (err) {
+    console.error("[AboutPage] Failed to load static pages:", err);
   }
 
   return (

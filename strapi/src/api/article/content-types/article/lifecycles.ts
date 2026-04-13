@@ -356,7 +356,17 @@ async function applySectionUnion(
     indexes,
   });
 
-  const merged = [...new Set([...manual, ...automatic])];
+  let merged: number[];
+  if (manualFromPayload !== null && opts.isUpdate) {
+    const existingSet = new Set(manualFromExisting);
+    const payloadSet = new Set(manualFromPayload);
+    const removedByUser = [...existingSet].filter((id) => !payloadSet.has(id));
+    const removedSet = new Set(removedByUser);
+    const filteredAutomatic = automatic.filter((id) => !removedSet.has(id));
+    merged = [...new Set([...manual, ...filteredAutomatic])];
+  } else {
+    merged = [...new Set([...manual, ...automatic])];
+  }
   data.sections = merged;
 }
 

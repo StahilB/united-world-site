@@ -13,8 +13,8 @@ export default async function ContactsPage() {
   try {
     const res = await getStaticPages();
     html = res.data?.contacts_html ?? "";
-  } catch {
-    // ignore
+  } catch (err) {
+    console.error("[ContactsPage] Failed to load static pages:", err);
   }
 
   return (
