@@ -720,16 +720,29 @@ export async function getSectionBySlug(
   return row;
 }
 
+export type GetArticlesBySectionOptions = {
+  /** Пересечение: статья должна быть и в текущей секции, и в этой (другая ветка рубрик). */
+  filterSectionSlug?: string;
+};
+
 /**
  * Статьи раздела (many-to-many `sections`) с пагинацией.
+ * При `filterSectionSlug` — дополнительное условие через $and (обе секции у статьи).
  */
 export async function getArticlesBySection(
   sectionSlug: string,
   page: number,
   pageSize: number,
+  options?: GetArticlesBySectionOptions,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const search = new URLSearchParams();
-  search.set("filters[sections][slug][$eq]", sectionSlug);
+  const filterExtra = options?.filterSectionSlug?.trim();
+  if (filterExtra) {
+    search.set("filters[$and][0][sections][slug][$eq]", sectionSlug);
+    search.set("filters[$and][1][sections][slug][$eq]", filterExtra);
+  } else {
+    search.set("filters[sections][slug][$eq]", sectionSlug);
+  }
   search.set("pagination[page]", String(page));
   search.set("pagination[pageSize]", String(pageSize));
   appendArticleListPopulate(search);

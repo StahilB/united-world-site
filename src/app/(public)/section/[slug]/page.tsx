@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArticleRubricGrid } from "@/components/rubric/ArticleRubricGrid";
+import { SectionRubricFilters } from "@/components/rubric/SectionRubricFilters";
 import {
   findSectionPath,
   getArticlesBySection,
   getSections,
   getSectionBySlug,
 } from "@/lib/api";
+import {
+  getRubricFilterItems,
+  getRubricSidebarMode,
+  isValidFilterSlug,
+} from "@/lib/rubric-filters";
 import {
   getSectionHref,
   SECTION_SLUGS_REDIRECT_TO_COLUMNS,
@@ -17,9 +23,17 @@ import type { Article } from "@/lib/types";
 
 const PAGE_SIZE = 12;
 
+function articlesQuery(page: number, filter?: string): string {
+  const p = new URLSearchParams();
+  if (page > 1) p.set("page", String(page));
+  if (filter) p.set("filter", filter);
+  const s = p.toString();
+  return s ? `?${s}` : "";
+}
+
 type SectionPageProps = {
   params: { slug: string };
-  searchParams: { page?: string };
+  searchParams: { page?: string; filter?: string };
 };
 
 export default async function SectionPage({
@@ -33,6 +47,7 @@ export default async function SectionPage({
   }
 
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const rawFilter = searchParams.filter?.trim();
 
   const strapiSection = await getSectionBySlug(slug);
   if (!strapiSection) {
@@ -48,14 +63,33 @@ export default async function SectionPage({
   const current = path[path.length - 1];
   const origin = getStrapiUrl();
 
-  const articlesRes = await getArticlesBySection(slug, page, PAGE_SIZE).catch(
-    () => null,
-  );
+  const sidebarMode = getRubricSidebarMode(path);
+  const filterItems = sidebarMode ? getRubricFilterItems(tree, sidebarMode) : [];
+  const filterLabel = sidebarMode === "filter-by-theme" ? "Тема" : "Регион";
+  const activeFilter =
+    sidebarMode && rawFilter && isValidFilterSlug(rawFilter, filterItems)
+      ? rawFilter
+      : undefined;
+
+  if (
+    rawFilter &&
+    sidebarMode &&
+    filterItems.length > 0 &&
+    !isValidFilterSlug(rawFilter, filterItems)
+  ) {
+    redirect(`/section/${slug}${articlesQuery(page, undefined)}`);
+  }
+
+  const articlesRes = await getArticlesBySection(slug, page, PAGE_SIZE, {
+    filterSectionSlug: activeFilter,
+  }).catch(() => null);
 
   const articles: Article[] =
     articlesRes?.data?.map((a) => mapStrapiArticleToArticle(a, origin)) ?? [];
 
   const pageCount = articlesRes?.meta?.pagination?.pageCount ?? 1;
+
+  const showSidebar = Boolean(sidebarMode && filterItems.length > 0);
 
   const paginationNav =
     pageCount > 1 ? (
@@ -65,11 +99,7 @@ export default async function SectionPage({
       >
         {page > 1 ? (
           <Link
-            href={
-              page === 2
-                ? `/section/${slug}`
-                : `/section/${slug}?page=${page - 1}`
-            }
+            href={`/section/${slug}${articlesQuery(page - 1, activeFilter)}`}
             className="font-semibold text-primary transition-colors hover:text-accent"
           >
             Назад
@@ -80,7 +110,7 @@ export default async function SectionPage({
         </span>
         {page < pageCount ? (
           <Link
-            href={`/section/${slug}?page=${page + 1}`}
+            href={`/section/${slug}${articlesQuery(page + 1, activeFilter)}`}
             className="font-semibold text-primary transition-colors hover:text-accent"
           >
             Вперёд
@@ -88,6 +118,43 @@ export default async function SectionPage({
         ) : null}
       </nav>
     ) : null;
+
+  const subsectionsBlock =
+    current.children.length > 0 ? (
+      <section className="mt-10" aria-label="Подразделы">
+        <h2 className="mb-4 font-heading text-xl font-normal text-primary md:text-2xl">
+          Подразделы
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {current.children.map((ch) => (
+            <Link
+              key={ch.id}
+              href={getSectionHref(ch.slug)}
+              className="rounded border border-neutral-200 bg-surface px-4 py-3 font-sans text-sm text-primary shadow-sm transition-colors hover:border-accent hover:text-accent"
+            >
+              {ch.name}
+            </Link>
+          ))}
+        </div>
+      </section>
+    ) : null;
+
+  const materialsBlock = (
+    <>
+      <h2 className="mt-12 font-heading text-2xl font-normal text-primary md:text-[1.65rem]">
+        Материалы
+      </h2>
+      <div className="mt-6">
+        <ArticleRubricGrid
+          embedded
+          hideHeading
+          articles={articles}
+          emptyMessage="В этом разделе пока нет материалов"
+        />
+      </div>
+      {paginationNav}
+    </>
+  );
 
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
@@ -124,37 +191,25 @@ export default async function SectionPage({
           </span>
         </nav>
 
-        {current.children.length > 0 ? (
-          <section className="mt-10" aria-label="Подразделы">
-            <h2 className="mb-4 font-heading text-xl font-normal text-primary md:text-2xl">
-              Подразделы
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {current.children.map((ch) => (
-                <Link
-                  key={ch.id}
-                  href={getSectionHref(ch.slug)}
-                  className="rounded border border-neutral-200 bg-surface px-4 py-3 font-sans text-sm text-primary shadow-sm transition-colors hover:border-accent hover:text-accent"
-                >
-                  {ch.name}
-                </Link>
-              ))}
+        {showSidebar && sidebarMode ? (
+          <div className="mt-8 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 lg:items-start">
+            <SectionRubricFilters
+              sectionSlug={slug}
+              label={filterLabel}
+              items={filterItems}
+              selectedFilter={activeFilter}
+            />
+            <div className="min-w-0">
+              {subsectionsBlock}
+              {materialsBlock}
             </div>
-          </section>
-        ) : null}
-
-        <h2 className="mt-12 font-heading text-2xl font-normal text-primary md:text-[1.65rem]">
-          Материалы
-        </h2>
-        <div className="mt-6">
-          <ArticleRubricGrid
-            embedded
-            hideHeading
-            articles={articles}
-            emptyMessage="В этом разделе пока нет материалов"
-          />
-        </div>
-        {paginationNav}
+          </div>
+        ) : (
+          <>
+            {subsectionsBlock}
+            {materialsBlock}
+          </>
+        )}
       </div>
     </main>
   );
