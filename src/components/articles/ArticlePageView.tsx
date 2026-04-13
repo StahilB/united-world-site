@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AuthorAvatar } from "@/components/author/AuthorAvatar";
+import { SOCIAL_URLS } from "@/components/ui/SocialIcons";
 import type { Article } from "@/lib/types";
 import type { TocHeading } from "@/lib/article-content";
 import { ArticleTableOfContents } from "./ArticleTableOfContents";
@@ -278,7 +279,7 @@ export function ArticlePageView({
                   Краткие выжимки материалов и анонсы — без лишнего шума.
                 </p>
                 <a
-                  href="https://t.me/"
+                  href={SOCIAL_URLS.telegram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 inline-flex min-h-10 items-center justify-center bg-[#229ED9] px-4 font-sans text-[12px] font-semibold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
