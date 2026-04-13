@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { AuthorAvatar } from "@/components/author/AuthorAvatar";
 import type { Article } from "@/lib/types";
 import type { TocHeading } from "@/lib/article-content";
 import { ArticleTableOfContents } from "./ArticleTableOfContents";
@@ -151,20 +152,16 @@ export function ArticlePageView({
 
         {/* Автор (шапка) */}
         <div className="mt-6 flex items-center gap-3">
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white">
-            <Image
-              src={article.author.avatarUrl}
-              alt=""
-              width={40}
-              height={40}
-              className="h-full w-full object-cover"
-              unoptimized
-            />
-          </div>
+          <AuthorAvatar
+            name={article.author.name}
+            slug={article.author.slug}
+            avatarUrl={article.author.avatarUrl}
+            size={40}
+          />
           <div className="font-sans text-[14px]">
             <span className="text-muted">Автор: </span>
             <Link
-              href="/team"
+              href={`/author/${article.author.slug}`}
               className="font-medium text-primary underline decoration-primary/20 underline-offset-2 hover:text-accent"
             >
               {article.author.name}
@@ -201,19 +198,15 @@ export function ArticlePageView({
                 Об авторе
               </h2>
               <div className="flex gap-4">
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-white">
-                  <Image
-                    src={article.author.avatarUrl}
-                    alt=""
-                    width={64}
-                    height={64}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                </div>
+                <AuthorAvatar
+                  name={article.author.name}
+                  slug={article.author.slug}
+                  avatarUrl={article.author.avatarUrl}
+                  size={64}
+                />
                 <div>
                   <Link
-                    href="/team"
+                    href={`/author/${article.author.slug}`}
                     className="font-heading text-xl text-primary hover:text-accent"
                   >
                     {article.author.name}

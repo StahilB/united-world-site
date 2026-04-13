@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AuthorAvatar } from "@/components/author/AuthorAvatar";
 import {
   getArticlesByAuthor,
   getArticlesByAuthorColumns,
@@ -20,24 +21,6 @@ function mediaUrl(origin: string, media: StrapiMedia | null | undefined): string
   const u = media.url;
   if (u.startsWith("http://") || u.startsWith("https://")) return u;
   return `${origin}${u.startsWith("/") ? "" : "/"}${u}`;
-}
-
-function initials(name: string): string {
-  const parts = String(name || "")
-    .trim()
-    .split(/\s+/g)
-    .filter(Boolean);
-  const a = parts[0]?.[0] ?? "";
-  const b = parts[1]?.[0] ?? "";
-  return (a + b).toUpperCase() || "A";
-}
-
-function hueFromString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i += 1) {
-    h = (h * 31 + s.charCodeAt(i)) % 360;
-  }
-  return h;
 }
 
 function ArticleCard({ article }: { article: Article }) {
@@ -104,31 +87,18 @@ export default async function AuthorPage({
   }
 
   const photo = mediaUrl(origin, author.photo ?? undefined);
-  const bgHue = hueFromString(author.slug || author.name || "");
+  const avatarUrl = photo ?? "";
 
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <section className="flex flex-col gap-5 border-b border-neutral-200 pb-10 md:flex-row md:items-center md:gap-8">
-          {photo ? (
-            <div className="relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-full bg-surface">
-              <Image
-                src={photo}
-                alt={author.name}
-                fill
-                className="object-cover"
-                sizes="120px"
-              />
-            </div>
-          ) : (
-            <div
-              className="flex h-[120px] w-[120px] shrink-0 items-center justify-center rounded-full text-2xl font-semibold text-white"
-              style={{ backgroundColor: `hsl(${bgHue} 45% 40%)` }}
-              aria-hidden
-            >
-              {initials(author.name)}
-            </div>
-          )}
+          <AuthorAvatar
+            name={author.name}
+            slug={author.slug || author.name || ""}
+            avatarUrl={avatarUrl}
+            size={120}
+          />
 
           <div className="min-w-0">
             <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl">
