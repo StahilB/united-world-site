@@ -681,6 +681,63 @@ export interface ApiSectionSection extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiStaticPageStaticPage extends Struct.SingleTypeSchema {
+  collectionName: 'static_pages';
+  info: {
+    description: '\u0421\u043E\u0434\u0435\u0440\u0436\u0438\u043C\u043E\u0435 \u0441\u0442\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0445 \u0441\u0442\u0440\u0430\u043D\u0438\u0446 \u0441\u0430\u0439\u0442\u0430 (\u041E \u0446\u0435\u043D\u0442\u0440\u0435, \u041A\u043E\u043C\u0430\u043D\u0434\u0430 \u0438 \u0442.\u0434.)';
+    displayName: 'Static Pages';
+    pluralName: 'static-pages';
+    singularName: 'static-page';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    about_html: Schema.Attribute.RichText &
+      Schema.Attribute.CustomField<
+        'plugin::ckeditor5.CKEditor',
+        {
+          preset: 'defaultHtml';
+        }
+      >;
+    contacts_html: Schema.Attribute.RichText &
+      Schema.Attribute.CustomField<
+        'plugin::ckeditor5.CKEditor',
+        {
+          preset: 'defaultHtml';
+        }
+      >;
+    cooperation_html: Schema.Attribute.RichText &
+      Schema.Attribute.CustomField<
+        'plugin::ckeditor5.CKEditor',
+        {
+          preset: 'defaultHtml';
+        }
+      >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::static-page.static-page'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    support_html: Schema.Attribute.RichText &
+      Schema.Attribute.CustomField<
+        'plugin::ckeditor5.CKEditor',
+        {
+          preset: 'defaultHtml';
+        }
+      >;
+    team_members: Schema.Attribute.JSON;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -1198,6 +1255,7 @@ declare module '@strapi/strapi' {
       'api::global-review.global-review': ApiGlobalReviewGlobalReview;
       'api::region.region': ApiRegionRegion;
       'api::section.section': ApiSectionSection;
+      'api::static-page.static-page': ApiStaticPageStaticPage;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

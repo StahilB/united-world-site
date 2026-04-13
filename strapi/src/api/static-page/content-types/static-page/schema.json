@@ -1,0 +1,46 @@
+{
+  "kind": "singleType",
+  "collectionName": "static_pages",
+  "info": {
+    "singularName": "static-page",
+    "pluralName": "static-pages",
+    "displayName": "Static Pages",
+    "description": "Содержимое статических страниц сайта (О центре, Команда и т.д.)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "about_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
+    "cooperation_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
+    "contacts_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
+    "support_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
+    "team_members": {
+      "type": "json"
+    }
+  }
+}

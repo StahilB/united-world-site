@@ -7,6 +7,7 @@ import type {
   StrapiRegion,
   StrapiSection,
   StrapiSingleResponse,
+  StrapiStaticPage,
 } from "./strapi-types";
 
 export type Section = {
@@ -30,6 +31,8 @@ export type {
   StrapiRegion,
   StrapiSection,
   StrapiSingleResponse,
+  StrapiStaticPage,
+  StrapiStaticTeamMember,
 } from "./strapi-types";
 
 const REVALIDATE = 60;
@@ -537,6 +540,16 @@ export async function getGlobalReview(): Promise<
   search.set("populate[featured_article][populate]", "*");
   return strapiFetch<StrapiSingleResponse<StrapiGlobalReview>>(
     `/api/global-review?${search.toString()}`,
+  );
+}
+
+/** Singleton: HTML + team JSON for static routes (/about, /team, …). */
+export async function getStaticPages(): Promise<
+  StrapiSingleResponse<StrapiStaticPage>
+> {
+  return strapiFetch<StrapiSingleResponse<StrapiStaticPage>>(
+    "/api/static-page?populate=*",
+    { next: { revalidate: 300 } },
   );
 }
 

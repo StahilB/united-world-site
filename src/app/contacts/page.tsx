@@ -3,18 +3,18 @@ import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
 
 export const metadata: Metadata = {
-  title: "Об организации — АНО «Единый Мир»",
+  title: "Контакты — АНО «Единый Мир»",
   description:
-    "АНО «Единый Мир» — некоммерческая организация, содействующая общественной дипломатии и международному диалогу.",
+    "Адрес, телефон, e-mail и социальные сети АНО «Единый Мир».",
 };
 
-export default async function AboutPage() {
+export default async function ContactsPage() {
   let html = "";
   try {
     const res = await getStaticPages();
-    html = res.data?.about_html ?? "";
+    html = res.data?.contacts_html ?? "";
   } catch {
-    // Strapi недоступен — покажем заглушку из StaticPageContent
+    // ignore
   }
 
   return (

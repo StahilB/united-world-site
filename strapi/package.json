@@ -15,6 +15,7 @@
     "upgrade:dry": "npx @strapi/upgrade latest --dry",
     "cleanup-categories": "node ./scripts/cleanup-categories.js",
     "seed-sections": "node ./scripts/seed-sections.js",
+    "seed-static-pages": "node ./scripts/seed-static-pages.js",
     "fix-article-categories": "node ./scripts/fix-article-categories.js",
     "reassign-sections": "node ./scripts/reassign-sections.js",
     "migrate-blocks-to-html": "node ./scripts/migrate-blocks-to-html.js"

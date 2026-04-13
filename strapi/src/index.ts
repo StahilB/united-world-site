@@ -13,6 +13,7 @@ const PUBLIC_ACTIONS = [
   'api::section.section.find',
   'api::section.section.findOne',
   'api::global-review.global-review.find',
+  'api::static-page.static-page.find',
   'plugin::upload.content-api.find',
   'plugin::upload.content-api.findOne',
 ] as const;

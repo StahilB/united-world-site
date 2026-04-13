@@ -155,3 +155,27 @@ export interface StrapiGlobalReview {
   updatedAt?: string;
   publishedAt?: string | null;
 }
+
+/** Team block on /team (JSON field on static-page). */
+export interface StrapiStaticTeamMember {
+  name: string;
+  role?: string;
+  directions?: string;
+  bio?: string;
+  photo?: string | null;
+  section: "team" | "expert";
+}
+
+/** Single type: editable static pages (About, Team JSON, Cooperation, etc.). */
+export interface StrapiStaticPage {
+  id?: number;
+  documentId?: string;
+  about_html?: string | null;
+  cooperation_html?: string | null;
+  contacts_html?: string | null;
+  support_html?: string | null;
+  team_members?: StrapiStaticTeamMember[] | null;
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string | null;
+}
