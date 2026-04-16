@@ -209,8 +209,18 @@ export async function getArticleBySlug(
 ): Promise<StrapiArticle | null> {
   const search = new URLSearchParams();
   search.set("filters[slug][$eq]", slug);
-  search.set("populate", "*");
   search.set("pagination[pageSize]", "1");
+
+  // Deep populate — author.photo + other relations used on article page
+  search.set("populate[cover_image]", "true");
+  search.set("populate[author][fields][0]", "id");
+  search.set("populate[author][fields][1]", "name");
+  search.set("populate[author][fields][2]", "slug");
+  search.set("populate[author][fields][3]", "bio");
+  search.set("populate[author][populate][photo][fields][0]", "url");
+  search.set("populate[categories]", "true");
+  search.set("populate[region]", "true");
+  search.set("populate[sections]", "true");
 
   const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
     `/api/articles?${search.toString()}`,
