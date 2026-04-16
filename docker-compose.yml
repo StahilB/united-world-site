@@ -56,7 +56,7 @@ services:
 
   telegram-bot:
     build: ./telegram-bot
-    restart: always
+    restart: on-failure:5
     depends_on:
       - strapi
     environment:

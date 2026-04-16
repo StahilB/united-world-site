@@ -431,12 +431,23 @@ bot.catch((err, ctx) => {
   console.error("bot error", err);
 });
 
-console.log(
-  `[boot] about to launch, BOT_TOKEN=${BOT_TOKEN.slice(0, 10)}..., CHANNEL_ID=${CHANNEL_ID}`,
-);
+async function startBot() {
+  console.log(
+    `[boot] about to launch, BOT_TOKEN=${BOT_TOKEN.slice(0, 10)}..., CHANNEL_ID=${CHANNEL_ID}`,
+  );
 
-bot
-  .launch({
+  // Clear webhook / pending updates before start
+  try {
+    await bot.telegram.deleteWebhook({ drop_pending_updates: true });
+    console.log("[boot] webhook cleared");
+  } catch (e) {
+    console.error("[boot] deleteWebhook failed (non-fatal):", e?.message || e);
+  }
+
+  // Small pause for Telegram to release previous getUpdates session
+  await new Promise((r) => setTimeout(r, 3000));
+
+  await bot.launch({
     allowedUpdates: [
       "message",
       "edited_message",
@@ -444,16 +455,17 @@ bot
       "edited_channel_post",
     ],
     dropPendingUpdates: true,
-  })
-  .then(() => {
-    console.log("[boot] Telegram bot running ✅");
-    console.log(`[boot] Listening for chat_id=${CHANNEL_ID}`);
-  })
-  .catch((e) => {
-    console.error("[boot] launch failed:", e?.message || e);
-    console.error(e?.stack || "");
-    process.exit(1);
   });
+
+  console.log("[boot] Telegram bot running ✅");
+  console.log(`[boot] Listening for chat_id=${CHANNEL_ID}`);
+}
+
+startBot().catch((e) => {
+  console.error("[boot] launch failed:", e?.message || e);
+  console.error(e?.stack || "");
+  setTimeout(() => process.exit(1), 1000);
+});
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
