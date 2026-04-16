@@ -8,7 +8,7 @@ const { SocksProxyAgent } = require("socks-proxy-agent");
 const agent = new SocksProxyAgent("socks5://127.0.0.1:10808");
 
 const { Telegraf } = require("telegraf");
-const { parseMessage } = require("./parser");
+const { parseFirstMessage, telegramToHtml } = require("./parser");
 const { createStrapiClient } = require("./strapi-client");
 const { slugFromTitle, readingTimeMinutes } = require("./utils");
 
@@ -31,6 +31,9 @@ const strapi = createStrapiClient({
   baseUrl: STRAPI_URL,
   token: STRAPI_TOKEN,
 });
+
+const pendingArticles = new Map();
+const PUBLISH_AFTER_MS = 5 * 60 * 1000;
 
 function siteBase() {
   return SITE_URL.replace(/\/$/, "");
@@ -102,6 +105,158 @@ async function createArticleWithUniqueSlug(title, createFn) {
   throw lastErr || new Error("Could not allocate unique slug");
 }
 
+function stripHtml(html) {
+  return String(html || "").replace(/<[^>]+>/g, "");
+}
+
+function pickPhotoFileId(msg) {
+  if (!msg?.photo || !Array.isArray(msg.photo) || msg.photo.length === 0) {
+    return null;
+  }
+  const p = msg.photo[msg.photo.length - 1];
+  return p?.file_id || null;
+}
+
+function resetTimer(chatId) {
+  const p = pendingArticles.get(chatId);
+  if (!p) return;
+  if (p.timer) clearTimeout(p.timer);
+  p.timer = setTimeout(() => {
+    finalizePublish(chatId, { reason: "timeout" }).catch((e) => {
+      console.error("auto publish failed:", e);
+    });
+  }, PUBLISH_AFTER_MS);
+}
+
+async function downloadTelegramPhoto(bot, fileId) {
+  if (!fileId) return { buffer: null, filename: null };
+  const link = await bot.telegram.getFileLink(fileId);
+  const res = await fetch(link.href);
+  if (!res.ok) throw new Error(`Download ${res.status}`);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  const p = link.pathname || "";
+  const ext = p.includes(".") ? p.split(".").pop() : "jpg";
+  const safeExt = ext && /^[a-z0-9]+$/i.test(ext) ? ext : "jpg";
+  return { buffer, filename: `cover.${safeExt}` };
+}
+
+async function finalizePublish(chatId, { reason, replyToMessageId } = {}) {
+  const pending = pendingArticles.get(chatId);
+  if (!pending) {
+    if (replyToMessageId) {
+      await bot.telegram.sendMessage(chatId, "ℹ️ Нет незаконченной статьи.", {
+        reply_to_message_id: replyToMessageId,
+      });
+    }
+    return;
+  }
+
+  // Stop timer and remove first, so we don't double-publish.
+  if (pending.timer) clearTimeout(pending.timer);
+  pendingArticles.delete(chatId);
+
+  try {
+    const bodyText = pending.bodyParts.join("\n\n").trim();
+    const htmlBody = telegramToHtml(bodyText);
+    const plainText = stripHtml(htmlBody);
+    const excerpt =
+      pending.excerptOverride ||
+      plainText.replace(/\s+/g, " ").trim().slice(0, 280);
+    const readingTime = readingTimeMinutes(plainText);
+
+    let categoryId = null;
+    let regionId = null;
+
+    if (pending.categorySlug) {
+      const c = await strapi.findCategoryBySlug(pending.categorySlug);
+      if (c) categoryId = c.id;
+      else {
+        console.warn(
+          `Category not found for slug="${pending.categorySlug}", publishing without category`,
+        );
+      }
+    }
+
+    if (pending.regionSlug) {
+      const r = await strapi.findRegionBySlug(pending.regionSlug);
+      if (r) regionId = r.id;
+      else {
+        console.warn(
+          `Region not found for slug="${pending.regionSlug}", publishing without region`,
+        );
+      }
+    }
+
+    const authorId = pending.authorName
+      ? await ensureAuthorId(pending.authorName)
+      : null;
+
+    let coverImageId = null;
+    if (pending.photoFileId) {
+      try {
+        const { buffer, filename } = await downloadTelegramPhoto(
+          bot,
+          pending.photoFileId,
+        );
+        if (buffer) {
+          coverImageId = await strapi.uploadImage(buffer, filename || "cover.jpg");
+        }
+      } catch (e) {
+        console.error("Upload cover failed:", e);
+      }
+    }
+
+    const result = await createArticleWithUniqueSlug(pending.title, async (slug) =>
+      strapi.createArticle({
+        title: pending.title,
+        slug,
+        htmlBody,
+        excerpt,
+        format: pending.format || "анализ",
+        publicationDate: new Date().toISOString(),
+        readingTime,
+        authorId,
+        categoryId,
+        regionId,
+        coverImageId,
+      }),
+    );
+
+    const url = articleUrl(result.slug);
+    const note =
+      reason === "timeout"
+        ? `✅ Опубликовано (авто): ${url}`
+        : `✅ Опубликовано: ${url}`;
+    const replyId = replyToMessageId || pending.lastMessageId;
+    await bot.telegram.sendMessage(chatId, note, {
+      reply_to_message_id: replyId,
+      disable_web_page_preview: false,
+    });
+  } catch (e) {
+    console.error(e);
+    const desc = e.message || String(e);
+    const replyId = replyToMessageId || pending.lastMessageId;
+    await bot.telegram.sendMessage(chatId, `❌ Ошибка: ${desc}`, {
+      reply_to_message_id: replyId,
+    });
+  }
+}
+
+function formatHelpText() {
+  return [
+    "Шаблон первого сообщения статьи:",
+    "",
+    "Заголовок статьи",
+    "#категория #регион #формат",
+    "Автор: Имя Фамилия",
+    "",
+    "Первый абзац текста…",
+    "",
+    "Дальше можно слать продолжение отдельными сообщениями.",
+    "Команды: /publish /cancel /status /recent",
+  ].join("\n");
+}
+
 /**
  * @param {import('telegraf').Context} ctx
  */
@@ -117,111 +272,102 @@ async function handleChannelPost(ctx) {
 
   const text = msg.caption || msg.text;
   if (!text || !String(text).trim()) {
+    // Continuation messages must have text; photos without caption are ignored.
+    return;
+  }
+
+  const trimmed = String(text).trim();
+  const lower = trimmed.toLowerCase();
+
+  // Commands
+  if (lower === "/publish") {
+    await finalizePublish(chatId, { reason: "command", replyToMessageId: msg.message_id });
+    return;
+  }
+  if (lower === "/cancel") {
+    const p = pendingArticles.get(chatId);
+    if (p?.timer) clearTimeout(p.timer);
+    pendingArticles.delete(chatId);
+    await replyStatus(ctx, "✅ Отменено. Буфер очищен.");
+    return;
+  }
+  if (lower === "/status") {
+    const p = pendingArticles.get(chatId);
+    if (!p) {
+      await replyStatus(ctx, "ℹ️ Нет незаконченной статьи.");
+      return;
+    }
+    const chars = p.bodyParts.join("\n\n").length;
+    const hasPhoto = p.photoFileId ? "да" : "нет";
+    const mins = Math.max(
+      0,
+      Math.ceil((PUBLISH_AFTER_MS - (Date.now() - p.lastActivityAt.getTime())) / 60000),
+    );
     await replyStatus(
       ctx,
-      "❌ Ошибка: нет текста (для фото нужна подпись с шаблоном)",
+      `📝 В работе: «${p.title}»\nСимволов: ${chars}\nФото: ${hasPhoto}\nАвтопубликация: ~${mins} мин`,
     );
     return;
   }
-
-  const parsed = parseMessage(text);
-  if (!parsed.ok) {
-    await replyStatus(ctx, `❌ Ошибка: ${parsed.error}`);
+  if (lower === "/format") {
+    await replyStatus(ctx, formatHelpText());
     return;
   }
-
-  let coverBuffer = null;
-  let coverName = "cover.jpg";
-  if (msg.photo && msg.photo.length) {
-    const p = msg.photo[msg.photo.length - 1];
+  if (lower === "/recent") {
     try {
-      const link = await ctx.telegram.getFileLink(p.file_id);
-      const res = await fetch(link.href);
-      if (!res.ok) throw new Error(`Download ${res.status}`);
-      coverBuffer = Buffer.from(await res.arrayBuffer());
-      const path = link.pathname || "";
-      const ext = path.includes(".") ? path.split(".").pop() : "jpg";
-      if (ext && /^[a-z0-9]+$/i.test(ext)) {
-        coverName = `cover.${ext}`;
+      const items = await strapi.getRecentArticles(5);
+      if (!items.length) {
+        await replyStatus(ctx, "ℹ️ Недавних статей не найдено.");
+        return;
       }
+      const lines = items.map((x, i) => `${i + 1}. ${x.title} — ${articleUrl(x.slug)}`);
+      await replyStatus(ctx, ["📰 Последние статьи:", ...lines].join("\n"));
     } catch (e) {
-      console.error("Photo download failed:", e);
+      await replyStatus(ctx, `❌ Ошибка: ${e.message || String(e)}`);
     }
+    return;
   }
 
-  try {
-    let categoryId = null;
-    let regionId = null;
+  const photoFileId = pickPhotoFileId(msg);
+  const pending = pendingArticles.get(chatId);
 
-    if (parsed.categorySlug) {
-      const c = await strapi.findCategoryBySlug(parsed.categorySlug);
-      if (c) {
-        categoryId = c.id;
-      } else {
-        console.warn(
-          `Category not found for slug="${parsed.categorySlug}", publishing without category`,
-        );
-      }
+  if (!pending) {
+    const parsed = parseFirstMessage(trimmed);
+    if (!parsed.ok) {
+      await replyStatus(ctx, `❌ Ошибка: ${parsed.error}\n\n${formatHelpText()}`);
+      return;
     }
 
-    if (parsed.regionSlug) {
-      const r = await strapi.findRegionBySlug(parsed.regionSlug);
-      if (r) {
-        regionId = r.id;
-      } else {
-        console.warn(
-          `Region not found for slug="${parsed.regionSlug}", publishing without region`,
-        );
-      }
-    }
-
-    const authorId = parsed.authorName
-      ? await ensureAuthorId(parsed.authorName)
-      : null;
-
-    const contentBlocks = strapi.markdownToBlocks(parsed.bodyMarkdown);
-    const readingTime = readingTimeMinutes(parsed.bodyMarkdown);
-
-    let excerpt = "";
-    const firstPara = contentBlocks.find((b) => b.type === "paragraph");
-    if (firstPara?.children?.length) {
-      excerpt = firstPara.children
-        .map((ch) => ch.text || "")
-        .join("")
-        .slice(0, 280);
-    }
-
-    let coverImageId = null;
-    if (coverBuffer) {
-      try {
-        coverImageId = await strapi.uploadImage(coverBuffer, coverName);
-      } catch (e) {
-        console.error("Upload cover failed:", e);
-      }
-    }
-
-    const result = await createArticleWithUniqueSlug(parsed.title, async (slug) =>
-      strapi.createArticle({
-        title: parsed.title,
-        slug,
-        contentBlocks,
-        excerpt,
-        format: parsed.format || "анализ",
-        authorId,
-        categoryId,
-        regionId,
-        coverImageId,
-        readingTime,
-      }),
+    const record = {
+      title: parsed.title,
+      categorySlug: parsed.categorySlug,
+      regionSlug: parsed.regionSlug,
+      format: parsed.format,
+      authorName: parsed.authorName,
+      bodyParts: [parsed.bodyText],
+      photoFileId: photoFileId || null,
+      timer: null,
+      startedAt: new Date(),
+      lastActivityAt: new Date(),
+      lastMessageId: msg.message_id,
+    };
+    pendingArticles.set(chatId, record);
+    resetTimer(chatId);
+    await replyStatus(
+      ctx,
+      `📝 Начал собирать статью «${record.title}». Отправляйте продолжение или /publish для публикации.`,
     );
-
-    const url = articleUrl(result.slug);
-    await replyStatus(ctx, `✅ Опубликовано: ${url}`);
-  } catch (e) {
-    console.error(e);
-    const desc = e.message || String(e);
-    await replyStatus(ctx, `❌ Ошибка: ${desc}`);
+    return;
   }
+
+  // Continuation
+  pending.bodyParts.push(trimmed);
+  pending.lastActivityAt = new Date();
+  pending.lastMessageId = msg.message_id;
+  if (!pending.photoFileId && photoFileId) {
+    pending.photoFileId = photoFileId;
+  }
+  resetTimer(chatId);
 }
 
 async function replyStatus(ctx, messageText) {

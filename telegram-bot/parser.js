@@ -1,15 +1,14 @@
 /**
- * Parse structured channel message into title, hashtags, body, author line.
+ * Parse Telegram channel messages.
  *
- * Expected layout:
- * ---
- * Title line
- * #category_slug #region_slug #format
- * ---
- * Markdown body
- * ---
- * Автор: Name
- * ---
+ * New flow (long articles):
+ * - First message:
+ *   Title
+ *   #category #region #format
+ *   Автор: Имя Фамилия
+ *
+ *   Body...
+ * - Continuations are plain text; bot concatenates them.
  */
 
 const FORMAT_ENUM = new Set(["анализ", "мнение", "интервью", "колонка", "обзор"]);
@@ -49,6 +48,7 @@ function normalizeFormatSlug(slug) {
 }
 
 /**
+ * Parse the first message of an article chain.
  * @param {string} raw
  * @returns {{
  *   ok: true,
@@ -56,47 +56,27 @@ function normalizeFormatSlug(slug) {
  *   categorySlug: string | null,
  *   regionSlug: string | null,
  *   format: string | null,
- *   bodyMarkdown: string,
  *   authorName: string | null,
+ *   bodyText: string,
  * } | { ok: false, error: string }}
  */
-function parseMessage(raw) {
+function parseFirstMessage(raw) {
   const text = typeof raw === "string" ? raw.trim() : "";
-  if (!text) {
-    return { ok: false, error: "Пустое сообщение" };
-  }
+  if (!text) return { ok: false, error: "Пустое сообщение" };
 
-  const parts = text
-    .split(/\r?\n---\r?\n/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const lines = text.split(/\r?\n/);
+  const title = (lines[0] || "").trim();
+  if (!title) return { ok: false, error: "Первая строка (заголовок) пуста" };
 
-  if (parts.length < 3) {
-    return {
-      ok: false,
-      error:
-        "Ожидаются минимум 3 блока, разделённых --- (заголовок и теги, текст, автор)",
-    };
-  }
-
-  const headerBlock = parts[0];
-  const authorBlock = parts[parts.length - 1];
-  const bodyMarkdown = parts.slice(1, -1).join("\n\n---\n\n");
-
-  const headerLines = headerBlock.split(/\r?\n/).map((l) => l.trim());
-  const title = headerLines[0] || "";
-  if (!title) {
-    return { ok: false, error: "Первая строка заголовка пуста" };
-  }
-
-  const hashtagLine = headerLines.slice(1).join(" ");
-  const tags = extractHashtags(hashtagLine);
-
+  // Find the line with hashtags (usually line 2).
+  const tagLineIdx = lines.findIndex((l, i) => i > 0 && /#/.test(l));
+  const tagLine = tagLineIdx >= 0 ? lines[tagLineIdx] : "";
+  const tags = extractHashtags(tagLine);
   const categorySlug = tags[0] ?? null;
   const regionSlug = tags[1] ?? null;
   const formatSlug = tags[2] ?? null;
 
-  let format = formatSlug ? normalizeFormatSlug(formatSlug) : null;
+  const format = formatSlug ? normalizeFormatSlug(formatSlug) : null;
   if (formatSlug && !format) {
     return {
       ok: false,
@@ -104,14 +84,25 @@ function parseMessage(raw) {
     };
   }
 
-  let authorName = null;
-  const authorMatch = authorBlock.match(/^автор\s*:\s*(.+)$/is);
-  if (authorMatch) {
-    authorName = authorMatch[1].trim().replace(/\s+---\s*$/s, "").trim();
-  }
+  // Find author line.
+  const authorIdx = lines.findIndex((l) => /^автор\s*:/i.test(l.trim()));
+  const authorName =
+    authorIdx >= 0
+      ? lines[authorIdx].replace(/^автор\s*:\s*/i, "").trim() || null
+      : null;
 
-  if (!bodyMarkdown.trim()) {
-    return { ok: false, error: "Текст статьи пуст" };
+  const bodyStartIdx = authorIdx >= 0 ? authorIdx + 1 : Math.max(tagLineIdx + 1, 1);
+  const bodyText = lines
+    .slice(bodyStartIdx)
+    .join("\n")
+    .trim();
+
+  if (!bodyText) {
+    return {
+      ok: false,
+      error:
+        "Текст статьи пуст. После строки «Автор: ...» добавьте пустую строку и первый абзац.",
+    };
   }
 
   return {
@@ -120,14 +111,43 @@ function parseMessage(raw) {
     categorySlug,
     regionSlug,
     format,
-    bodyMarkdown: bodyMarkdown.trim(),
     authorName,
+    bodyText,
   };
 }
 
+function telegramToHtml(text) {
+  let html = String(text || "");
+  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/__(.+?)__/g, "<em>$1</em>");
+  const paragraphs = html.split(/\n\n+/);
+  html = paragraphs
+    .map((p) => {
+      p = p.trim();
+      if (!p) return "";
+      if (p.startsWith("<h2>") || p.startsWith("<h3>")) {
+        const nl = p.indexOf("\n");
+        if (nl === -1) return p;
+        const heading = p.slice(0, nl).trim();
+        const rest = p.slice(nl + 1).trim();
+        if (!rest) return heading;
+        const restWithBr = rest.replace(/\n/g, "<br>");
+        return `${heading}\n<p>${restWithBr}</p>`;
+      }
+      p = p.replace(/\n/g, "<br>");
+      return `<p>${p}</p>`;
+    })
+    .filter(Boolean)
+    .join("\n");
+  return html;
+}
+
 module.exports = {
-  parseMessage,
+  parseFirstMessage,
   extractHashtags,
   normalizeFormatSlug,
   FORMAT_ENUM,
+  telegramToHtml,
 };

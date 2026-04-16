@@ -264,7 +264,7 @@ function createStrapiClient({ baseUrl, token }) {
     const {
       title,
       slug,
-      contentBlocks,
+      htmlBody,
       excerpt,
       format,
       authorId,
@@ -272,14 +272,16 @@ function createStrapiClient({ baseUrl, token }) {
       regionId,
       coverImageId,
       readingTime,
+      publicationDate,
     } = params;
 
     const data = {
       title,
       slug,
-      content: contentBlocks,
+      content_html: htmlBody,
       format: format || "анализ",
       reading_time: readingTime,
+      publication_date: publicationDate || new Date().toISOString(),
     };
 
     if (excerpt) {
@@ -319,6 +321,19 @@ function createStrapiClient({ baseUrl, token }) {
     uploadImage,
     createArticle,
     markdownToBlocks,
+    async getRecentArticles(limit = 5) {
+      const q = new URLSearchParams();
+      q.set("sort[0]", "publication_date:desc");
+      q.set("pagination[pageSize]", String(limit));
+      q.set("pagination[page]", "1");
+      q.set("fields[0]", "title");
+      q.set("fields[1]", "slug");
+      const data = await fetchJson(`/api/articles?${q.toString()}`);
+      return (data?.data || []).map((x) => ({
+        title: x.title,
+        slug: x.slug,
+      }));
+    },
   };
 }
 
