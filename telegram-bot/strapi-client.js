@@ -2,6 +2,8 @@
  * Strapi REST API: lookup entities, upload media, create article.
  */
 
+const http = require("http");
+const https = require("https");
 const FormData = require("form-data");
 const { marked } = require("marked");
 
@@ -255,29 +257,54 @@ function createStrapiClient({ baseUrl, token }) {
       `[strapi] POST ${url}, filename=${filename}, contentType=${contentType}, size=${buffer.length}`,
     );
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...form.getHeaders(),
-      },
-      body: form,
+    const parsed = new URL(url);
+    const lib = parsed.protocol === "https:" ? https : http;
+
+    return new Promise((resolve, reject) => {
+      const req = lib.request(
+        {
+          hostname: parsed.hostname,
+          port:
+            parsed.port ||
+            (parsed.protocol === "https:" ? 443 : 80),
+          path: parsed.pathname + parsed.search,
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...form.getHeaders(),
+          },
+        },
+        (res) => {
+          let data = "";
+          res.on("data", (chunk) => {
+            data += chunk;
+          });
+          res.on("end", () => {
+            console.log(
+              `[strapi] upload response: ${res.statusCode} ${data.slice(0, 200)}`,
+            );
+            if (res.statusCode && res.statusCode >= 400) {
+              reject(new Error(`Upload ${res.statusCode}: ${data}`));
+              return;
+            }
+            try {
+              const json = JSON.parse(data);
+              const file = Array.isArray(json) ? json[0] : json?.[0];
+              resolve(file?.id ?? null);
+            } catch {
+              reject(new Error(`Upload parse error: ${data.slice(0, 200)}`));
+            }
+          });
+        },
+      );
+
+      req.on("error", (e) => {
+        console.error("[strapi] upload request error:", e.message);
+        reject(e);
+      });
+
+      form.pipe(req);
     });
-
-    const text = await res.text();
-    console.log(`[strapi] upload response: ${res.status} ${text.slice(0, 200)}`);
-
-    let json = null;
-    try {
-      json = text ? JSON.parse(text) : null;
-    } catch {
-      json = null;
-    }
-    if (!res.ok) {
-      throw new Error(`Upload ${res.status}: ${text || res.statusText}`);
-    }
-    const file = Array.isArray(json) ? json[0] : json?.[0];
-    return file?.id ?? null;
   }
 
   /**
