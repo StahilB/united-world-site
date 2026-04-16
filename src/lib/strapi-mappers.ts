@@ -30,6 +30,13 @@ function mediaUrl(media: StrapiMedia | null | undefined): string {
   return resolveStrapiAssetUrl(media.url);
 }
 
+function authorPhotoUrl(media: StrapiMedia | null | undefined): string {
+  if (!media?.url) {
+    return "";
+  }
+  return resolveStrapiAssetUrl(media.url);
+}
+
 function authorFromStrapi(a: StrapiAuthor | null | undefined): Author {
   if (!a) {
     return {
@@ -37,19 +44,15 @@ function authorFromStrapi(a: StrapiAuthor | null | undefined): Author {
       name: "Редакция",
       slug: "editorial",
       bio: "",
-      avatarUrl: FALLBACK_COVER,
+      avatarUrl: "",
     };
   }
-  const url = mediaUrl(a.photo ?? undefined);
-  console.log(
-    `[authorFromStrapi] ${a.name}: photo=${JSON.stringify(a.photo)}, avatarUrl=${url}`,
-  );
   return {
     id: String(a.id),
     name: a.name,
     slug: a.slug,
     bio: a.bio ?? "",
-    avatarUrl: url,
+    avatarUrl: authorPhotoUrl(a.photo ?? undefined),
   };
 }
 
