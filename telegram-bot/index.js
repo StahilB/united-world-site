@@ -115,9 +115,13 @@ function stripHtml(html) {
 
 function pickPhotoFileId(msg) {
   if (!msg?.photo || !Array.isArray(msg.photo) || msg.photo.length === 0) {
+    console.log("[photo] no photo array in msg");
     return null;
   }
   const p = msg.photo[msg.photo.length - 1];
+  console.log(
+    `[photo] found ${msg.photo.length} sizes, picked file_id=${p?.file_id?.slice(0, 30)}...`,
+  );
   return p?.file_id || null;
 }
 
@@ -134,12 +138,17 @@ function resetTimer(chatId) {
 
 async function downloadTelegramPhoto(bot, fileId) {
   if (!fileId) return { buffer: null, filename: null };
+  console.log(`[download] getFileLink for ${fileId.slice(0, 30)}...`);
   const link = await bot.telegram.getFileLink(fileId);
+  console.log(`[download] file URL: ${link.href}`);
   const res = await fetch(link.href);
-  if (!res.ok) throw new Error(`Download ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`Download failed: HTTP ${res.status} from ${link.href}`);
+  }
   const buffer = Buffer.from(await res.arrayBuffer());
-  const p = link.pathname || "";
-  const ext = p.includes(".") ? p.split(".").pop() : "jpg";
+  console.log(`[download] got ${buffer.length} bytes`);
+  const p = link.pathname || link.href;
+  const ext = p.includes(".") ? p.split(".").pop().split("?")[0] : "jpg";
   const safeExt = ext && /^[a-z0-9]+$/i.test(ext) ? ext : "jpg";
   return { buffer, filename: `cover.${safeExt}` };
 }
@@ -195,18 +204,28 @@ async function finalizePublish(chatId, { reason, replyToMessageId } = {}) {
       ? await ensureAuthorId(pending.authorName)
       : null;
 
+    console.log(
+      `[publish] photoFileId=${pending.photoFileId ? `${pending.photoFileId.slice(0, 30)}...` : "null"}`,
+    );
     let coverImageId = null;
     if (pending.photoFileId) {
       try {
+        console.log("[publish] downloading photo from Telegram...");
         const { buffer, filename } = await downloadTelegramPhoto(
           bot,
           pending.photoFileId,
         );
+        console.log(
+          `[publish] downloaded: buffer=${buffer?.length || 0} bytes, filename=${filename}`,
+        );
         if (buffer) {
+          console.log("[publish] uploading to Strapi...");
           coverImageId = await strapi.uploadImage(buffer, filename || "cover.jpg");
+          console.log(`[publish] uploaded: coverImageId=${coverImageId}`);
         }
       } catch (e) {
-        console.error("Upload cover failed:", e);
+        console.error("[publish] Upload cover failed:", e?.message || e);
+        console.error(e?.stack || "");
       }
     }
 
@@ -292,7 +311,18 @@ async function handleChannelPost(ctx) {
 
   const text = msg.caption || msg.text;
   if (!text || !String(text).trim()) {
-    // Continuation messages must have text; photos without caption are ignored.
+    const photoOnly = pickPhotoFileId(msg);
+    if (photoOnly) {
+      const pendingPhoto = pendingArticles.get(chatId);
+      if (pendingPhoto && !pendingPhoto.photoFileId) {
+        pendingPhoto.photoFileId = photoOnly;
+        pendingPhoto.lastActivityAt = new Date();
+        resetTimer(chatId);
+        console.log("[handle] saved photo-only message to pending");
+      } else {
+        console.log("[handle] photo-only but no pending article, ignoring");
+      }
+    }
     return;
   }
 
@@ -355,6 +385,9 @@ async function handleChannelPost(ctx) {
   }
 
   const photoFileId = pickPhotoFileId(msg);
+  console.log(
+    `[handle] photoFileId=${photoFileId ? `${photoFileId.slice(0, 30)}...` : "null"}, hasCaption=${!!msg.caption}, hasText=${!!msg.text}`,
+  );
   const pending = pendingArticles.get(chatId);
 
   if (!pending) {
@@ -378,6 +411,9 @@ async function handleChannelPost(ctx) {
       lastMessageId: msg.message_id,
     };
     pendingArticles.set(chatId, record);
+    console.log(
+      `[handle] new article "${record.title}", photoFileId=${record.photoFileId ? "yes" : "null"}`,
+    );
     resetTimer(chatId);
     await replyStatus(
       ctx,
