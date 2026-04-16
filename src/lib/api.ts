@@ -111,12 +111,29 @@ async function strapiFetchNoStore<T>(path: string, init?: RequestInit): Promise<
 
 /** Populate relations for article list cards (matches spec). */
 function appendArticleListPopulate(params: URLSearchParams): void {
-  // Strapi 5: dot-notation for nested populate
-  params.set("populate[0]", "cover_image");
-  params.set("populate[1]", "author.photo");
-  params.set("populate[2]", "categories");
-  params.set("populate[3]", "region");
-  params.set("populate[4]", "sections");
+  // Strapi 5 REST: nested populate via bracket syntax
+  params.set("populate[cover_image][fields][0]", "url");
+  params.set("populate[cover_image][fields][1]", "width");
+  params.set("populate[cover_image][fields][2]", "height");
+
+  params.set("populate[author][fields][0]", "id");
+  params.set("populate[author][fields][1]", "name");
+  params.set("populate[author][fields][2]", "slug");
+  params.set("populate[author][fields][3]", "bio");
+  params.set("populate[author][populate][photo][fields][0]", "url");
+
+  params.set("populate[categories][fields][0]", "id");
+  params.set("populate[categories][fields][1]", "name");
+  params.set("populate[categories][fields][2]", "slug");
+  params.set("populate[categories][fields][3]", "color");
+
+  params.set("populate[region][fields][0]", "id");
+  params.set("populate[region][fields][1]", "name");
+  params.set("populate[region][fields][2]", "slug");
+
+  params.set("populate[sections][fields][0]", "id");
+  params.set("populate[sections][fields][1]", "name");
+  params.set("populate[sections][fields][2]", "slug");
 }
 
 export type GetArticlesParams = {
@@ -402,8 +419,11 @@ export async function getAuthorsForArticleFormat(
     search.set("sort[0]", "publication_date:desc");
     search.set("pagination[pageSize]", String(pageSize));
     search.set("pagination[page]", String(page));
-    search.set("populate[0]", "author");
-    search.set("populate[author][populate][0]", "photo");
+    search.set("populate[author][fields][0]", "id");
+    search.set("populate[author][fields][1]", "name");
+    search.set("populate[author][fields][2]", "slug");
+    search.set("populate[author][fields][3]", "bio");
+    search.set("populate[author][populate][photo][fields][0]", "url");
     const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
       `/api/articles?${search.toString()}`,
     );
@@ -439,8 +459,11 @@ export async function getAuthorsForColumnsSection(
       search.set("sort[0]", "publication_date:desc");
       search.set("pagination[pageSize]", String(pageSize));
       search.set("pagination[page]", String(page));
-      search.set("populate[0]", "author");
-      search.set("populate[author][populate][0]", "photo");
+      search.set("populate[author][fields][0]", "id");
+      search.set("populate[author][fields][1]", "name");
+      search.set("populate[author][fields][2]", "slug");
+      search.set("populate[author][fields][3]", "bio");
+      search.set("populate[author][populate][photo][fields][0]", "url");
       const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
         `/api/articles?${search.toString()}`,
       );
@@ -477,9 +500,14 @@ export async function getArticlesForColumnsSection(
       search.set("sort[0]", "publication_date:desc");
       search.set("pagination[pageSize]", String(pageSize));
       search.set("pagination[page]", String(page));
-      search.set("populate[0]", "author");
-      search.set("populate[author][populate][0]", "photo");
-      search.set("populate[1]", "cover_image");
+      search.set("populate[author][fields][0]", "id");
+      search.set("populate[author][fields][1]", "name");
+      search.set("populate[author][fields][2]", "slug");
+      search.set("populate[author][fields][3]", "bio");
+      search.set("populate[author][populate][photo][fields][0]", "url");
+      search.set("populate[cover_image][fields][0]", "url");
+      search.set("populate[cover_image][fields][1]", "width");
+      search.set("populate[cover_image][fields][2]", "height");
       const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
         `/api/articles?${search.toString()}`,
       );
