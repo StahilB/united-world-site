@@ -232,8 +232,29 @@ function createStrapiClient({ baseUrl, token }) {
    */
   async function uploadImage(buffer, filename) {
     const form = new FormData();
-    form.append("files", buffer, { filename });
+
+    const ext = (filename || "").split(".").pop()?.toLowerCase() || "jpg";
+    const mimeMap = {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      gif: "image/gif",
+      webp: "image/webp",
+      svg: "image/svg+xml",
+    };
+    const contentType = mimeMap[ext] || "image/jpeg";
+
+    form.append("files", buffer, {
+      filename: filename || "cover.jpg",
+      contentType,
+      knownLength: buffer.length,
+    });
+
     const url = `${origin}/api/upload`;
+    console.log(
+      `[strapi] POST ${url}, filename=${filename}, contentType=${contentType}, size=${buffer.length}`,
+    );
+
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -242,7 +263,10 @@ function createStrapiClient({ baseUrl, token }) {
       },
       body: form,
     });
+
     const text = await res.text();
+    console.log(`[strapi] upload response: ${res.status} ${text.slice(0, 200)}`);
+
     let json = null;
     try {
       json = text ? JSON.parse(text) : null;
