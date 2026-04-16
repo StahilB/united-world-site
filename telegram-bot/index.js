@@ -4,9 +4,6 @@
 
 require("dotenv").config();
 
-const { SocksProxyAgent } = require("socks-proxy-agent");
-const agent = new SocksProxyAgent("socks5://127.0.0.1:10808");
-
 const { Telegraf } = require("telegraf");
 const { parseFirstMessage, telegramToHtml } = require("./parser");
 const { createStrapiClient } = require("./strapi-client");
@@ -388,8 +385,16 @@ async function replyStatus(ctx, messageText) {
   }
 }
 
+const proxyUrl = process.env.TELEGRAM_PROXY_URL || "";
+const telegramOpts = {};
+if (proxyUrl) {
+  const { SocksProxyAgent } = require("socks-proxy-agent");
+  telegramOpts.agent = new SocksProxyAgent(proxyUrl);
+  console.log(`Using Telegram proxy: ${proxyUrl}`);
+}
+
 const bot = new Telegraf(BOT_TOKEN, {
-  telegram: { agent },
+  telegram: telegramOpts,
 });
 
 bot.on("channel_post", handleChannelPost);
