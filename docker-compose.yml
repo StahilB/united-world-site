@@ -59,12 +59,16 @@ services:
     restart: always
     depends_on:
       - strapi
+    tty: true
+    stdin_open: true
     environment:
       BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN}
       CHANNEL_ID: ${CHANNEL_ID:?set CHANNEL_ID}
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}
       STRAPI_TOKEN: ${STRAPI_TOKEN:?set STRAPI_TOKEN}
-      SITE_URL: ${SITE_URL:-https://anounitedworld.com}
+      SITE_URL: ${SITE_URL:-http://72.56.250.143}
+      NODE_ENV: production
+      NODE_NO_WARNINGS: "1"
 
   nginx:
     image: nginx:alpine

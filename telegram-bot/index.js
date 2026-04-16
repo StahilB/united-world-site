@@ -4,6 +4,16 @@
 
 require("dotenv").config();
 
+// Force unbuffered stdout/stderr (useful in Docker/Alpine)
+if (process.stdout._handle && process.stdout._handle.setBlocking) {
+  process.stdout._handle.setBlocking(true);
+}
+if (process.stderr._handle && process.stderr._handle.setBlocking) {
+  process.stderr._handle.setBlocking(true);
+}
+
+console.log("[boot] telegram-bot starting...");
+
 const { Telegraf } = require("telegraf");
 const { parseFirstMessage, telegramToHtml } = require("./parser");
 const { createStrapiClient } = require("./strapi-client");
@@ -258,12 +268,20 @@ function formatHelpText() {
  * @param {import('telegraf').Context} ctx
  */
 async function handleChannelPost(ctx) {
-  const msg = ctx.channelPost || ctx.message;
-  if (!msg) return;
+  const msg =
+    ctx.channelPost || ctx.message || ctx.editedMessage || ctx.editedChannelPost;
+  if (!msg) {
+    console.log("[handle] no message in ctx, skip");
+    return;
+  }
 
-  const chatId = String(msg.chat.id);
-  if (chatId !== String(CHANNEL_ID)) {
-    console.log(`Skip chat_id=${chatId} (expected ${CHANNEL_ID})`);
+  const chatId = ctx.chat?.id;
+  console.log(
+    `[handle] from chat=${chatId} expected=${CHANNEL_ID} match=${String(chatId) === String(CHANNEL_ID)}`,
+  );
+
+  if (String(chatId) !== String(CHANNEL_ID)) {
+    console.log(`[handle] SKIP — wrong chat (got ${chatId}, expected ${CHANNEL_ID})`);
     return;
   }
 
@@ -397,20 +415,51 @@ const bot = new Telegraf(BOT_TOKEN, {
   telegram: telegramOpts,
 });
 
-bot.on("channel_post", handleChannelPost);
+// Events in channel posts
+bot.on("channel_post", (ctx) => {
+  console.log(`[event] channel_post from chat ${ctx.chat?.id}`);
+  return handleChannelPost(ctx);
+});
+
+// Events in group/supergroup/private chats
+bot.on("message", (ctx) => {
+  console.log(
+    `[event] message from chat ${ctx.chat?.id} (type=${ctx.chat?.type})`,
+  );
+  return handleChannelPost(ctx);
+});
+
+// Also listen to edits
+bot.on("edited_message", (ctx) => {
+  console.log(`[event] edited_message from chat ${ctx.chat?.id}`);
+  return handleChannelPost(ctx);
+});
 
 bot.catch((err, ctx) => {
   console.error("bot error", err);
 });
 
+console.log(
+  `[boot] about to launch, BOT_TOKEN=${BOT_TOKEN.slice(0, 10)}..., CHANNEL_ID=${CHANNEL_ID}`,
+);
+
 bot
-  .launch()
+  .launch({
+    allowedUpdates: [
+      "message",
+      "edited_message",
+      "channel_post",
+      "edited_channel_post",
+    ],
+    dropPendingUpdates: true,
+  })
   .then(() => {
-    console.log("Telegram bot running. Listening for channel_post…");
-    console.log(`CHANNEL_ID=${CHANNEL_ID}`);
+    console.log("[boot] Telegram bot running ✅");
+    console.log(`[boot] Listening for chat_id=${CHANNEL_ID}`);
   })
   .catch((e) => {
-    console.error(e);
+    console.error("[boot] launch failed:", e?.message || e);
+    console.error(e?.stack || "");
     process.exit(1);
   });
 
