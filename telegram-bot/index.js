@@ -4,14 +4,6 @@
 
 require("dotenv").config();
 
-// Force unbuffered stdout/stderr (useful in Docker/Alpine)
-if (process.stdout._handle && process.stdout._handle.setBlocking) {
-  process.stdout._handle.setBlocking(true);
-}
-if (process.stderr._handle && process.stderr._handle.setBlocking) {
-  process.stderr._handle.setBlocking(true);
-}
-
 console.log("[boot] telegram-bot starting...");
 
 const { Telegraf } = require("telegraf");
