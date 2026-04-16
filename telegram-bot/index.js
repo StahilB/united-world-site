@@ -267,13 +267,21 @@ async function handleChannelPost(ctx) {
     return;
   }
 
-  const chatId = ctx.chat?.id;
+  const chat = msg.chat || ctx.chat;
+  const chatId = chat?.id;
+  const chatType = chat?.type;
+  const rawText = msg.caption || msg.text || "";
+  const textPreview = String(rawText).slice(0, 200);
+  const match = String(chatId) === String(CHANNEL_ID);
+
   console.log(
-    `[handle] from chat=${chatId} expected=${CHANNEL_ID} match=${String(chatId) === String(CHANNEL_ID)}`,
+    `[handle] updateType=${ctx.updateType} chatId=${chatId} chatType=${chatType} match=${match} text=${JSON.stringify(textPreview)}`,
   );
 
-  if (String(chatId) !== String(CHANNEL_ID)) {
-    console.log(`[handle] SKIP — wrong chat (got ${chatId}, expected ${CHANNEL_ID})`);
+  if (!match) {
+    console.log(
+      `[handle] SKIP — wrong chat (got ${chatId}, expected ${CHANNEL_ID})`,
+    );
     return;
   }
 
