@@ -7,7 +7,12 @@ require("dotenv").config();
 console.log("[boot] telegram-bot starting...");
 
 const { Telegraf } = require("telegraf");
-const { parseFirstMessage, telegramToHtml } = require("./parser");
+const {
+  parseFirstMessage,
+  telegramToHtml,
+  resolveCategorySlug,
+  resolveRegionSlug,
+} = require("./parser");
 const { createStrapiClient } = require("./strapi-client");
 const { slugFromTitle, readingTimeMinutes } = require("./utils");
 
@@ -361,8 +366,8 @@ async function handleChannelPost(ctx) {
 
     const record = {
       title: parsed.title,
-      categorySlug: parsed.categorySlug,
-      regionSlug: parsed.regionSlug,
+      categorySlug: resolveCategorySlug(parsed.categorySlug),
+      regionSlug: resolveRegionSlug(parsed.regionSlug),
       format: parsed.format,
       authorName: parsed.authorName,
       bodyParts: [parsed.bodyText],

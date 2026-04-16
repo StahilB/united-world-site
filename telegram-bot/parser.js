@@ -13,6 +13,50 @@
 
 const FORMAT_ENUM = new Set(["анализ", "мнение", "интервью", "колонка", "обзор"]);
 
+const CATEGORY_ALIASES = {
+  безопасность: "mezhdunarodnaya-bezopasnost",
+  политика: "politika-i-diplomatiya",
+  экономика: "ekonomika-i-razvitie",
+  энергетика: "energetika-i-resursy",
+  экология: "ekologiya-i-klimat",
+  образование: "obrazovanie-i-kultura",
+  организации: "mezhdunarodnye-organizatsii",
+  мероприятия: "mezhdunarodnye-meropriyatiya",
+  мнения: "mneniya",
+  интервью: "intervyu",
+};
+
+const REGION_ALIASES = {
+  россия: "rossiya",
+  европа: "evropa",
+  ближний_восток: "blizhniy-vostok",
+  африка: "afrika",
+  латам: "latinskaya-amerika",
+  латинская_америка: "latinskaya-amerika",
+  кавказ: "kavkaz",
+  центральная_азия: "tsentralnaya-aziya",
+  южная_азия: "yuzhnaya-aziya",
+  юва: "yugo-vostochnaya-aziya",
+  юго_восточная_азия: "yugo-vostochnaya-aziya",
+  ва_атр: "vostochnaya-aziya-i-atr",
+  восточная_азия: "vostochnaya-aziya-i-atr",
+  северная_америка: "severnaya-amerika",
+  океания: "avstraliya-i-okeaniya",
+  арктика: "arktika",
+};
+
+function resolveCategorySlug(tag) {
+  if (!tag) return null;
+  const lower = tag.toLowerCase();
+  return CATEGORY_ALIASES[lower] || lower;
+}
+
+function resolveRegionSlug(tag) {
+  if (!tag) return null;
+  const lower = tag.toLowerCase();
+  return REGION_ALIASES[lower] || lower;
+}
+
 /**
  * Extract #hashtags from a line (Telegram-style, no space inside tag).
  * @param {string} line
@@ -120,8 +164,9 @@ function parseFirstMessage(raw) {
 // v1: plain text + markdown-style headings/paragraphs. Entities will be supported later.
 function telegramToHtml(text, _entities) {
   let html = String(text || "");
-  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
-  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+  // Markdown-style headings (allow leading spaces)
+  html = html.replace(/(^|\n)\s*###\s+(.+?)(?=\n|$)/g, "$1<h3>$2</h3>");
+  html = html.replace(/(^|\n)\s*##\s+(.+?)(?=\n|$)/g, "$1<h2>$2</h2>");
   const paragraphs = html.split(/\n\n+/);
   html = paragraphs
     .map((p) => {
@@ -150,4 +195,6 @@ module.exports = {
   normalizeFormatSlug,
   FORMAT_ENUM,
   telegramToHtml,
+  resolveCategorySlug,
+  resolveRegionSlug,
 };
