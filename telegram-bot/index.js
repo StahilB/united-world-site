@@ -295,18 +295,18 @@ async function handleChannelPost(ctx) {
   const lower = trimmed.toLowerCase();
 
   // Commands
-  if (lower === "/publish") {
+  if (lower === "/publish" || lower.startsWith("/publish@")) {
     await finalizePublish(chatId, { reason: "command", replyToMessageId: msg.message_id });
     return;
   }
-  if (lower === "/cancel") {
+  if (lower === "/cancel" || lower.startsWith("/cancel@")) {
     const p = pendingArticles.get(chatId);
     if (p?.timer) clearTimeout(p.timer);
     pendingArticles.delete(chatId);
     await replyStatus(ctx, "✅ Отменено. Буфер очищен.");
     return;
   }
-  if (lower === "/status") {
+  if (lower === "/status" || lower.startsWith("/status@")) {
     const p = pendingArticles.get(chatId);
     if (!p) {
       await replyStatus(ctx, "ℹ️ Нет незаконченной статьи.");
@@ -324,11 +324,11 @@ async function handleChannelPost(ctx) {
     );
     return;
   }
-  if (lower === "/format") {
+  if (lower === "/format" || lower.startsWith("/format@")) {
     await replyStatus(ctx, formatHelpText());
     return;
   }
-  if (lower === "/recent") {
+  if (lower === "/recent" || lower.startsWith("/recent@")) {
     try {
       const items = await strapi.getRecentArticles(5);
       if (!items.length) {
@@ -340,6 +340,12 @@ async function handleChannelPost(ctx) {
     } catch (e) {
       await replyStatus(ctx, `❌ Ошибка: ${e.message || String(e)}`);
     }
+    return;
+  }
+
+  // Ignore unknown commands so they don't enter article body
+  if (trimmed.startsWith("/")) {
+    console.log(`[handle] ignoring unknown command: ${trimmed}`);
     return;
   }
 

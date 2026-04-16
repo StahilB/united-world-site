@@ -171,16 +171,18 @@ export function ArticlePageView({
         </div>
 
         {/* Обложка */}
-        <div className="relative mt-8 aspect-video w-full overflow-hidden bg-primary/5">
-          <Image
-            src={article.coverImage}
-            alt=""
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 1152px) 100vw, 1152px"
-          />
-        </div>
+        {article.coverImage && !article.coverImage.includes("picsum") && (
+          <div className="relative mt-8 aspect-video w-full overflow-hidden bg-primary/5">
+            <Image
+              src={article.coverImage}
+              alt=""
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 1152px) 100vw, 1152px"
+            />
+          </div>
+        )}
 
         {/* Двухколоночный layout */}
         <div className="mt-10 grid grid-cols-1 gap-12 lg:mt-12 lg:grid-cols-[minmax(0,65fr)_minmax(0,30fr)] lg:gap-10 xl:gap-14">

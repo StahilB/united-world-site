@@ -91,11 +91,12 @@ function parseFirstMessage(raw) {
       ? lines[authorIdx].replace(/^автор\s*:\s*/i, "").trim() || null
       : null;
 
-  const bodyStartIdx = authorIdx >= 0 ? authorIdx + 1 : Math.max(tagLineIdx + 1, 1);
-  const bodyText = lines
-    .slice(bodyStartIdx)
-    .join("\n")
-    .trim();
+  let bodyStartIdx = authorIdx >= 0 ? authorIdx + 1 : Math.max(tagLineIdx + 1, 1);
+  // Skip empty lines after author/hashtags
+  while (bodyStartIdx < lines.length && !lines[bodyStartIdx].trim()) {
+    bodyStartIdx += 1;
+  }
+  const bodyText = lines.slice(bodyStartIdx).join("\n").trim();
 
   if (!bodyText) {
     return {
@@ -116,12 +117,11 @@ function parseFirstMessage(raw) {
   };
 }
 
-function telegramToHtml(text) {
+// v1: plain text + markdown-style headings/paragraphs. Entities will be supported later.
+function telegramToHtml(text, _entities) {
   let html = String(text || "");
   html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
-  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  html = html.replace(/__(.+?)__/g, "<em>$1</em>");
   const paragraphs = html.split(/\n\n+/);
   html = paragraphs
     .map((p) => {
