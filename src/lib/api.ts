@@ -111,11 +111,12 @@ async function strapiFetchNoStore<T>(path: string, init?: RequestInit): Promise<
 
 /** Populate relations for article list cards (matches spec). */
 function appendArticleListPopulate(params: URLSearchParams): void {
-  params.set("populate[cover_image]", "true");
-  params.set("populate[author][populate][0]", "photo");
-  params.set("populate[categories]", "true");
-  params.set("populate[region]", "true");
-  params.set("populate[sections]", "true");
+  // Strapi 5: dot-notation for nested populate
+  params.set("populate[0]", "cover_image");
+  params.set("populate[1]", "author.photo");
+  params.set("populate[2]", "categories");
+  params.set("populate[3]", "region");
+  params.set("populate[4]", "sections");
 }
 
 export type GetArticlesParams = {

@@ -40,12 +40,16 @@ function authorFromStrapi(a: StrapiAuthor | null | undefined): Author {
       avatarUrl: FALLBACK_COVER,
     };
   }
+  const url = mediaUrl(a.photo ?? undefined);
+  console.log(
+    `[authorFromStrapi] ${a.name}: photo=${JSON.stringify(a.photo)}, avatarUrl=${url}`,
+  );
   return {
     id: String(a.id),
     name: a.name,
     slug: a.slug,
     bio: a.bio ?? "",
-    avatarUrl: mediaUrl(a.photo ?? undefined),
+    avatarUrl: url,
   };
 }
 
