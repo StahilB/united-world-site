@@ -28,7 +28,7 @@ import type {
 import type { GlobalReviewsMainArticle, ThematicBlockItem } from "@/lib/types";
 import { getStrapiUrl } from "@/lib/strapi-config";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const emptyArticles: StrapiCollectionResponse<StrapiArticle> = { data: [] };
 const emptyRegions: StrapiCollectionResponse<StrapiRegion> = { data: [] };
