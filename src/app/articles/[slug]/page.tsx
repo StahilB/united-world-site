@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://anounitedworld.com";
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anounitedworld.com";
   const articleUrl = `/articles/${params.slug}`;
 
   try {
@@ -41,10 +41,12 @@ export async function generateMetadata({
       };
     }
 
-    const image = raw.cover_image?.url || "/og-default-brand.jpg";
-    const absoluteImage = image.startsWith("http")
-      ? image
-      : `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
+    const image = raw.cover_image?.url;
+    const absoluteImage = image
+      ? image.startsWith("http")
+        ? image
+        : `${SITE_URL}${image.startsWith("/") ? image : `/${image}`}`
+      : `${SITE_URL}/og-default-brand.jpg`;
     const title = raw.title;
     const description =
       raw.excerpt?.slice(0, 160) || "Аналитический материал АНО «Единый Мир».";
@@ -53,6 +55,18 @@ export async function generateMetadata({
     const authorName = raw.author?.name || "АНО «Единый Мир»";
     const categoryName = raw.categories?.[0]?.name;
     const regionName = raw.region?.name;
+    const tags = [categoryName, regionName].filter(
+      (t): t is string => typeof t === "string" && t.length > 0,
+    );
+    const authors = [authorName].filter(
+      (a): a is string => typeof a === "string" && a.length > 0,
+    );
+    const other: Record<string, string> = {
+      ...(publishedTime && { "article:published_time": publishedTime }),
+      ...(modifiedTime && { "article:modified_time": modifiedTime }),
+      ...(authorName && { "article:author": authorName }),
+      ...(categoryName && { "article:section": categoryName }),
+    };
 
     return {
       title,
@@ -66,11 +80,11 @@ export async function generateMetadata({
         title,
         description,
         siteName: "Единый Мир",
-        publishedTime,
-        modifiedTime,
-        authors: [authorName],
-        section: categoryName,
-        tags: [categoryName, regionName].filter(Boolean),
+        ...(publishedTime && { publishedTime }),
+        ...(modifiedTime && { modifiedTime }),
+        ...(authors.length > 0 && { authors }),
+        ...(categoryName && { section: categoryName }),
+        tags,
         images: [{ url: absoluteImage, width: 1200, height: 630, alt: title }],
       },
       twitter: {
@@ -79,12 +93,7 @@ export async function generateMetadata({
         description,
         images: [absoluteImage],
       },
-      other: {
-        "article:published_time": publishedTime ?? "",
-        "article:modified_time": modifiedTime ?? "",
-        "article:author": authorName,
-        "article:section": categoryName ?? "",
-      },
+      ...(Object.keys(other).length > 0 && { other }),
     };
   } catch {
     return { title: "Статья не найдена" };
