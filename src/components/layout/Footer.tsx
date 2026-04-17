@@ -14,6 +14,7 @@ const navLinks = [
   { href: "/category/politika-i-diplomatiya", label: "Аналитика" },
   { href: "/team", label: "Экспертиза" },
   { href: "/about", label: "О центре" },
+  { href: "/sitemap-html", label: "Карта сайта" },
   { href: "/en", label: "EN" },
 ] as const;
 

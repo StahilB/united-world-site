@@ -3,6 +3,7 @@ import { GlobalReviewsBlock } from "@/components/blocks/GlobalReviewsBlock";
 import { LatestArticlesBlock } from "@/components/blocks/LatestArticlesBlock";
 import { RegionalReviewsBlock } from "@/components/blocks/RegionalReviewsBlock";
 import { ThematicBlock } from "@/components/blocks/ThematicBlock";
+import Link from "next/link";
 import {
   getArticles,
   getLatestArticles,
@@ -154,6 +155,11 @@ export default async function HomePage() {
 
   return (
     <main className="flex min-h-screen flex-col">
+      <nav aria-label="Главное меню" className="sr-only">
+        <Link href="/analytics">Аналитика</Link>
+        <Link href="/expertise">Экспертиза</Link>
+        <Link href="/about">О центре</Link>
+      </nav>
       <section className="py-12 md:py-16">
         <GlobalReviewsBlock
           mainArticle={mainArticle}

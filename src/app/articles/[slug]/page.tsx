@@ -10,7 +10,7 @@ import {
   getArticleRenderedContent,
   getArticleTags,
 } from "@/lib/article-content";
-import { getArticleBySlug } from "@/lib/api";
+import { getArticleBySlug, getRelatedArticles } from "@/lib/api";
 import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import { getStrapiUrl } from "@/lib/strapi-config";
@@ -131,11 +131,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   let readAlso: Article[] = [];
   let similar: Article[] = [];
+  let related: Article[] = [];
   try {
-    [readAlso, similar] = await Promise.all([
+    const [readAlsoRes, similarRes, relatedRes] = await Promise.all([
       fetchReadAlsoArticles(article, 3),
       fetchSimilarArticles(article, 3),
+      getRelatedArticles(
+        slug,
+        raw.categories?.[0]?.slug || undefined,
+        raw.region?.slug || undefined,
+        4,
+      ),
     ]);
+    readAlso = readAlsoRes;
+    similar = similarRes;
+    related = (relatedRes.data ?? []).map((a) => mapStrapiArticleToArticle(a, origin));
   } catch (e) {
     console.error("[ArticlePage] related articles fetch failed:", e);
   }
@@ -180,6 +190,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         toc={toc}
         readAlso={readAlso}
         similar={similar}
+        related={related}
         tags={tags}
       />
     </>

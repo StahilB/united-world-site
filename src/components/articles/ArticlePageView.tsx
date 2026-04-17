@@ -25,6 +25,7 @@ type ArticlePageViewProps = {
   toc: TocHeading[];
   readAlso: Article[];
   similar: Article[];
+  related: Article[];
   tags: string[];
 };
 
@@ -87,6 +88,7 @@ export function ArticlePageView({
   toc,
   readAlso,
   similar,
+  related,
   tags,
 }: ArticlePageViewProps) {
   const primaryCategory = article.categories[0];
@@ -114,7 +116,15 @@ export function ArticlePageView({
               </Link>
             </li>
             <li aria-hidden className="text-primary/35">
-              /
+              ›
+            </li>
+            <li>
+              <Link href="/analytics" className="hover:text-accent">
+                Аналитика
+              </Link>
+            </li>
+            <li aria-hidden className="text-primary/35">
+              ›
             </li>
             <li>
               <Link href={breadcrumbSectionHref} className="hover:text-accent">
@@ -122,7 +132,7 @@ export function ArticlePageView({
               </Link>
             </li>
             <li aria-hidden className="text-primary/35">
-              /
+              ›
             </li>
             <li className="text-primary/80">{truncateTitle(article.title)}</li>
           </ol>
@@ -248,6 +258,22 @@ export function ArticlePageView({
                 </h2>
                 <div className="mt-6 space-y-6">
                   {similar.map((a) => (
+                    <SimilarCardWide key={a.id} article={a} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {related.length > 0 && (
+              <section className="mt-14 max-w-[900px]" aria-labelledby="read-more-bottom">
+                <h2
+                  id="read-more-bottom"
+                  className="font-heading text-xl text-primary md:text-2xl"
+                >
+                  Читайте также
+                </h2>
+                <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {related.map((a) => (
                     <SimilarCardWide key={a.id} article={a} />
                   ))}
                 </div>

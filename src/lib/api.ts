@@ -254,6 +254,75 @@ export async function getLatestArticles(
   );
 }
 
+export async function getRelatedArticles(
+  articleSlug: string,
+  categorySlug?: string,
+  regionSlug?: string,
+  limit = 4,
+): Promise<StrapiCollectionResponse<StrapiArticle>> {
+  const picked: StrapiArticle[] = [];
+  const seen = new Set<string>([articleSlug]);
+
+  const addUnique = (items: StrapiArticle[]) => {
+    for (const item of items) {
+      if (picked.length >= limit) break;
+      if (!item?.slug || seen.has(item.slug)) continue;
+      seen.add(item.slug);
+      picked.push(item);
+    }
+  };
+
+  const queryByFilter = async (
+    filterKey: string,
+    filterValue: string,
+    pageSize: number,
+  ): Promise<StrapiArticle[]> => {
+    const search = new URLSearchParams();
+    search.set("filters[slug][$ne]", articleSlug);
+    search.set(filterKey, filterValue);
+    search.set("sort[0]", "publication_date:desc");
+    search.set("pagination[page]", "1");
+    search.set("pagination[pageSize]", String(pageSize));
+    appendArticleListPopulate(search);
+    const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
+      `/api/articles?${search.toString()}`,
+      { next: { revalidate: 300 } },
+    );
+    return res.data ?? [];
+  };
+
+  if (categorySlug) {
+    const items = await queryByFilter("filters[categories][slug][$eq]", categorySlug, limit);
+    addUnique(items);
+  }
+
+  if (regionSlug && picked.length < limit) {
+    const items = await queryByFilter(
+      "filters[region][slug][$eq]",
+      regionSlug,
+      Math.max(limit * 2, 8),
+    );
+    addUnique(items);
+  }
+
+  if (picked.length < limit) {
+    const latest = await getLatestArticles(Math.max(limit * 3, 12));
+    addUnique((latest.data ?? []).filter((a) => a.slug !== articleSlug));
+  }
+
+  return {
+    data: picked.slice(0, limit),
+    meta: {
+      pagination: {
+        page: 1,
+        pageSize: limit,
+        pageCount: 1,
+        total: picked.length,
+      },
+    },
+  };
+}
+
 /** Путь `/api/articles?...` для списка по региону (совпадает с телом запроса). */
 export function articlesByRegionRequestPath(regionId: number, limit: number): string {
   const search = new URLSearchParams();
