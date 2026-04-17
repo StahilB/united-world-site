@@ -13,7 +13,6 @@ import {
 import { THEMATIC_BLOCK_THEMES } from "@/lib/thematic-block";
 import {
   buildRegionalReviewItems,
-  formatDateRu,
   mapStrapiArticleToArticle,
   toExpertInterviews,
   toExpertOpinions,
@@ -28,7 +27,7 @@ import type {
 import type { GlobalReviewsMainArticle, ThematicBlockItem } from "@/lib/types";
 import { getStrapiUrl } from "@/lib/strapi-config";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const emptyArticles: StrapiCollectionResponse<StrapiArticle> = { data: [] };
 const emptyRegions: StrapiCollectionResponse<StrapiRegion> = { data: [] };
@@ -55,9 +54,6 @@ export default async function HomePage() {
     console.error("[HomePage] Strapi fetch failed:", e);
   }
 
-  const PLACEHOLDER_COVER =
-    "https://picsum.photos/seed/united-world/1200/800";
-
   let thematicItems: ThematicBlockItem[] = [];
   try {
     const thematicResponses = await Promise.all(
@@ -69,25 +65,14 @@ export default async function HomePage() {
         }),
       ),
     );
-    thematicItems = THEMATIC_BLOCK_THEMES.map((theme, i) => {
+    const collected: ThematicBlockItem[] = [];
+    THEMATIC_BLOCK_THEMES.forEach((theme, i) => {
       const raw = thematicResponses[i]?.data?.[0];
       if (!raw) {
-        return {
-          category: {
-            name: theme.name,
-            slug: theme.slug,
-            color: theme.color,
-          },
-          article: {
-            title: "Материалы скоро",
-            slug: theme.slug,
-            coverImage: PLACEHOLDER_COVER,
-            format: "—",
-          },
-        };
+        return;
       }
       const a = mapStrapiArticleToArticle(raw, origin);
-      return {
+      collected.push({
         category: {
           name: theme.name,
           slug: theme.slug,
@@ -99,23 +84,12 @@ export default async function HomePage() {
           coverImage: a.coverImage,
           format: a.format,
         },
-      };
+      });
     });
+    thematicItems = collected;
   } catch (e) {
     console.error("[HomePage] thematic block fetch failed:", e);
-    thematicItems = THEMATIC_BLOCK_THEMES.map((theme) => ({
-      category: {
-        name: theme.name,
-        slug: theme.slug,
-        color: theme.color,
-      },
-      article: {
-        title: "Материалы скоро",
-        slug: theme.slug,
-        coverImage: PLACEHOLDER_COVER,
-        format: "—",
-      },
-    }));
+    thematicItems = [];
   }
 
   const latestArticles = latestRes.data.map((a) =>
@@ -126,15 +100,9 @@ export default async function HomePage() {
     mapStrapiArticleToArticle(a, origin),
   );
 
-  const mainArticle: GlobalReviewsMainArticle = popularRes.data[0]
+  const mainArticle: GlobalReviewsMainArticle | null = popularRes.data[0]
     ? toGlobalReviewsMainArticle(popularRes.data[0], origin)
-    : {
-        title: "Материалы появятся в ближайшее время",
-        excerpt: "Добавьте статьи в Strapi.",
-        date: formatDateRu(new Date().toISOString()),
-        dateIso: new Date().toISOString().slice(0, 10),
-        href: "/",
-      };
+    : null;
 
   const popularArticles = popularRes.data.slice(1).map((a) =>
     toGlobalReviewsPopularArticle(a),
@@ -151,6 +119,10 @@ export default async function HomePage() {
 
   const expertOpinions = toExpertOpinions(poolMapped);
   const expertInterviews = toExpertInterviews(poolMapped);
+  const hasLatest = latestArticles.length > 0;
+  const hasRegional = regionsRes.data.length > 0 && regionalItems.length > 0;
+  const hasThematic = thematicItems.length > 0;
+  const hasExpert = expertOpinions.length > 0 || expertInterviews.length > 0;
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -159,31 +131,41 @@ export default async function HomePage() {
         <Link href="/expertise">Экспертиза</Link>
         <Link href="/about">О центре</Link>
       </nav>
-      <section className="py-12 md:py-16">
-        <GlobalReviewsBlock
-          mainArticle={mainArticle}
-          popularArticles={popularArticles}
-        />
-      </section>
+      {mainArticle && (
+        <section className="py-12 md:py-16">
+          <GlobalReviewsBlock
+            mainArticle={mainArticle}
+            popularArticles={popularArticles}
+          />
+        </section>
+      )}
 
-      <section className="py-12 md:py-16">
-        <LatestArticlesBlock articles={latestArticles} />
-      </section>
+      {hasLatest && (
+        <section className="py-12 md:py-16">
+          <LatestArticlesBlock articles={latestArticles} />
+        </section>
+      )}
 
-      <section className="py-12 md:py-16">
-        <RegionalReviewsBlock items={regionalItems} />
-      </section>
+      {hasRegional && (
+        <section className="py-12 md:py-16">
+          <RegionalReviewsBlock items={regionalItems} />
+        </section>
+      )}
 
-      <section className="py-12 md:py-16">
-        <ThematicBlock items={thematicItems} />
-      </section>
+      {hasThematic && (
+        <section className="py-12 md:py-16">
+          <ThematicBlock items={thematicItems} />
+        </section>
+      )}
 
-      <section className="py-12 md:py-16">
-        <ExpertForumBlock
-          opinions={expertOpinions}
-          interviews={expertInterviews}
-        />
-      </section>
+      {hasExpert && (
+        <section className="py-12 md:py-16">
+          <ExpertForumBlock
+            opinions={expertOpinions}
+            interviews={expertInterviews}
+          />
+        </section>
+      )}
     </main>
   );
 }
