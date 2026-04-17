@@ -27,7 +27,7 @@ export function Footer() {
             <Link href="/" className="inline-flex w-fit shrink-0">
               <div className="flex h-28 w-28 items-center justify-center rounded-2xl bg-white/90 p-3">
                 <Image
-                  src="/logo.png"
+                  src="/images/logo_1.png"
                   alt="Единый Мир"
                   width={96}
                   height={96}
