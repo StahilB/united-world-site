@@ -14,6 +14,7 @@ import type { Article } from "@/lib/types";
 
 const SLUG = "novosti";
 const PAGE_SIZE = 12;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Новости",

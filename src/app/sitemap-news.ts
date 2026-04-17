@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getLatestArticles } from "@/lib/api";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anounitedworld.com";
+export const revalidate = 3600;
 
 export default async function sitemapNews(): Promise<MetadataRoute.Sitemap> {
   const TWO_DAYS_AGO = Date.now() - 2 * 24 * 60 * 60 * 1000;

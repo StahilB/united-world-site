@@ -25,6 +25,7 @@ import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { Article } from "@/lib/types";
 
 const PAGE_SIZE = 12;
+export const revalidate = 300;
 
 function articlesQuery(page: number, filter?: string): string {
   const p = new URLSearchParams();

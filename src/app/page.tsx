@@ -28,8 +28,7 @@ import type {
 import type { GlobalReviewsMainArticle, ThematicBlockItem } from "@/lib/types";
 import { getStrapiUrl } from "@/lib/strapi-config";
 
-/** No static fetch to Strapi at build time (CMS may be down). */
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const emptyArticles: StrapiCollectionResponse<StrapiArticle> = { data: [] };
 const emptyRegions: StrapiCollectionResponse<StrapiRegion> = { data: [] };

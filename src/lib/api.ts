@@ -35,7 +35,9 @@ export type {
   StrapiStaticTeamMember,
 } from "./strapi-types";
 
-const REVALIDATE = 60;
+const REVALIDATE = 300;
+const REVALIDATE_ARTICLE = 600;
+const REVALIDATE_AUTHORS = 3600;
 /** Кэш дерева разделов и списков по разделу */
 const REVALIDATE_SECTIONS = 300;
 
@@ -224,6 +226,7 @@ export async function getArticleBySlug(
 
   const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
     `/api/articles?${search.toString()}`,
+    { next: { revalidate: REVALIDATE_ARTICLE } },
   );
   return res.data[0] ?? null;
 }
@@ -397,6 +400,7 @@ export async function getAuthors(): Promise<
   search.set("populate[0]", "photo");
   return strapiFetch<StrapiCollectionResponse<StrapiAuthor>>(
     `/api/authors?${search.toString()}`,
+    { next: { revalidate: REVALIDATE_AUTHORS } },
   );
 }
 
@@ -410,6 +414,7 @@ export async function getAuthorBySlug(
   search.set("populate[0]", "photo");
   const res = await strapiFetch<StrapiCollectionResponse<StrapiAuthor>>(
     `/api/authors?${search.toString()}`,
+    { next: { revalidate: REVALIDATE_AUTHORS } },
   );
   return res.data[0] ?? null;
 }

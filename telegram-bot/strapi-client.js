@@ -139,6 +139,8 @@ function inlineToChildren(tokens) {
 
 function createStrapiClient({ baseUrl, token }) {
   const origin = baseUrl.replace(/\/$/, "");
+  const siteUrl = (process.env.SITE_URL || "").replace(/\/$/, "");
+  const revalidateSecret = process.env.REVALIDATE_SECRET || "";
 
   async function fetchJson(path, options = {}) {
     const url = path.startsWith("http") ? path : `${origin}${path}`;
@@ -360,7 +362,24 @@ function createStrapiClient({ baseUrl, token }) {
     if (!row?.id) {
       throw new Error("Strapi не вернул созданную статью");
     }
-    return { id: row.id, slug: row.slug || slug };
+    const created = { id: row.id, slug: row.slug || slug };
+
+    if (siteUrl && revalidateSecret) {
+      try {
+        await fetch(`${siteUrl}/api/revalidate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-revalidate-secret": revalidateSecret,
+          },
+          body: JSON.stringify({ slug: created.slug, path: "/" }),
+        });
+      } catch (e) {
+        console.error("[revalidate] request failed:", e?.message || e);
+      }
+    }
+
+    return created;
   }
 
   return {

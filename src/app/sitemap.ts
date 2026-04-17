@@ -3,6 +3,7 @@ import type { Section } from "@/lib/api";
 import { getArticles, getAuthors, getSections } from "@/lib/api";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anounitedworld.com";
+export const revalidate = 3600;
 
 function flattenSections(sections: Section[]): Section[] {
   const out: Section[] = [];

@@ -3,6 +3,7 @@ import { getLatestArticles } from "@/lib/api";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anounitedworld.com";
 const NEWS_NAME = "Единый Мир";
 const NEWS_LANG = "ru";
+export const revalidate = 3600;
 
 function escapeXml(value: string): string {
   return value
@@ -55,7 +56,7 @@ export async function GET(): Promise<Response> {
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=900, s-maxage=900",
+      "Cache-Control": "public, max-age=3600, s-maxage=3600",
     },
   });
 }

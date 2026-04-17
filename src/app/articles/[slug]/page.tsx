@@ -20,11 +20,7 @@ type ArticlePageProps = {
   params: { slug: string };
 };
 
-/**
- * Fully dynamic: no `generateStaticParams` — slugs are resolved at request time.
- * (Keeps `next build` working when Strapi is offline.)
- */
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 
 export async function generateMetadata({
   params,

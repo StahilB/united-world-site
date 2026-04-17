@@ -53,6 +53,7 @@ services:
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}
       STRAPI_TOKEN: ${STRAPI_TOKEN:-}
       NEXT_PUBLIC_STRAPI_URL: ${NEXT_PUBLIC_STRAPI_URL:-http://72.56.250.143:1337}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
 
   telegram-bot:
     build: ./telegram-bot
@@ -65,6 +66,7 @@ services:
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}
       STRAPI_TOKEN: ${STRAPI_TOKEN:?set STRAPI_TOKEN}
       SITE_URL: ${SITE_URL:-http://72.56.250.143}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
       NODE_ENV: production
 
   nginx:

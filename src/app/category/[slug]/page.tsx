@@ -14,7 +14,7 @@ import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { StrapiArticle, StrapiCollectionResponse } from "@/lib/strapi-types";
 import type { Article } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const LIST_LIMIT = 100;
 
