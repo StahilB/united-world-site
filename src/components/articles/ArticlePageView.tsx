@@ -121,14 +121,6 @@ export function ArticlePageView({
               ›
             </li>
             <li>
-              <Link href="/analytics" className="hover:text-accent">
-                Аналитика
-              </Link>
-            </li>
-            <li aria-hidden className="text-primary/35">
-              ›
-            </li>
-            <li>
               <Link href={breadcrumbSectionHref} className="hover:text-accent">
                 {breadcrumbSectionLabel}
               </Link>

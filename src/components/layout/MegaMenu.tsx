@@ -90,13 +90,13 @@ export function MegaMenu() {
       <div className="border-t border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
           <Link
-            href="/analytics/situational"
+            href="/section/situativnyy-analiz"
             className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
           >
             Ситуативный анализ
           </Link>
           <Link
-            href="/analytics/global"
+            href="/section/globalnye-obzory"
             className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
           >
             Глобальные обзоры

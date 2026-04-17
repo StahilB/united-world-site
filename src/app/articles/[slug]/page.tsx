@@ -167,12 +167,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <JsonLd
         data={breadcrumbSchema([
           { name: "Главная", url: "/" },
-          { name: "Аналитика", url: "/analytics" },
           ...(primaryCategory?.name
             ? [
                 {
                   name: primaryCategory.name,
-                  url: primaryCategory.slug ? `/section/${primaryCategory.slug}` : "/analytics",
+                  url: primaryCategory.slug ? `/section/${primaryCategory.slug}` : "/",
                 },
               ]
             : []),

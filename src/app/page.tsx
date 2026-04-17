@@ -155,7 +155,7 @@ export default async function HomePage() {
   return (
     <main className="flex min-h-screen flex-col">
       <nav aria-label="Главное меню" className="sr-only">
-        <Link href="/analytics">Аналитика</Link>
+        <Link href="/section/analitika">Аналитика</Link>
         <Link href="/expertise">Экспертиза</Link>
         <Link href="/about">О центре</Link>
       </nav>
