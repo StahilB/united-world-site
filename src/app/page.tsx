@@ -39,58 +39,78 @@ export default async function HomePage() {
   let poolRes = emptyArticles;
   let regionsRes = emptyRegions;
 
-  try {
-    const results = await Promise.all([
+  const [latestResult, popularResult, poolResult, regionsResult] =
+    await Promise.allSettled([
       getLatestArticles(4),
       getPopularArticles(7),
       getArticles({ pageSize: 100, page: 1 }),
       getRegions(),
     ]);
-    latestRes = results[0];
-    popularRes = results[1];
-    poolRes = results[2];
-    regionsRes = results[3];
-  } catch (e) {
-    console.error("[HomePage] Strapi fetch failed:", e);
+
+  if (latestResult.status === "fulfilled") {
+    latestRes = latestResult.value;
+  } else {
+    console.error("[HomePage] latest fetch failed:", latestResult.reason);
+  }
+
+  if (popularResult.status === "fulfilled") {
+    popularRes = popularResult.value;
+  } else {
+    console.error("[HomePage] popular fetch failed:", popularResult.reason);
+  }
+
+  if (poolResult.status === "fulfilled") {
+    poolRes = poolResult.value;
+  } else {
+    console.error("[HomePage] pool fetch failed:", poolResult.reason);
+  }
+
+  if (regionsResult.status === "fulfilled") {
+    regionsRes = regionsResult.value;
+  } else {
+    console.error("[HomePage] regions fetch failed:", regionsResult.reason);
   }
 
   let thematicItems: ThematicBlockItem[] = [];
-  try {
-    const thematicResponses = await Promise.all(
-      THEMATIC_BLOCK_THEMES.map((theme) =>
-        getArticles({
-          category: theme.slug,
-          pageSize: 1,
-          page: 1,
-        }),
-      ),
-    );
-    const collected: ThematicBlockItem[] = [];
-    THEMATIC_BLOCK_THEMES.forEach((theme, i) => {
-      const raw = thematicResponses[i]?.data?.[0];
-      if (!raw) {
-        return;
+  const thematicResponses = await Promise.allSettled(
+    THEMATIC_BLOCK_THEMES.map((theme) =>
+      getArticles({
+        category: theme.slug,
+        pageSize: 1,
+        page: 1,
+      }),
+    ),
+  );
+  const collected: ThematicBlockItem[] = [];
+  THEMATIC_BLOCK_THEMES.forEach((theme, i) => {
+    const result = thematicResponses[i];
+    if (!result || result.status !== "fulfilled") {
+      if (result?.status === "rejected") {
+        console.error(
+          `[HomePage] thematic fetch failed for ${theme.slug}:`,
+          result.reason,
+        );
       }
-      const a = mapStrapiArticleToArticle(raw, origin);
-      collected.push({
-        category: {
-          name: theme.name,
-          slug: theme.slug,
-          color: theme.color,
-        },
-        article: {
-          title: a.title,
-          slug: a.slug,
-          coverImage: a.coverImage,
-          format: a.format,
-        },
-      });
+      return;
+    }
+    const raw = result.value?.data?.[0];
+    if (!raw) return;
+    const a = mapStrapiArticleToArticle(raw, origin);
+    collected.push({
+      category: {
+        name: theme.name,
+        slug: theme.slug,
+        color: theme.color,
+      },
+      article: {
+        title: a.title,
+        slug: a.slug,
+        coverImage: a.coverImage,
+        format: a.format,
+      },
     });
-    thematicItems = collected;
-  } catch (e) {
-    console.error("[HomePage] thematic block fetch failed:", e);
-    thematicItems = [];
-  }
+  });
+  thematicItems = collected;
 
   const latestArticles = latestRes.data.map((a) =>
     mapStrapiArticleToArticle(a, origin),
