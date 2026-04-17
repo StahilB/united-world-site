@@ -13,8 +13,9 @@ import type { Article } from "@/lib/types";
 import { SearchForm } from "./SearchForm";
 
 export const metadata: Metadata = {
-  title: "Поиск — Единый Мир",
-  description: "Поиск материалов аналитического центра",
+  title: "Поиск по сайту",
+  description: "Поиск материалов аналитического центра «Единый Мир».",
+  robots: { index: false, follow: true },
 };
 
 export const dynamic = "force-dynamic";

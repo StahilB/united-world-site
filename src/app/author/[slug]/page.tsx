@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AuthorAvatar } from "@/components/author/AuthorAvatar";
 import {
@@ -62,6 +63,26 @@ type AuthorPageProps = {
   params: { slug: string };
   searchParams?: { from?: string };
 };
+
+export async function generateMetadata({
+  params,
+}: Pick<AuthorPageProps, "params">): Promise<Metadata> {
+  const author = await getAuthorBySlug(params.slug).catch(() => null);
+  if (!author) {
+    return {
+      title: "Автор не найден",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  return {
+    title: `Автор: ${author.name}`,
+    description:
+      author.bio?.trim() ||
+      `Публикации автора ${author.name} на сайте аналитического центра «Единый Мир».`,
+    alternates: { canonical: `/author/${params.slug}` },
+  };
+}
 
 export default async function AuthorPage({
   params,

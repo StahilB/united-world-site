@@ -3,9 +3,8 @@ import { getStaticPages } from "@/lib/api";
 import type { StrapiStaticTeamMember } from "@/lib/strapi-types";
 
 export const metadata: Metadata = {
-  title: "Команда — АНО «Единый Мир»",
-  description:
-    "Команда и эксперты АНО «Центр мониторинга и оценки проблем современности «Единый Мир»».",
+  title: "Команда",
+  description: "Эксперты и сотрудники центра «Единый Мир».",
 };
 
 function normalizeMembers(raw: unknown): StrapiStaticTeamMember[] {

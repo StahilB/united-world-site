@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArticleRubricGrid } from "@/components/rubric/ArticleRubricGrid";
@@ -35,6 +36,24 @@ type SectionPageProps = {
   params: { slug: string };
   searchParams: { page?: string; filter?: string };
 };
+
+export async function generateMetadata({
+  params,
+}: Pick<SectionPageProps, "params">): Promise<Metadata> {
+  const section = await getSectionBySlug(params.slug).catch(() => null);
+  if (!section) {
+    return {
+      title: "Рубрика не найдена",
+      robots: { index: false, follow: false },
+    };
+  }
+  const name = section.name;
+  return {
+    title: name,
+    description: `Статьи по теме «${name}» — аналитический центр «Единый Мир».`,
+    alternates: { canonical: `/section/${params.slug}` },
+  };
+}
 
 export default async function SectionPage({
   params,

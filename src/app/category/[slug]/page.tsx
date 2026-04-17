@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleRubricGrid } from "@/components/rubric/ArticleRubricGrid";
 import {
@@ -18,6 +19,24 @@ const LIST_LIMIT = 100;
 type CategoryPageProps = {
   params: { slug: string };
 };
+
+export async function generateMetadata({
+  params,
+}: CategoryPageProps): Promise<Metadata> {
+  const category = await getCategoryBySlug(params.slug).catch(() => null);
+  if (!category) {
+    return {
+      title: "Категория не найдена",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  return {
+    title: category.name,
+    description: `Статьи по теме «${category.name}» — аналитический центр «Единый Мир».`,
+    alternates: { canonical: `/category/${params.slug}` },
+  };
+}
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = params;

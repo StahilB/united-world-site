@@ -27,18 +27,65 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://anounitedworld.com";
+  const articleUrl = `/articles/${params.slug}`;
+
   try {
     const raw = await getArticleBySlug(params.slug);
     if (!raw) {
-      return { title: "Статья не найдена" };
+      return {
+        title: "Статья не найдена",
+        robots: { index: false, follow: false },
+      };
     }
-    const article = mapStrapiArticleToArticle(raw, getStrapiUrl());
+
+    const image = raw.cover_image?.url || "/og-default-dark.jpg";
+    const absoluteImage = image.startsWith("http")
+      ? image
+      : `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
+    const title = raw.title;
+    const description =
+      raw.excerpt?.slice(0, 160) || "Аналитический материал АНО «Единый Мир».";
+    const publishedTime = raw.publication_date || raw.publishedAt || undefined;
+    const modifiedTime = raw.updatedAt || undefined;
+    const authorName = raw.author?.name || "АНО «Единый Мир»";
+    const categoryName = raw.categories?.[0]?.name;
+    const regionName = raw.region?.name;
+
     return {
-      title: `${article.title} — Единый Мир`,
-      description: article.excerpt,
+      title,
+      description,
+      authors: [{ name: authorName }],
+      alternates: { canonical: articleUrl },
+      openGraph: {
+        type: "article",
+        locale: "ru_RU",
+        url: articleUrl,
+        title,
+        description,
+        siteName: "Единый Мир",
+        publishedTime,
+        modifiedTime,
+        authors: [authorName],
+        section: categoryName,
+        tags: [categoryName, regionName].filter(Boolean),
+        images: [{ url: absoluteImage, width: 1200, height: 630, alt: title }],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [absoluteImage],
+      },
+      other: {
+        "article:published_time": publishedTime ?? "",
+        "article:modified_time": modifiedTime ?? "",
+        "article:author": authorName,
+        "article:section": categoryName ?? "",
+      },
     };
   } catch {
-    return { title: "Единый Мир" };
+    return { title: "Статья не найдена" };
   }
 }
 

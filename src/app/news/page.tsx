@@ -16,7 +16,7 @@ const SLUG = "novosti";
 const PAGE_SIZE = 12;
 
 export const metadata: Metadata = {
-  title: "Новости — АНО «Единый Мир»",
+  title: "Новости",
   description: "Новости и анонсы аналитического центра «Единый Мир».",
 };
 

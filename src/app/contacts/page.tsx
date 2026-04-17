@@ -3,9 +3,8 @@ import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
 
 export const metadata: Metadata = {
-  title: "Контакты — АНО «Единый Мир»",
-  description:
-    "Адрес, телефон, e-mail и социальные сети АНО «Единый Мир».",
+  title: "Контакты",
+  description: "Контактная информация АНО «Единый Мир»: адрес и email для связи.",
 };
 
 export default async function ContactsPage() {

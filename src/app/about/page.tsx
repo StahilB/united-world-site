@@ -3,7 +3,7 @@ import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
 
 export const metadata: Metadata = {
-  title: "Об организации — АНО «Единый Мир»",
+  title: "Об организации",
   description:
     "АНО «Единый Мир» — некоммерческая организация, содействующая общественной дипломатии и международному диалогу.",
 };

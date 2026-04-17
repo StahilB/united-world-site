@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleRubricGrid } from "@/components/rubric/ArticleRubricGrid";
 import {
@@ -18,6 +19,24 @@ const LIST_LIMIT = 100;
 type RegionPageProps = {
   params: { slug: string };
 };
+
+export async function generateMetadata({
+  params,
+}: RegionPageProps): Promise<Metadata> {
+  const region = await getRegionBySlug(params.slug).catch(() => null);
+  if (!region) {
+    return {
+      title: "Регион не найден",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  return {
+    title: region.name,
+    description: `Статьи по региону «${region.name}» — аналитический центр «Единый Мир».`,
+    alternates: { canonical: `/region/${params.slug}` },
+  };
+}
 
 export default async function RegionPage({ params }: RegionPageProps) {
   const { slug } = params;

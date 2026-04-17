@@ -3,9 +3,8 @@ import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
 
 export const metadata: Metadata = {
-  title: "Поддержать проект — АНО «Единый Мир»",
-  description:
-    "Как поддержать некоммерческую организацию «Единый Мир» и независимую аналитику.",
+  title: "Поддержать",
+  description: "Как поддержать деятельность аналитического центра «Единый Мир».",
 };
 
 export default async function SupportPage() {

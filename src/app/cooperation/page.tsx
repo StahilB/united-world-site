@@ -3,9 +3,9 @@ import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
 
 export const metadata: Metadata = {
-  title: "Сотрудничество — АНО «Единый Мир»",
+  title: "Сотрудничество",
   description:
-    "Направления сотрудничества и контакты АНО «Единый Мир» для аналитических центров, СМИ и экспертов.",
+    "Направления сотрудничества аналитического центра «Единый Мир» для партнеров, экспертов и организаций.",
 };
 
 export default async function CooperationPage() {
