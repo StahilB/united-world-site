@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Source_Sans_3 } from "next/font/google";
+import { YandexMetrica } from "@/components/analytics/YandexMetrica";
 import { Footer } from "@/components/layout/Footer";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
@@ -18,9 +19,90 @@ const sourceSans3 = Source_Sans_3({
   display: "swap",
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anounitedworld.com";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#0F1B2D",
+};
+
 export const metadata: Metadata = {
-  title: "Единый Мир",
-  description: "Аналитический центр",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Единый Мир — аналитический центр общественной дипломатии",
+    template: "%s | Единый Мир",
+  },
+  description:
+    "АНО «Центр мониторинга и оценки проблем современности «Единый Мир» — " +
+    "независимый аналитический центр. Экспертные материалы по международной " +
+    "политике, экономике, безопасности и общественной дипломатии.",
+  keywords: [
+    "аналитический центр",
+    "международные отношения",
+    "геополитика",
+    "общественная дипломатия",
+    "международная безопасность",
+    "АНО Единый Мир",
+    "международная политика",
+    "аналитика",
+    "экспертиза",
+  ],
+  authors: [{ name: "АНО «Единый Мир»", url: SITE_URL }],
+  creator: "АНО «Единый Мир»",
+  publisher: "АНО «Единый Мир»",
+  formatDetection: { email: false, address: false, telephone: false },
+  alternates: {
+    canonical: "/",
+    languages: {
+      "ru-RU": SITE_URL,
+      "en-US": "https://en.anounitedworld.com",
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    alternateLocale: ["en_US"],
+    url: SITE_URL,
+    siteName: "Единый Мир",
+    title: "Единый Мир — аналитический центр общественной дипломатии",
+    description:
+      "Экспертные материалы по международной политике, экономике и безопасности.",
+    images: [
+      {
+        url: "/og-default-dark.jpg",
+        width: 1200,
+        height: 630,
+        alt: "АНО «Единый Мир»",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Единый Мир — аналитический центр",
+    description: "Экспертные материалы по международной политике и общественной дипломатии",
+    images: ["/og-default-dark.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
+  },
+  verification: {
+    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
+    other: {
+      "mailru-domain": process.env.NEXT_PUBLIC_MAILRU_VERIFICATION ?? "",
+    },
+  },
+  category: "News",
 };
 
 export default function RootLayout({
@@ -37,6 +119,7 @@ export default function RootLayout({
         <SiteHeader />
         {children}
         <Footer />
+        <YandexMetrica />
       </body>
     </html>
   );
