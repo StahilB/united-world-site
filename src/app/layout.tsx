@@ -22,6 +22,7 @@ const sourceSans3 = Source_Sans_3({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anounitedworld.com";
+const IS_PRODUCTION_DOMAIN = SITE_URL.includes("anounitedworld.com");
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -86,17 +87,24 @@ export const metadata: Metadata = {
     description: "Экспертные материалы по международной политике и общественной дипломатии",
     images: ["/og-default-brand.jpg"],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-snippet": -1,
-      "max-image-preview": "large",
-      "max-video-preview": -1,
-    },
-  },
+  robots: IS_PRODUCTION_DOMAIN
+    ? {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-snippet": -1,
+          "max-image-preview": "large",
+          "max-video-preview": -1,
+        },
+      }
+    : {
+        index: false,
+        follow: false,
+        noarchive: true,
+        nosnippet: true,
+      },
   verification: {
     yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
     google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
