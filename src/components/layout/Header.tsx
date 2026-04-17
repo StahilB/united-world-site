@@ -26,7 +26,7 @@ const topRowsCollapsed =
 /** Достаточно большой max-height для анимации раскрытия (контент строк 1–2) */
 const topRowsExpanded = "max-h-[560px] translate-y-0 opacity-100";
 
-const LOGO_SRC = "/images/logo_1.png";
+const LOGO_SRC = "/logo.png";
 
 function LogoMark({
   heightPx,
