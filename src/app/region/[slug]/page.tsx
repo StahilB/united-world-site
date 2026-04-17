@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ArticleRubricGrid } from "@/components/rubric/ArticleRubricGrid";
 import {
   articlesByRegionRequestPath,
@@ -7,6 +8,7 @@ import {
   getRegionBySlug,
   strapiAbsoluteUrl,
 } from "@/lib/api";
+import { breadcrumbSchema } from "@/lib/schema";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { StrapiCollectionResponse, StrapiArticle } from "@/lib/strapi-types";
@@ -82,11 +84,20 @@ export default async function RegionPage({ params }: RegionPageProps) {
   }
 
   return (
-    <ArticleRubricGrid
-      heading={region.name}
-      articles={articles}
-      debug={{ requestUrl, rawCount }}
-      emptyMessage="Статьи не найдены"
-    />
+    <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Главная", url: "/" },
+          { name: "Регионы", url: "/region" },
+          { name: region.name, url: `/region/${slug}` },
+        ])}
+      />
+      <ArticleRubricGrid
+        heading={region.name}
+        articles={articles}
+        debug={{ requestUrl, rawCount }}
+        emptyMessage="Статьи не найдены"
+      />
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ArticleRubricGrid } from "@/components/rubric/ArticleRubricGrid";
 import {
   articlesByCategoryRequestPath,
@@ -7,6 +8,7 @@ import {
   getCategoryBySlug,
   strapiAbsoluteUrl,
 } from "@/lib/api";
+import { breadcrumbSchema } from "@/lib/schema";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { StrapiArticle, StrapiCollectionResponse } from "@/lib/strapi-types";
@@ -86,11 +88,20 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   }
 
   return (
-    <ArticleRubricGrid
-      heading={category.name}
-      articles={articles}
-      debug={{ requestUrl, rawCount }}
-      emptyMessage="Статьи не найдены"
-    />
+    <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Главная", url: "/" },
+          { name: "Категории", url: "/category" },
+          { name: category.name, url: `/category/${slug}` },
+        ])}
+      />
+      <ArticleRubricGrid
+        heading={category.name}
+        articles={articles}
+        debug={{ requestUrl, rawCount }}
+        emptyMessage="Статьи не найдены"
+      />
+    </>
   );
 }

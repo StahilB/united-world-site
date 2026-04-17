@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArticlePageView } from "@/components/articles/ArticlePageView";
 import { ViewCounter } from "@/components/articles/ViewCounter";
 import { ArticleStrapiUnavailable } from "@/components/articles/ArticleStrapiUnavailable";
+import { JsonLd } from "@/components/seo/JsonLd";
 import {
   fetchReadAlsoArticles,
   fetchSimilarArticles,
@@ -10,6 +11,7 @@ import {
   getArticleTags,
 } from "@/lib/article-content";
 import { getArticleBySlug } from "@/lib/api";
+import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import type { Article } from "@/lib/types";
@@ -39,7 +41,7 @@ export async function generateMetadata({
       };
     }
 
-    const image = raw.cover_image?.url || "/og-default-dark.jpg";
+    const image = raw.cover_image?.url || "/og-default-brand.jpg";
     const absoluteImage = image.startsWith("http")
       ? image
       : `${siteUrl}${image.startsWith("/") ? image : `/${image}`}`;
@@ -90,13 +92,14 @@ export async function generateMetadata({
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
+  const slug = params.slug;
   let raw = null;
   let strapiUnreachable = false;
 
   try {
-    raw = await getArticleBySlug(params.slug);
+    raw = await getArticleBySlug(slug);
   } catch (e) {
-    console.error(`[ArticlePage] Strapi fetch failed for /${params.slug}:`, e);
+    console.error(`[ArticlePage] Strapi fetch failed for /${slug}:`, e);
     strapiUnreachable = true;
   }
 
@@ -129,9 +132,38 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
 
   const tags = getArticleTags(article);
+  const primaryCategory = article.categories[0];
 
   return (
     <>
+      <JsonLd
+        data={articleSchema({
+          title: article.title,
+          slug,
+          excerpt: article.excerpt,
+          coverImage: article.coverImage,
+          publishedAt: article.publishedAt,
+          authorName: article.author.name || "АНО «Единый Мир»",
+          authorSlug: article.author.slug || undefined,
+          categoryName: primaryCategory?.name,
+          wordCount: article.readingTime ? article.readingTime * 180 : undefined,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Главная", url: "/" },
+          { name: "Аналитика", url: "/analytics" },
+          ...(primaryCategory?.name
+            ? [
+                {
+                  name: primaryCategory.name,
+                  url: primaryCategory.slug ? `/section/${primaryCategory.slug}` : "/analytics",
+                },
+              ]
+            : []),
+          { name: article.title, url: `/articles/${slug}` },
+        ])}
+      />
       <ViewCounter articleId={raw.id} />
       <ArticlePageView
         article={article}

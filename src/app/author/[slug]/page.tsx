@@ -3,11 +3,13 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AuthorAvatar } from "@/components/author/AuthorAvatar";
+import { JsonLd } from "@/components/seo/JsonLd";
 import {
   getArticlesByAuthor,
   getArticlesByAuthorColumns,
   getAuthorBySlug,
 } from "@/lib/api";
+import { personSchema } from "@/lib/schema";
 import { getStrapiUrl, resolveStrapiAssetUrl } from "@/lib/strapi-config";
 import { formatDateRu, mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { StrapiMedia } from "@/lib/strapi-types";
@@ -111,6 +113,14 @@ export default async function AuthorPage({
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <JsonLd
+          data={personSchema({
+            name: author.name,
+            slug: author.slug,
+            bio: author.bio || undefined,
+            photo: photo || undefined,
+          })}
+        />
         <section className="flex flex-col gap-5 border-b border-neutral-200 pb-10 md:flex-row md:items-center md:gap-8">
           <AuthorAvatar
             name={author.name}

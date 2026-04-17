@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ArticleRubricGrid } from "@/components/rubric/ArticleRubricGrid";
 import { SectionRubricFilters } from "@/components/rubric/SectionRubricFilters";
 import {
@@ -18,6 +19,7 @@ import {
   getSectionHref,
   SECTION_SLUGS_REDIRECT_TO_COLUMNS,
 } from "@/lib/navigation";
+import { breadcrumbSchema } from "@/lib/schema";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { Article } from "@/lib/types";
@@ -178,6 +180,12 @@ export default async function SectionPage({
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <JsonLd
+          data={breadcrumbSchema([
+            { name: "Главная", url: "/" },
+            ...path.map((s) => ({ name: s.name, url: getSectionHref(s.slug) })),
+          ])}
+        />
         <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl lg:text-[2.75rem]">
           {current.name}
         </h1>

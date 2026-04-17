@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Source_Sans_3 } from "next/font/google";
 import { YandexMetrica } from "@/components/analytics/YandexMetrica";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/layout/Footer";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { organizationSchema, websiteSchema } from "@/lib/schema";
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -71,7 +73,7 @@ export const metadata: Metadata = {
       "Экспертные материалы по международной политике, экономике и безопасности.",
     images: [
       {
-        url: "/og-default-dark.jpg",
+        url: "/og-default-brand.jpg",
         width: 1200,
         height: 630,
         alt: "АНО «Единый Мир»",
@@ -82,7 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Единый Мир — аналитический центр",
     description: "Экспертные материалы по международной политике и общественной дипломатии",
-    images: ["/og-default-dark.jpg"],
+    images: ["/og-default-brand.jpg"],
   },
   robots: {
     index: true,
@@ -116,6 +118,8 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${sourceSans3.variable} h-full antialiased`}
     >
       <body className={`${sourceSans3.className} min-h-full`}>
+        <JsonLd data={organizationSchema()} />
+        <JsonLd data={websiteSchema()} />
         <SiteHeader />
         {children}
         <Footer />
