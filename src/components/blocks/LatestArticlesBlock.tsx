@@ -24,7 +24,7 @@ const cardHover =
 const rubricClass =
   "mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-accent";
 
-function FeaturedCard({ article }: { article: Article }) {
+function FeaturedCard({ article, priority }: { article: Article; priority?: boolean }) {
   const href = `/articles/${article.slug}`;
   return (
     <article className="flex h-full min-h-0 flex-col bg-white">
@@ -38,6 +38,7 @@ function FeaturedCard({ article }: { article: Article }) {
             alt={article.title}
             fill
             className="object-cover"
+            priority={priority}
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         </div>
@@ -101,7 +102,7 @@ export function LatestArticlesBlock({ articles }: LatestArticlesBlockProps) {
 
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           <div className="min-w-0">
-            <FeaturedCard article={first} />
+            <FeaturedCard article={first} priority />
           </div>
           {rest.map((article) => (
             <div key={article.id} className="min-w-0">

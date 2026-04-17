@@ -117,6 +117,10 @@ export default function RootLayout({
       lang="ru"
       className={`${playfairDisplay.variable} ${sourceSans3.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="preconnect" href="http://72.56.250.143:1337" />
+        <link rel="dns-prefetch" href="http://72.56.250.143:1337" />
+      </head>
       <body className={`${sourceSans3.className} min-h-full`}>
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />

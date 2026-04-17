@@ -4,6 +4,7 @@ import { mapStrapiArticleToArticle } from "./strapi-mappers";
 import { getStrapiUrl } from "./strapi-config";
 import { strapiBlocksToHtml } from "./strapi-blocks-html";
 import { getArticlesByCategory as mockGetByCategory, mockArticles } from "./mock-data";
+import type { CSSProperties } from "react";
 
 function sortByDateDesc(articles: Article[]): Article[] {
   return [...articles].sort(
@@ -13,6 +14,120 @@ function sortByDateDesc(articles: Article[]): Article[] {
 }
 
 export type { TocHeading };
+
+export type ArticleHtmlChunk =
+  | { type: "html"; html: string }
+  | {
+      type: "image";
+      src: string;
+      alt: string;
+      width: number;
+      height: number;
+      className?: string;
+      style?: CSSProperties;
+      loading?: "lazy" | "eager";
+      decoding?: "async" | "sync" | "auto";
+    };
+
+function extractAttr(tag: string, name: string): string | null {
+  const rx = new RegExp(`${name}\\s*=\\s*["']([^"']+)["']`, "i");
+  return tag.match(rx)?.[1] ?? null;
+}
+
+function toCamelCase(s: string): string {
+  return s.replace(/-([a-z])/g, (_, ch: string) => ch.toUpperCase());
+}
+
+const ALLOWED_IMG_INLINE_STYLE_KEYS = new Set([
+  "width",
+  "height",
+  "maxWidth",
+  "margin",
+  "marginTop",
+  "marginRight",
+  "marginBottom",
+  "marginLeft",
+  "display",
+  "float",
+  "aspectRatio",
+  "borderRadius",
+  "verticalAlign",
+]);
+
+function parseInlineStyle(raw: string | null): CSSProperties | undefined {
+  if (!raw) return undefined;
+  const out: Record<string, string> = {};
+  raw
+    .split(";")
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .forEach((rule) => {
+      const idx = rule.indexOf(":");
+      if (idx <= 0) return;
+      const key = toCamelCase(rule.slice(0, idx).trim());
+      const value = rule.slice(idx + 1).trim();
+      if (!key || !value) return;
+      if (!ALLOWED_IMG_INLINE_STYLE_KEYS.has(key)) return;
+      out[key] = value;
+    });
+  return Object.keys(out).length > 0 ? (out as CSSProperties) : undefined;
+}
+
+/**
+ * Splits html into chunks where <img> tags are extracted
+ * so UI can render them with next/image.
+ */
+export function replaceImgWithNextImage(html: string): ArticleHtmlChunk[] {
+  const chunks: ArticleHtmlChunk[] = [];
+  const imgTagRx = /<img\b[^>]*>/gi;
+  let lastIdx = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = imgTagRx.exec(html)) !== null) {
+    const idx = match.index;
+    const tag = match[0];
+    const before = html.slice(lastIdx, idx);
+    if (before.trim()) {
+      chunks.push({ type: "html", html: before });
+    }
+
+    const src = extractAttr(tag, "src");
+    if (src) {
+      const widthRaw = Number(extractAttr(tag, "width"));
+      const heightRaw = Number(extractAttr(tag, "height"));
+      const width = Number.isFinite(widthRaw) && widthRaw > 0 ? widthRaw : 1200;
+      const height = Number.isFinite(heightRaw) && heightRaw > 0 ? heightRaw : 675;
+      const loading = extractAttr(tag, "loading");
+      const decoding = extractAttr(tag, "decoding");
+      chunks.push({
+        type: "image",
+        src,
+        alt: extractAttr(tag, "alt") ?? "",
+        width,
+        height,
+        className: extractAttr(tag, "class") ?? undefined,
+        style: parseInlineStyle(extractAttr(tag, "style")),
+        loading:
+          loading === "lazy" || loading === "eager"
+            ? loading
+            : undefined,
+        decoding:
+          decoding === "async" || decoding === "sync" || decoding === "auto"
+            ? decoding
+            : undefined,
+      });
+    }
+
+    lastIdx = idx + tag.length;
+  }
+
+  const tail = html.slice(lastIdx);
+  if (tail.trim()) {
+    chunks.push({ type: "html", html: tail });
+  }
+
+  return chunks;
+}
 
 function slugify(text: string): string {
   return text

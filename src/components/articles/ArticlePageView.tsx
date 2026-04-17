@@ -4,6 +4,7 @@ import { AuthorAvatar } from "@/components/author/AuthorAvatar";
 import { SOCIAL_URLS } from "@/components/ui/SocialIcons";
 import type { Article } from "@/lib/types";
 import type { TocHeading } from "@/lib/article-content";
+import { replaceImgWithNextImage } from "@/lib/article-content";
 import { ArticleTableOfContents } from "./ArticleTableOfContents";
 
 function formatPublished(iso: string): string {
@@ -100,6 +101,7 @@ export function ArticlePageView({
     : primaryCategory
       ? `/category/${primaryCategory.slug}`
       : "/articles";
+  const articleChunks = replaceImgWithNextImage(html);
 
   return (
     <main className="bg-surface pb-20 pt-6 md:pt-10">
@@ -199,8 +201,33 @@ export function ArticlePageView({
           <div className="min-w-0">
             <article
               className="article-body"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
+            >
+              {articleChunks.map((chunk, idx) =>
+                chunk.type === "html" ? (
+                  <div
+                    key={`html-${idx}`}
+                    dangerouslySetInnerHTML={{ __html: chunk.html }}
+                  />
+                ) : (
+                  <figure
+                    key={`img-${idx}`}
+                    className={`my-6 ${chunk.className ?? ""}`.trim()}
+                    style={chunk.style}
+                    data-decoding={chunk.decoding}
+                  >
+                    <Image
+                      src={chunk.src}
+                      alt={chunk.alt}
+                      width={chunk.width}
+                      height={chunk.height}
+                      loading={chunk.loading}
+                      sizes="(max-width: 1152px) 100vw, 900px"
+                      className="h-auto w-full object-cover"
+                    />
+                  </figure>
+                ),
+              )}
+            </article>
 
             {/* Блок автора внизу */}
             <section
