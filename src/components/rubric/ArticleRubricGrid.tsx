@@ -3,33 +3,20 @@ import Link from "next/link";
 import { formatDateRu } from "@/lib/strapi-mappers";
 import type { Article } from "@/lib/types";
 
-const cardHover =
-  "transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(20,33,61,0.08)]";
-
-const rubricClass =
-  "mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-accent";
-
 function rubricLabel(article: Article): string {
   return article.categories[0]?.name ?? article.format;
 }
 
 export type ArticleRubricGridProps = {
-  /** Заголовок страницы рубрики (Playfair Display), можно пустым при hideHeading */
   heading?: string;
   articles: Article[];
-  /** Временная диагностика Strapi (URL + число записей в ответе) */
-  debug?: { requestUrl: string; rawCount: number };
-  /** Текст при пустом списке (по умолчанию — общий для рубрик) */
   emptyMessage?: string;
-  /** Только сетка карточек + заголовок, без внешнего `<main>` (вложенная страница) */
   embedded?: boolean;
-  /** Не выводить H1 (заголовок страницы задаётся снаружи) */
   hideHeading?: boolean;
 };
 
 export function ArticleRubricGrid({
   articles,
-  debug,
   emptyMessage = "В этой рубрике пока нет материалов",
   embedded = false,
   hideHeading = false,
@@ -38,86 +25,70 @@ export function ArticleRubricGrid({
   const inner = (
     <div
       className={
-        embedded
-          ? "mx-auto max-w-6xl"
-          : "mx-auto max-w-6xl px-4 md:px-6"
+        embedded ? "mx-auto max-w-6xl" : "mx-auto max-w-6xl px-6 md:px-8"
       }
     >
-        {!hideHeading ? (
-          <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl lg:text-[2.75rem]">
-            {heading}
-          </h1>
-        ) : null}
+      {!hideHeading ? (
+        <h1 className="font-heading text-[32px] font-bold leading-tight tracking-tight text-ink md:text-[44px] lg:text-[52px]">
+          {heading}
+        </h1>
+      ) : null}
 
-        {debug ? (
-          <div className={`rounded-md border border-dashed border-neutral-300 bg-surface px-4 py-3 font-mono text-xs text-secondary break-all ${hideHeading ? "mt-0" : "mt-6"}`}>
-            <div>
-              <span className="font-semibold text-primary">Запрос:</span>{" "}
-              {debug.requestUrl}
-            </div>
-            <div className="mt-2">
-              <span className="font-semibold text-primary">Статей в ответе:</span>{" "}
-              {debug.rawCount}
-            </div>
-          </div>
-        ) : null}
-
-        {articles.length === 0 ? (
-          <p
-            className={`font-sans text-base text-muted ${
-              hideHeading ? "mt-0" : "mt-10"
-            }`}
-          >
-            {emptyMessage}
-          </p>
-        ) : (
-          <div
-            className={`grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8 ${
-              hideHeading ? "mt-0" : "mt-10"
-            }`}
-          >
-            {articles.map((article) => {
-              const href = `/articles/${article.slug}`;
-              return (
-                <article
-                  key={article.id}
-                  className="flex h-full min-h-0 flex-col bg-white"
+      {articles.length === 0 ? (
+        <p
+          className={`font-sans text-[15px] text-text-mute ${
+            hideHeading ? "mt-0" : "mt-10"
+          }`}
+        >
+          {emptyMessage}
+        </p>
+      ) : (
+        <div
+          className={`grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-8 ${
+            hideHeading ? "mt-0" : "mt-12"
+          }`}
+        >
+          {articles.map((article) => {
+            const href = `/articles/${article.slug}`;
+            return (
+              <article
+                key={article.id}
+                className="flex h-full min-w-0 flex-col"
+              >
+                <Link
+                  href={href}
+                  className="group flex h-full flex-col transition-[transform] duration-200 ease-out hover:-translate-y-[2px]"
                 >
-                  <Link
-                    href={href}
-                    className={`group flex h-full min-h-0 flex-col overflow-hidden bg-white outline-none ${cardHover}`}
-                  >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface">
-                      <Image
-                        src={article.coverImage}
-                        alt={article.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    </div>
-                    <div className="flex flex-1 flex-col p-4 pt-5 md:p-5">
-                      <span className={rubricClass}>{rubricLabel(article)}</span>
-                      <h2 className="font-heading text-xl font-normal leading-snug tracking-tight text-primary transition-colors group-hover:text-accent md:text-[22px]">
-                        {article.title}
-                      </h2>
-                      <time
-                        className="mt-3 font-sans text-[12px] text-muted"
-                        dateTime={article.publishedAt}
-                      >
-                        {formatDateRu(article.publishedAt)}
-                      </time>
-                      <p className="mt-2 font-sans text-sm text-secondary">
-                        {article.author.name}
-                      </p>
-                    </div>
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-paper-mute">
+                    <Image
+                      src={article.coverImage}
+                      alt={article.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col">
+                    <p className="kicker mt-4 line-clamp-1">
+                      {rubricLabel(article)}
+                    </p>
+                    <h2 className="mt-2 font-heading text-[19px] font-bold leading-snug tracking-tight text-ink transition-colors group-hover:text-gold-deep md:text-[20px]">
+                      {article.title}
+                    </h2>
+                    <time
+                      className="meta mt-auto block pt-4"
+                      dateTime={article.publishedAt}
+                    >
+                      {formatDateRu(article.publishedAt)}
+                    </time>
+                  </div>
+                </Link>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 
   if (embedded) {
@@ -125,6 +96,6 @@ export function ArticleRubricGrid({
   }
 
   return (
-    <main className="min-h-screen bg-white py-10 md:py-14">{inner}</main>
+    <main className="min-h-screen bg-paper py-12 md:py-16">{inner}</main>
   );
 }
