@@ -1,5 +1,5 @@
 import { ExpertForumBlock } from "@/components/blocks/ExpertForumBlock";
-import { GlobalReviewsBlock } from "@/components/blocks/GlobalReviewsBlock";
+import { HeroTopBlock } from "@/components/blocks/HeroTopBlock";
 import { LatestArticlesBlock } from "@/components/blocks/LatestArticlesBlock";
 import { RegionalReviewsBlock } from "@/components/blocks/RegionalReviewsBlock";
 import { ThematicBlock } from "@/components/blocks/ThematicBlock";
@@ -145,12 +145,10 @@ export default async function HomePage() {
         <Link href="/about">О центре</Link>
       </nav>
       {mainArticle && (
-        <section className="py-12 md:py-16">
-          <GlobalReviewsBlock
-            mainArticle={mainArticle}
-            popularArticles={popularArticles}
-          />
-        </section>
+        <HeroTopBlock
+          mainArticle={mainArticle}
+          popularArticles={popularArticles}
+        />
       )}
 
       {hasLatest && (
