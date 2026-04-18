@@ -61,7 +61,7 @@ function SimilarCardWide({ article: a }: { article: Article }) {
       href={`/articles/${a.slug}`}
       className="group flex min-w-0 flex-col overflow-hidden bg-paper-warm transition-[transform] duration-200 ease-out hover:-translate-y-[2px] md:flex-row"
     >
-      <div className="relative aspect-[16/10] w-full shrink-0 md:aspect-[4/3] md:w-[38%]">
+      <div className="relative aspect-[16/10] w-full shrink-0 md:aspect-[4/3] md:w-[40%]">
         <Image
           src={a.coverImage}
           alt=""
@@ -70,11 +70,11 @@ function SimilarCardWide({ article: a }: { article: Article }) {
           sizes="(max-width: 768px) 100vw, 33vw"
         />
       </div>
-      <div className="flex flex-1 flex-col justify-center p-5 md:p-6">
+      <div className="flex min-w-0 flex-1 flex-col justify-center p-4 md:p-5">
         <p className="kicker line-clamp-1">
           {a.categories[0]?.name ?? a.format}
         </p>
-        <h3 className="mt-2 font-heading text-[18px] font-bold leading-snug tracking-tight text-ink transition-colors group-hover:text-gold-deep md:text-[19px]">
+        <h3 className="mt-2 font-heading text-[15px] font-bold leading-[1.25] tracking-tight text-ink transition-colors group-hover:text-gold-deep md:text-[16px] line-clamp-4">
           {a.title}
         </h3>
       </div>
