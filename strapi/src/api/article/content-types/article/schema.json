@@ -25,8 +25,7 @@
       "type": "blocks"
     },
     "excerpt": {
-      "type": "text",
-      "maxLength": 300
+      "type": "text"
     },
     "cover_image": {
       "type": "media",
