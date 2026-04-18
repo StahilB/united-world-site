@@ -3,6 +3,7 @@ import { Playfair_Display, Source_Sans_3 } from "next/font/google";
 import { YandexMetrica } from "@/components/analytics/YandexMetrica";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/layout/Footer";
+import { MigrationBanner } from "@/components/layout/MigrationBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { organizationSchema, websiteSchema } from "@/lib/schema";
 import "./globals.css";
@@ -132,6 +133,7 @@ export default function RootLayout({
       <body className={`${sourceSans3.className} min-h-full`}>
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
+        <MigrationBanner />
         <SiteHeader />
         {children}
         <Footer />
