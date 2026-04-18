@@ -31,6 +31,8 @@ export interface GlobalReviewsMainArticle {
   /** ISO 8601 для атрибута dateTime */
   dateIso: string;
   href: string;
+  /** Обложка из Strapi; если нет — блок hero без изображения */
+  coverImage?: string;
 }
 
 /** Пункт списка «Самое читаемое» в блоке глобальных обзоров */

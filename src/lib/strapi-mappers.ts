@@ -137,13 +137,16 @@ export function toGlobalReviewsMainArticle(
   a: StrapiArticle,
   origin: string = getStrapiUrl(),
 ): GlobalReviewsMainArticle {
+  const mapped = mapStrapiArticleToArticle(a, origin);
   const iso = publishedIso(a);
+  const hasRealCover = Boolean(a.cover_image?.url);
   return {
-    title: a.title,
-    excerpt: a.excerpt ?? "",
+    title: mapped.title,
+    excerpt: mapped.excerpt ?? "",
     date: formatDateRu(iso),
     dateIso: iso.slice(0, 10),
-    href: `/articles/${a.slug}`,
+    href: `/articles/${mapped.slug}`,
+    ...(hasRealCover ? { coverImage: mapped.coverImage } : {}),
   };
 }
 
