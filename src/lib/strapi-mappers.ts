@@ -20,8 +20,7 @@ import type {
 } from "./types";
 import { getStrapiUrl, resolveStrapiAssetUrl } from "./strapi-config";
 
-const FALLBACK_COVER =
-  "https://picsum.photos/seed/united-world/1200/800";
+const FALLBACK_COVER = "/images/placeholder-cover.svg";
 
 function mediaUrl(media: StrapiMedia | null | undefined): string {
   if (!media?.url) {
