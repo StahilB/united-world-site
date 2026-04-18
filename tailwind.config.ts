@@ -9,13 +9,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#14213D",
-        secondary: "#2B4570",
-        accent: "#B8952C",
-        accentLight: "#D4B44C",
-        surface: "#F5F7FA",
-        text: "#14213D",
-        muted: "#5A6A85",
+        // Core ink (brand dark blue)
+        ink: "#0B1E3A",
+        "ink-soft": "#1F3357",
+        // Paper / surfaces
+        paper: "#FFFFFF",
+        "paper-warm": "#FAF7F2",
+        // Text
+        text: "#111418",
+        "text-mute": "#5E6472",
+        // Rules
+        rule: "#D7D2C8",
+        "rule-cool": "#E5E7EB",
+        // Gold (three shades by background)
+        gold: "#B8862B",
+        "gold-deep": "#8B6418",
+        "gold-light": "#E8CC83",
+        // Alert
+        alert: "#B7361C",
+
+        // Legacy aliases — НЕ УДАЛЯЕМ, чтобы не сломать Header/MegaMenu/
+        // MobileMenu/рубричные страницы в один присест. Они указывают на
+        // новые токены. В следующей итерации зачистим.
+        primary: "#0B1E3A",
+        secondary: "#1F3357",
+        accent: "#B8862B",
+        accentLight: "#E8CC83",
+        surface: "#FAF7F2",
+        muted: "#5E6472",
       },
       fontFamily: {
         sans: ["var(--font-source-sans-3)", "system-ui", "sans-serif"],
