@@ -8,7 +8,7 @@ export type RegionalReviewsBlockProps = {
 function RegionRow({ item }: { item: RegionalReviewItem }) {
   const href = `/articles/${item.article.slug}`;
   return (
-    <article className="border-t border-rule py-5 first:border-t-0 first:pt-0">
+    <article className="py-5">
       <p className="font-heading text-[20px] font-bold leading-tight text-ink md:text-[22px]">
         {item.region.name}
       </p>
@@ -38,7 +38,7 @@ export function RegionalReviewsBlock({ items }: RegionalReviewsBlockProps) {
           </Link>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-x-12 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-x-12 md:grid-cols-2 lg:grid-cols-3 [&>article]:relative [&>article]:before:absolute [&>article]:before:left-0 [&>article]:before:right-0 [&>article]:before:top-0 [&>article]:before:h-px [&>article]:before:bg-rule [&>article:nth-child(-n+1)]:before:hidden md:[&>article:nth-child(-n+2)]:before:hidden lg:[&>article:nth-child(-n+3)]:before:hidden">
           {items.map((item) => (
             <RegionRow key={item.region.slug} item={item} />
           ))}
