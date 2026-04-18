@@ -230,27 +230,17 @@ function createStrapiClient({ baseUrl, token }) {
   }
 
   /**
+   * Загружает бинарный файл в Strapi media library.
    * @param {Buffer} buffer
    * @param {string} filename
-   * @returns {Promise<number | null>} media id
+   * @param {string} contentType — например "image/png", "image/jpeg"
+   * @returns {Promise<{ id: number, url: string } | null>}
    */
-  async function uploadImage(buffer, filename) {
+  async function uploadMedia(buffer, filename, contentType) {
     const form = new FormData();
-
-    const ext = (filename || "").split(".").pop()?.toLowerCase() || "jpg";
-    const mimeMap = {
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      png: "image/png",
-      gif: "image/gif",
-      webp: "image/webp",
-      svg: "image/svg+xml",
-    };
-    const contentType = mimeMap[ext] || "image/jpeg";
-
     form.append("files", buffer, {
-      filename: filename || "cover.jpg",
-      contentType,
+      filename: filename || "file.bin",
+      contentType: contentType || "application/octet-stream",
       knownLength: buffer.length,
     });
 
@@ -286,13 +276,22 @@ function createStrapiClient({ baseUrl, token }) {
               `[strapi] upload response: ${res.statusCode} ${data.slice(0, 200)}`,
             );
             if (res.statusCode && res.statusCode >= 400) {
-              reject(new Error(`Upload ${res.statusCode}: ${data}`));
+              console.error(
+                "[uploadMedia] Strapi upload failed:",
+                res.statusCode,
+                data,
+              );
+              resolve(null);
               return;
             }
             try {
               const json = JSON.parse(data);
               const file = Array.isArray(json) ? json[0] : json?.[0];
-              resolve(file?.id ?? null);
+              if (!file?.id) {
+                resolve(null);
+                return;
+              }
+              resolve({ id: file.id, url: file.url || "" });
             } catch {
               reject(new Error(`Upload parse error: ${data.slice(0, 200)}`));
             }
@@ -307,6 +306,30 @@ function createStrapiClient({ baseUrl, token }) {
 
       form.pipe(req);
     });
+  }
+
+  /**
+   * @param {Buffer} buffer
+   * @param {string} filename
+   * @returns {Promise<number | null>} media id
+   */
+  async function uploadImage(buffer, filename) {
+    const ext = (filename || "").split(".").pop()?.toLowerCase() || "jpg";
+    const mimeMap = {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      gif: "image/gif",
+      webp: "image/webp",
+      svg: "image/svg+xml",
+    };
+    const contentType = mimeMap[ext] || "image/jpeg";
+    const uploaded = await uploadMedia(
+      buffer,
+      filename || "cover.jpg",
+      contentType,
+    );
+    return uploaded?.id ?? null;
   }
 
   /**
@@ -388,6 +411,7 @@ function createStrapiClient({ baseUrl, token }) {
     findRegionBySlug,
     findAuthorByName,
     createAuthor,
+    uploadMedia,
     uploadImage,
     createArticle,
     markdownToBlocks,
