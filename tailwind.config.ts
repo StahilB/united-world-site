@@ -9,34 +9,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Core ink (brand dark blue)
-        ink: "#0B1E3A",
-        "ink-soft": "#1F3357",
+        // Core ink (brand cobalt — взято со среднего тона глобуса в логотипе)
+        ink: "#0D2A5C",
+        "ink-soft": "#1E3F7A",
+        "ink-deep": "#061739",
         // Paper / surfaces
         paper: "#FFFFFF",
-        "paper-warm": "#FAF7F2",
+        "paper-warm": "#F5F6F9",
+        "paper-mute": "#EEF1F6",
         // Text
-        text: "#111418",
-        "text-mute": "#5E6472",
+        text: "#0F1729",
+        "text-mute": "#4E5A73",
         // Rules
-        rule: "#D7D2C8",
+        rule: "#DCE0E8",
         "rule-cool": "#E5E7EB",
-        // Gold (three shades by background)
-        gold: "#B8862B",
-        "gold-deep": "#8B6418",
-        "gold-light": "#E8CC83",
+        // Gold (honeyed, точные тона с рамки логотипа)
+        gold: "#C99A3A",
+        "gold-deep": "#8C6420",
+        "gold-light": "#E8C774",
         // Alert
         alert: "#B7361C",
 
-        // Legacy aliases — НЕ УДАЛЯЕМ, чтобы не сломать Header/MegaMenu/
-        // MobileMenu/рубричные страницы в один присест. Они указывают на
-        // новые токены. В следующей итерации зачистим.
-        primary: "#0B1E3A",
-        secondary: "#1F3357",
-        accent: "#B8862B",
-        accentLight: "#E8CC83",
-        surface: "#FAF7F2",
-        muted: "#5E6472",
+        // Legacy aliases — указывают на новые значения
+        primary: "#0D2A5C",
+        secondary: "#1E3F7A",
+        accent: "#C99A3A",
+        accentLight: "#E8C774",
+        surface: "#F5F6F9",
+        muted: "#4E5A73",
       },
       fontFamily: {
         sans: ["var(--font-source-sans-3)", "system-ui", "sans-serif"],
