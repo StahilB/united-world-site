@@ -40,6 +40,19 @@ services:
       STRAPI_TOKEN: "3f59bd5f61009a22be9f8a0bd8a610ae336f90549a7ac052b883e95be0f2f5790e974b49ef5d48ac9a5822ccc0fd85fa1be924ac3d861ef3f52bfdd416c6fe02c1ec1a012369f39760d3ad10e5b0437fe3cf39fcbca56f265d61e8504922057491f08504e6d1c001f61bef7b644466679644cfb28479a354e89688a566f4a2b1"
     volumes:
       - strapi_uploads:/app/public/uploads
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "--spider",
+          "http://localhost:1337/api/articles?pagination[pageSize]=1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
 
   nextjs:
     build:
@@ -54,6 +67,11 @@ services:
         NEXT_PUBLIC_YANDEX_METRICA_ID: ${NEXT_PUBLIC_YANDEX_METRICA_ID:-}
         NEXT_PUBLIC_YM_WEBVISOR: ${NEXT_PUBLIC_YM_WEBVISOR:-true}
     restart: unless-stopped
+    depends_on:
+      strapi:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}
@@ -64,7 +82,8 @@ services:
     build: ./telegram-bot
     restart: on-failure:5
     depends_on:
-      - strapi
+      strapi:
+        condition: service_healthy
     environment:
       BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN}
       CHANNEL_ID: ${CHANNEL_ID:?set CHANNEL_ID}
