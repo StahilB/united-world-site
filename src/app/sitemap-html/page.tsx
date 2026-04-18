@@ -54,7 +54,7 @@ export default async function SitemapHtmlPage() {
                 <li key={s.id}>
                   <Link
                     href={`/section/${s.slug}`}
-                    className="font-sans text-sm text-ink underline decoration-ink/20 underline-offset-2 hover:text-accent"
+                    className="font-sans text-sm text-ink underline decoration-ink/20 underline-offset-2 hover:text-gold-deep"
                   >
                     {s.name}
                   </Link>
@@ -74,7 +74,7 @@ export default async function SitemapHtmlPage() {
                 <li key={a.slug}>
                   <Link
                     href={`/articles/${a.slug}`}
-                    className="font-sans text-sm text-ink underline decoration-ink/20 underline-offset-2 hover:text-accent"
+                    className="font-sans text-sm text-ink underline decoration-ink/20 underline-offset-2 hover:text-gold-deep"
                   >
                     {a.title}
                   </Link>

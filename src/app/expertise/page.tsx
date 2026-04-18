@@ -14,7 +14,7 @@ export default function ExpertiseHubPage() {
           <li>
             <Link
               href="/expertise/opinions"
-              className="text-accent underline-offset-4 hover:underline"
+              className="text-gold-deep underline-offset-4 hover:underline"
             >
               Мнения
             </Link>
@@ -22,7 +22,7 @@ export default function ExpertiseHubPage() {
           <li>
             <Link
               href="/expertise/interviews"
-              className="text-accent underline-offset-4 hover:underline"
+              className="text-gold-deep underline-offset-4 hover:underline"
             >
               Интервью
             </Link>
@@ -30,7 +30,7 @@ export default function ExpertiseHubPage() {
           <li>
             <Link
               href="/expertise/columns"
-              className="text-accent underline-offset-4 hover:underline"
+              className="text-gold-deep underline-offset-4 hover:underline"
             >
               Авторские колонки
             </Link>

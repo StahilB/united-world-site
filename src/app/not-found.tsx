@@ -55,7 +55,7 @@ export default async function NotFound() {
                 type="search"
                 name="q"
                 placeholder="Ключевые слова"
-                className="w-full min-h-11 border border-ink/15 bg-white px-3 py-2 text-base text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+                className="w-full min-h-11 border border-ink/15 bg-white px-3 py-2 text-base text-ink placeholder:text-muted focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
               />
             </label>
             <button
@@ -87,10 +87,10 @@ export default async function NotFound() {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-sans text-[11px] font-semibold uppercase tracking-wide text-accent">
+                      <p className="font-sans text-[11px] font-semibold uppercase tracking-wide text-gold-deep">
                         {a.categories[0]?.name ?? a.format}
                       </p>
-                      <p className="mt-1 font-heading text-[15px] font-normal leading-snug text-ink group-hover:text-accent">
+                      <p className="mt-1 font-heading text-[15px] font-normal leading-snug text-ink group-hover:text-gold-deep">
                         {a.title}
                       </p>
                     </div>
@@ -108,7 +108,7 @@ export default async function NotFound() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="inline-flex border border-ink/15 bg-white px-3 py-2 font-sans text-sm text-ink transition-colors hover:border-accent hover:text-accent"
+                className="inline-flex border border-ink/15 bg-white px-3 py-2 font-sans text-sm text-ink transition-colors hover:border-gold hover:text-gold-deep"
               >
                 {item.label}
               </Link>

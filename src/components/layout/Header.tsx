@@ -76,7 +76,7 @@ function BurgerIcon() {
 }
 
 const navLinkClass =
-  "text-[13px] font-normal uppercase tracking-[0.05em] text-ink transition-colors duration-200 hover:text-accent";
+  "text-[13px] font-normal uppercase tracking-[0.05em] text-ink transition-colors duration-200 hover:text-gold-deep";
 
 const navSepClass = "text-[13px] text-neutral-400 select-none";
 
@@ -143,7 +143,7 @@ function MegaLeavesRow({ leaves }: { leaves: Section[] }) {
         <Link
           key={l.id}
           href={getSectionHref(l.slug)}
-          className="text-xs font-semibold uppercase tracking-[0.06em] text-ink transition-colors hover:text-accent hover:underline"
+          className="text-xs font-semibold uppercase tracking-[0.06em] text-ink transition-colors hover:text-gold-deep hover:underline"
         >
           {l.name}
         </Link>
@@ -316,7 +316,7 @@ export function Header({ sections }: HeaderProps) {
               </a>
               <Link
                 href="/support"
-                className="rounded-sm bg-accent px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-gold-light md:text-xs"
+                className="rounded-sm bg-gold px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-gold-light md:text-xs"
               >
                 Поддержать
               </Link>
@@ -361,7 +361,7 @@ export function Header({ sections }: HeaderProps) {
 
         {/* Row 3 — фиксированная высота, без анимации от скролла */}
         <div
-          className="relative border-y border-accent bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+          className="relative border-y border-gold bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
           onMouseLeave={scheduleCloseNavMenu}
         >
           <div className="mx-auto grid h-11 min-h-[44px] w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 md:px-6">
@@ -400,7 +400,7 @@ export function Header({ sections }: HeaderProps) {
                     {root.slug === "en" ? (
                       <a
                         href="#"
-                        className={`${navLinkClass}${activeRoot?.id === root.id ? " text-accent" : ""}`}
+                        className={`${navLinkClass}${activeRoot?.id === root.id ? " text-gold-deep" : ""}`}
                         onClick={(e) => e.preventDefault()}
                         aria-current={
                           activeRoot?.id === root.id ? "true" : undefined
@@ -411,7 +411,7 @@ export function Header({ sections }: HeaderProps) {
                     ) : (
                       <Link
                         href={getSectionHref(root.slug)}
-                        className={`${navLinkClass}${activeRoot?.id === root.id ? " text-accent" : ""}`}
+                        className={`${navLinkClass}${activeRoot?.id === root.id ? " text-gold-deep" : ""}`}
                         aria-current={
                           activeRoot?.id === root.id ? "true" : undefined
                         }
@@ -441,7 +441,7 @@ export function Header({ sections }: HeaderProps) {
 
           {activeRoot && activeRoot.children.length > 0 ? (
             <div
-              className="absolute left-0 right-0 top-full z-[60] hidden w-full border-t-2 border-accent bg-white shadow-lg md:block"
+              className="absolute left-0 right-0 top-full z-[60] hidden w-full border-t-2 border-gold bg-white shadow-lg md:block"
               onMouseEnter={clearNavLeaveTimer}
             >
               <SectionMegaPanel root={activeRoot} />

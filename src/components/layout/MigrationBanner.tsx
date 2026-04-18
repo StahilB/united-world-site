@@ -39,14 +39,14 @@ export function MigrationBanner() {
     <div
       role="region"
       aria-label="Информация о переезде сайта"
-      className="relative z-[60] border-b-2 border-accent bg-ink px-4 py-2.5 text-surface"
+      className="relative z-[60] border-b-2 border-gold bg-ink px-4 py-2.5 text-surface"
     >
       <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 pr-10 text-center text-sm leading-snug sm:text-base">
         <span>
           Мы переезжаем на новый сайт. Актуальные материалы смотрите на{" "}
           <a
             href="https://old.anounitedworld.com"
-            className="font-semibold text-accent underline underline-offset-2 transition hover:text-surface"
+            className="font-semibold text-gold-deep underline underline-offset-2 transition hover:text-surface"
             target="_blank"
             rel="noopener noreferrer"
           >

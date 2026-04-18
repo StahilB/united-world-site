@@ -7,7 +7,7 @@ export default function PrivacyPage() {
       <p className="mt-6 font-sans text-sm leading-relaxed text-muted">
         Раздел готовится. По вопросам данных:{" "}
         <a
-          className="text-accent underline underline-offset-2"
+          className="text-gold-deep underline underline-offset-2"
           href="mailto:official@anounitedworld.com"
         >
           official@anounitedworld.com

@@ -124,7 +124,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         {page > 1 ? (
           <Link
             href={`/search${buildQuery(searchParams, { page: page - 1 })}`}
-            className="font-semibold text-ink transition-colors hover:text-accent"
+            className="font-semibold text-ink transition-colors hover:text-gold-deep"
           >
             Назад
           </Link>
@@ -135,7 +135,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         {page < pageCount ? (
           <Link
             href={`/search${buildQuery(searchParams, { page: page + 1 })}`}
-            className="font-semibold text-ink transition-colors hover:text-accent"
+            className="font-semibold text-ink transition-colors hover:text-gold-deep"
           >
             Вперёд
           </Link>

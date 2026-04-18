@@ -53,7 +53,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
                 name="format"
                 value={f}
                 defaultChecked={defaults.formats.includes(f)}
-                className="h-3.5 w-3.5 rounded border-ink/25 text-accent focus:ring-accent"
+                className="h-3.5 w-3.5 rounded border-ink/25 text-gold-deep focus:ring-gold"
               />
               {f}
             </label>
@@ -68,7 +68,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
         <select
           name="region"
           defaultValue={defaults.region}
-          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
         >
           <option value="">Все регионы</option>
           {regions.map((r) => (
@@ -86,7 +86,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
         <select
           name="category"
           defaultValue={defaults.category}
-          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
         >
           <option value="">Все темы</option>
           {categories.map((c) => (
@@ -105,7 +105,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
           type="date"
           name="dateFrom"
           defaultValue={defaults.dateFrom}
-          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
         />
       </label>
 
@@ -117,7 +117,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
           type="date"
           name="dateTo"
           defaultValue={defaults.dateTo}
-          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
         />
       </label>
 
@@ -128,7 +128,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
         <select
           name="author"
           defaultValue={defaults.author}
-          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
         >
           <option value="">Все авторы</option>
           {authors.map((a) => (
@@ -153,7 +153,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
             name="q"
             defaultValue={defaults.q}
             placeholder="Ключевые слова в заголовке"
-            className="w-full min-h-11 border border-ink/15 bg-white px-3 py-2 font-sans text-base text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+            className="w-full min-h-11 border border-ink/15 bg-white px-3 py-2 font-sans text-base text-ink placeholder:text-muted focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
           />
         </label>
         <button

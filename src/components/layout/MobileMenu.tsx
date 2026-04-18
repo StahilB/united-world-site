@@ -75,7 +75,7 @@ function MobileSectionNode({
         <Link
           href={href}
           onClick={onClose}
-          className="mb-2 block text-xs font-semibold uppercase tracking-wide text-accent underline-offset-2 hover:underline"
+          className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gold-deep underline-offset-2 hover:underline"
         >
           Раздел: {node.name}
         </Link>
@@ -113,7 +113,7 @@ export function MobileMenu({ sections, isOpen, onClose }: MobileMenuProps) {
       aria-modal="true"
       aria-label="Меню"
     >
-      <div className="flex items-center justify-between border-b border-accent px-4 py-3">
+      <div className="flex items-center justify-between border-b border-gold px-4 py-3">
         <span className="font-heading text-lg font-semibold text-ink">
           Меню
         </span>
@@ -142,7 +142,7 @@ export function MobileMenu({ sections, isOpen, onClose }: MobileMenuProps) {
           <Link
             href="/search"
             onClick={onClose}
-            className="mb-1 flex items-center gap-3 border-b border-neutral-200 py-3 pl-1 font-sans text-sm font-semibold uppercase tracking-wide text-ink transition-colors hover:text-accent"
+            className="mb-1 flex items-center gap-3 border-b border-neutral-200 py-3 pl-1 font-sans text-sm font-semibold uppercase tracking-wide text-ink transition-colors hover:text-gold-deep"
           >
             <svg
               width="20"
@@ -153,7 +153,7 @@ export function MobileMenu({ sections, isOpen, onClose }: MobileMenuProps) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="shrink-0 text-accent"
+              className="shrink-0 text-gold-deep"
               aria-hidden
             >
               <circle cx="11" cy="11" r="7" />

@@ -87,7 +87,7 @@ export function HeaderSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 w-10 shrink-0 items-center justify-center text-ink transition-colors hover:text-accent"
+        className="flex h-10 w-10 shrink-0 items-center justify-center text-ink transition-colors hover:text-gold-deep"
         aria-label="Открыть поиск"
       >
         <MagnifierIcon />

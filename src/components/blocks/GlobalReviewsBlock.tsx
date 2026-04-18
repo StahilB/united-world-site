@@ -35,7 +35,7 @@ function PopularList({
               >
                 {n}
               </span>
-              <span className="min-w-0 flex-1 pt-0.5 font-sans text-[13px] leading-snug text-text group-hover:text-accent">
+              <span className="min-w-0 flex-1 pt-0.5 font-sans text-[13px] leading-snug text-text group-hover:text-gold-deep">
                 {article.title}
               </span>
             </Link>
@@ -50,7 +50,7 @@ function MainArticleBlock({ article }: { article: GlobalReviewsMainArticle }) {
   return (
     <article>
       <Link href={article.href} className="group block">
-        <h3 className="font-heading text-[28px] font-normal leading-tight tracking-tight text-ink transition-colors group-hover:text-accent sm:text-[32px]">
+        <h3 className="font-heading text-[28px] font-normal leading-tight tracking-tight text-ink transition-colors group-hover:text-gold-deep sm:text-[32px]">
           {article.title}
         </h3>
       </Link>
@@ -78,7 +78,7 @@ export function GlobalReviewsBlock({
   return (
     <section className={`${SECTION_BG} py-10 md:py-12`}>
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <h2 className="border-l-4 border-accent pl-4 font-heading text-lg font-normal uppercase tracking-[0.14em] text-ink md:text-xl">
+        <h2 className="border-l-4 border-gold pl-4 font-heading text-lg font-normal uppercase tracking-[0.14em] text-ink md:text-xl">
           Самое читаемое
         </h2>
 

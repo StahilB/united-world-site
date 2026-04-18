@@ -84,7 +84,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         {page > 1 ? (
           <Link
             href={page === 2 ? "/news" : `/news?page=${page - 1}`}
-            className="font-semibold text-ink transition-colors hover:text-accent"
+            className="font-semibold text-ink transition-colors hover:text-gold-deep"
           >
             Назад
           </Link>
@@ -95,7 +95,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         {page < pageCount ? (
           <Link
             href={`/news?page=${page + 1}`}
-            className="font-semibold text-ink transition-colors hover:text-accent"
+            className="font-semibold text-ink transition-colors hover:text-gold-deep"
           >
             Вперёд
           </Link>
@@ -114,7 +114,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 font-sans text-sm text-muted"
           aria-label="Хлебные крошки"
         >
-          <Link href="/" className="transition-colors hover:text-accent">
+          <Link href="/" className="transition-colors hover:text-gold-deep">
             Главная
           </Link>
           {path.slice(0, -1).map((s) => (
@@ -124,7 +124,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
               </span>
               <Link
                 href={getSectionHref(s.slug)}
-                className="transition-colors hover:text-accent"
+                className="transition-colors hover:text-gold-deep"
               >
                 {s.name}
               </Link>

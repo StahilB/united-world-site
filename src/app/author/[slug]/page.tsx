@@ -43,10 +43,10 @@ function ArticleCard({ article }: { article: Article }) {
           />
         </div>
         <div className="flex flex-1 flex-col p-4 pt-5 md:p-5">
-          <span className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+          <span className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-deep">
             {rubric}
           </span>
-          <h2 className="font-heading text-xl font-normal leading-snug tracking-tight text-ink transition-colors group-hover:text-accent md:text-[22px]">
+          <h2 className="font-heading text-xl font-normal leading-snug tracking-tight text-ink transition-colors group-hover:text-gold-deep md:text-[22px]">
             {article.title}
           </h2>
           <time

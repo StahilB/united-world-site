@@ -31,7 +31,7 @@ export function SectionRubricFilters({
         </label>
         <select
           id="rubric-filter-mobile"
-          className="w-full min-h-11 border border-neutral-200 bg-white px-3 py-2 font-sans text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="w-full min-h-11 border border-neutral-200 bg-white px-3 py-2 font-sans text-sm text-ink focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
           value={selectedFilter ?? ""}
           onChange={(e) => {
             const v = e.target.value;

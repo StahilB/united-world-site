@@ -60,7 +60,7 @@ function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
         )}
 
         <div className="min-w-0 flex-1">
-          <div className="font-sans text-[18px] font-bold leading-snug text-ink group-hover:text-accent">
+          <div className="font-sans text-[18px] font-bold leading-snug text-ink group-hover:text-gold-deep">
             {a.name}
           </div>
           <p className="mt-2 overflow-hidden font-sans text-sm leading-relaxed text-muted [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
