@@ -331,7 +331,7 @@ export function ArticlePageView({
                 </div>
               )}
 
-              <div className="bg-ink p-5 text-white">
+              <div className="bg-ink-deep p-5 text-white">
                 <p className="kicker text-gold-light">Подписка</p>
                 <p className="mt-3 font-heading text-[17px] font-bold leading-snug">
                   Дайджест в Telegram
