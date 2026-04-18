@@ -459,10 +459,7 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    excerpt: Schema.Attribute.Text &
-      Schema.Attribute.SetMinMaxLength<{
-        maxLength: 300;
-      }>;
+    excerpt: Schema.Attribute.Text;
     format: Schema.Attribute.Enumeration<
       [
         '\u0430\u043D\u0430\u043B\u0438\u0437',
