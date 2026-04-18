@@ -2,16 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ArticleRubricGrid } from "@/components/rubric/ArticleRubricGrid";
-import {
-  articlesByRegionRequestPath,
-  getArticlesByRegion,
-  getRegionBySlug,
-  strapiAbsoluteUrl,
-} from "@/lib/api";
+import { getArticlesByRegion, getRegionBySlug } from "@/lib/api";
 import { breadcrumbSchema } from "@/lib/schema";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
-import type { StrapiCollectionResponse, StrapiArticle } from "@/lib/strapi-types";
 import type { Article } from "@/lib/types";
 
 export const revalidate = 300;
@@ -49,35 +43,9 @@ export default async function RegionPage({ params }: RegionPageProps) {
     notFound();
   }
 
-  const path = articlesByRegionRequestPath(region.id, LIST_LIMIT);
-  const requestUrl = strapiAbsoluteUrl(path);
-
   let articles: Article[] = [];
-  let rawCount = 0;
-  let res: StrapiCollectionResponse<StrapiArticle> | null = null;
-
   try {
-    console.log("[RegionPage] Strapi GET (full URL):", requestUrl);
-    res = await getArticlesByRegion(region.id, LIST_LIMIT);
-    rawCount = res.data?.length ?? 0;
-    console.log(
-      "[RegionPage] Strapi response:",
-      JSON.stringify(
-        {
-          meta: res.meta,
-          dataLength: rawCount,
-          regionFilter: { field: "region.id", value: region.id, slugParam: slug },
-          sample: res.data?.slice(0, 2).map((a) => ({
-            id: a.id,
-            slug: a.slug,
-            title: a.title,
-            region: a.region,
-          })),
-        },
-        null,
-        2,
-      ),
-    );
+    const res = await getArticlesByRegion(region.id, LIST_LIMIT);
     articles = res.data.map((a) => mapStrapiArticleToArticle(a, origin));
   } catch (e) {
     console.error("[RegionPage] articles fetch failed:", e);
@@ -95,7 +63,6 @@ export default async function RegionPage({ params }: RegionPageProps) {
       <ArticleRubricGrid
         heading={region.name}
         articles={articles}
-        debug={{ requestUrl, rawCount }}
         emptyMessage="Статьи не найдены"
       />
     </>
