@@ -33,7 +33,7 @@ function ArticleCard({ article }: { article: Article }) {
         href={href}
         className="group flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-neutral-200 bg-white transition-all duration-300 ease-in-out hover:-translate-y-[2px] hover:shadow-[0_10px_30px_rgba(20,33,61,0.10)]"
       >
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-paper-warm">
           <Image
             src={article.coverImage}
             alt={article.title}

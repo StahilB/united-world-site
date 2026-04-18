@@ -150,7 +150,7 @@ export default async function SectionPage({
             <Link
               key={ch.id}
               href={getSectionHref(ch.slug)}
-              className="rounded border border-neutral-200 bg-surface px-4 py-3 font-sans text-sm text-ink shadow-sm transition-colors hover:border-gold hover:text-gold-deep"
+              className="rounded border border-neutral-200 bg-paper-warm px-4 py-3 font-sans text-sm text-ink shadow-sm transition-colors hover:border-gold hover:text-gold-deep"
             >
               {ch.name}
             </Link>

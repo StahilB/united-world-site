@@ -61,7 +61,7 @@ export function SectionRubricFilters({
               className={`block rounded px-2 py-1.5 font-sans text-sm transition-colors ${
                 !selectedFilter
                   ? "bg-ink/8 font-semibold text-ink"
-                  : "text-ink-soft hover:bg-surface hover:text-ink"
+                  : "text-ink-soft hover:bg-paper-warm hover:text-ink"
               }`}
             >
               Все
@@ -74,7 +74,7 @@ export function SectionRubricFilters({
                 className={`block rounded px-2 py-1.5 font-sans text-sm transition-colors ${
                   selectedFilter === it.slug
                     ? "bg-ink/8 font-semibold text-ink"
-                    : "text-ink-soft hover:bg-surface hover:text-ink"
+                    : "text-ink-soft hover:bg-paper-warm hover:text-ink"
                 }`}
               >
                 {it.name}

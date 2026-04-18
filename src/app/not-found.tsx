@@ -31,7 +31,7 @@ export default async function NotFound() {
   }
 
   return (
-    <main className="min-h-screen bg-surface py-12 md:py-16">
+    <main className="min-h-screen bg-paper-warm py-12 md:py-16">
       <div className="mx-auto max-w-3xl px-4 md:max-w-4xl md:px-6">
         <p className="font-sans text-xs font-semibold uppercase tracking-[0.12em] text-text-mute">
           Ошибка 404

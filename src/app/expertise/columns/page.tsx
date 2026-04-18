@@ -40,7 +40,7 @@ function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
     >
       <div className="flex items-start gap-4">
         {photo ? (
-          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full bg-surface">
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full bg-paper-warm">
             <Image
               src={photo}
               alt={a.name}

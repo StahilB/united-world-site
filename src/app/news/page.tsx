@@ -38,9 +38,9 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           </h1>
           <p className="mt-4 max-w-xl font-sans text-[15px] text-text-mute">
             Раздел «Новости» не найден в Strapi. Выполните{" "}
-            <code className="rounded bg-surface px-1 text-sm">npm run seed-sections</code>{" "}
-            в каталоге <code className="rounded bg-surface px-1 text-sm">strapi</code>{" "}
-            или создайте секцию с slug <code className="rounded bg-surface px-1 text-sm">novosti</code>.
+            <code className="rounded bg-paper-warm px-1 text-sm">npm run seed-sections</code>{" "}
+            в каталоге <code className="rounded bg-paper-warm px-1 text-sm">strapi</code>{" "}
+            или создайте секцию с slug <code className="rounded bg-paper-warm px-1 text-sm">novosti</code>.
           </p>
         </div>
       </main>

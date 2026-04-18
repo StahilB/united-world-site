@@ -60,7 +60,7 @@ export default async function TeamPage() {
             {core.map((m) => (
               <article
                 key={m.name}
-                className="border border-ink/10 bg-surface/60 p-5 shadow-sm"
+                className="border border-ink/10 bg-paper-warm/60 p-5 shadow-sm"
               >
                 <h3 className="font-heading text-lg font-normal text-ink">
                   {m.name}

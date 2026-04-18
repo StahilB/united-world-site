@@ -108,7 +108,7 @@ export function MobileMenu({ sections, isOpen, onClose }: MobileMenuProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-surface md:hidden"
+      className="fixed inset-0 z-[100] flex flex-col bg-paper-warm md:hidden"
       role="dialog"
       aria-modal="true"
       aria-label="Меню"

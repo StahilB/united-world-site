@@ -167,7 +167,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
       {wide ? (
         filterFields
       ) : (
-        <details className="rounded-sm border border-ink/10 bg-surface/50">
+        <details className="rounded-sm border border-ink/10 bg-paper-warm/50">
           <summary className="cursor-pointer px-4 py-3 font-sans text-sm font-semibold text-ink">
             Фильтры
           </summary>

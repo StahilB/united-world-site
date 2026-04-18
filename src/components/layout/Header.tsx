@@ -361,7 +361,7 @@ export function Header({ sections }: HeaderProps) {
 
         {/* Row 3 — фиксированная высота, без анимации от скролла */}
         <div
-          className="relative border-y border-gold bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+          className="relative border-y border-gold bg-paper-warm shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
           onMouseLeave={scheduleCloseNavMenu}
         >
           <div className="mx-auto grid h-11 min-h-[44px] w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 md:px-6">

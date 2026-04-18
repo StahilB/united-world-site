@@ -154,7 +154,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           сохраняются в адресе страницы — ссылку можно передать коллегам.
         </p>
 
-        <div className="mt-8 rounded-sm border border-ink/10 bg-surface/40 p-4 md:p-6">
+        <div className="mt-8 rounded-sm border border-ink/10 bg-paper-warm/40 p-4 md:p-6">
           <SearchForm
             defaults={{
               q,
