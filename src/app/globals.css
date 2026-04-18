@@ -8,14 +8,54 @@
   }
 
   body {
-    background-color: #f5f7fa;
-    color: #14213d;
+    background-color: #ffffff;
+    color: #111418;
+  }
+}
+
+@layer utilities {
+  /* Раздел главной страницы — единый вертикальный ритм */
+  .section-home {
+    @apply py-16 md:py-24;
+  }
+  /* Контейнер контента главной */
+  .container-site {
+    @apply mx-auto max-w-6xl px-6 md:px-8;
+  }
+  /* Kicker (метка над заголовком) */
+  .kicker {
+    @apply font-sans text-[11px] font-bold uppercase tracking-[0.14em] text-gold-deep;
+  }
+  /* Заголовок секции главной */
+  .h-section {
+    @apply font-heading text-[22px] font-bold leading-tight tracking-tight text-ink md:text-[28px];
+  }
+  /* Display-заголовок (hero) */
+  .h-display {
+    @apply font-heading font-bold leading-[1.05] tracking-[-0.02em] text-ink;
+    font-size: clamp(36px, 5vw, 56px);
+  }
+  /* Подзаголовки внутри блоков */
+  .h-sub {
+    @apply font-heading text-[20px] font-bold leading-tight text-ink md:text-[22px];
+  }
+  /* Лид / intro */
+  .lead {
+    @apply font-sans text-[17px] leading-[1.6] text-text-mute md:text-[19px];
+  }
+  /* Meta-строка */
+  .meta {
+    @apply font-sans text-[12px] font-semibold uppercase tracking-[0.12em] text-text-mute;
+  }
+  /* Номер в рейтинге */
+  .rank-num {
+    @apply font-heading text-[2rem] font-bold leading-none tabular-nums text-ink/15;
   }
 }
 
 @layer components {
   .article-body {
-    @apply max-w-[700px] font-sans text-[18px] leading-[1.7] text-text;
+    @apply max-w-[680px] font-sans text-[17px] leading-[1.75] text-text;
   }
 
   .article-body p {
@@ -23,23 +63,23 @@
   }
 
   .article-lead {
-    @apply mb-8 text-[19px] font-normal leading-[1.65] text-primary;
+    @apply mb-8 text-[19px] font-normal leading-[1.65] text-ink;
   }
 
   .article-h2 {
-    @apply mt-10 mb-4 scroll-mt-28 font-heading text-2xl font-normal tracking-tight text-primary md:text-[28px];
+    @apply mt-12 mb-4 scroll-mt-28 font-heading text-[26px] font-bold tracking-tight text-ink md:text-[30px];
   }
 
   .article-h3 {
-    @apply mt-8 mb-3 scroll-mt-28 font-heading text-xl font-normal text-primary;
+    @apply mt-8 mb-3 scroll-mt-28 font-heading text-[20px] font-bold text-ink md:text-[22px];
   }
 
   .article-body h2 {
-    @apply mt-10 mb-4 scroll-mt-28 font-heading text-2xl font-bold tracking-tight text-primary md:text-[28px];
+    @apply mt-12 mb-4 scroll-mt-28 font-heading text-[26px] font-bold tracking-tight text-ink md:text-[30px];
   }
 
   .article-body h3 {
-    @apply mt-8 mb-3 scroll-mt-28 font-heading text-xl font-bold text-primary;
+    @apply mt-8 mb-3 scroll-mt-28 font-heading text-[20px] font-bold text-ink md:text-[22px];
   }
 
   .article-body img {
@@ -71,7 +111,7 @@
 
   /* CKEditor HTML from Strapi (about, cooperation, contacts, support) */
   .static-page-body {
-    @apply max-w-[800px] font-sans text-[17px] leading-[1.75] text-text;
+    @apply max-w-[780px] font-sans text-[17px] leading-[1.75] text-text;
   }
 
   .static-page-body p {
@@ -79,15 +119,15 @@
   }
 
   .static-page-body h1 {
-    @apply mb-6 mt-0 font-heading text-3xl font-normal tracking-tight text-primary md:text-[2rem];
-  }
-
-  .static-page-body h3 {
-    @apply mt-6 mb-3 font-heading text-xl font-bold text-primary;
+    @apply mb-6 mt-0 font-heading text-[32px] font-bold tracking-tight text-ink md:text-[40px];
   }
 
   .static-page-body h2 {
-    @apply mt-8 mb-4 font-heading text-2xl font-bold tracking-tight text-primary;
+    @apply mt-10 mb-4 font-heading text-[24px] font-bold tracking-tight text-ink md:text-[28px];
+  }
+
+  .static-page-body h3 {
+    @apply mt-8 mb-3 font-heading text-[20px] font-bold text-ink;
   }
 
   .static-page-body ul {
