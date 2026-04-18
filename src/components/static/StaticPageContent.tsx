@@ -4,7 +4,7 @@
 export function StaticPageContent({ html }: { html: string }) {
   if (!html?.trim()) {
     return (
-      <p className="font-sans text-[15px] leading-relaxed text-muted">
+      <p className="font-sans text-[15px] leading-relaxed text-text-mute">
         Материал готовится к публикации. Загляните позже.
       </p>
     );

@@ -4,7 +4,7 @@ export default function PrivacyPage() {
       <h1 className="font-heading text-2xl text-ink">
         Политика конфиденциальности
       </h1>
-      <p className="mt-6 font-sans text-sm leading-relaxed text-muted">
+      <p className="mt-6 font-sans text-sm leading-relaxed text-text-mute">
         Раздел готовится. По вопросам данных:{" "}
         <a
           className="text-gold-deep underline underline-offset-2"

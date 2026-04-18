@@ -44,7 +44,7 @@ export default async function TeamPage() {
         <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl">
           Команда
         </h1>
-        <p className="mt-4 max-w-[800px] font-sans text-[15px] leading-relaxed text-muted">
+        <p className="mt-4 max-w-[800px] font-sans text-[15px] leading-relaxed text-text-mute">
           АНО «Единый Мир» объединяет аналитиков, исследователей и организаторов
           международных коммуникаций.
         </p>
@@ -71,7 +71,7 @@ export default async function TeamPage() {
                   </p>
                 ) : null}
                 {m.directions ? (
-                  <p className="mt-3 font-sans text-[13px] leading-relaxed text-muted">
+                  <p className="mt-3 font-sans text-[13px] leading-relaxed text-text-mute">
                     <span className="font-semibold text-ink/80">
                       Направления:{" "}
                     </span>
@@ -82,7 +82,7 @@ export default async function TeamPage() {
             ))}
           </div>
           {core.length === 0 ? (
-            <p className="mt-4 font-sans text-sm text-muted">
+            <p className="mt-4 font-sans text-sm text-text-mute">
               Список обновляется. Данные можно задать в Strapi → Static Pages →
               team_members.
             </p>
@@ -116,7 +116,7 @@ export default async function TeamPage() {
                   </p>
                 ) : null}
                 {m.directions ? (
-                  <p className="mt-4 font-sans text-[13px] leading-relaxed text-muted">
+                  <p className="mt-4 font-sans text-[13px] leading-relaxed text-text-mute">
                     <span className="font-semibold text-ink/80">
                       Направления:{" "}
                     </span>
@@ -127,7 +127,7 @@ export default async function TeamPage() {
             ))}
           </div>
           {experts.length === 0 ? (
-            <p className="mt-4 font-sans text-sm text-muted">
+            <p className="mt-4 font-sans text-sm text-text-mute">
               Раздел экспертов можно заполнить в Strapi.
             </p>
           ) : null}

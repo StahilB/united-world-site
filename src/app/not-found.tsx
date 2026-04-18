@@ -33,13 +33,13 @@ export default async function NotFound() {
   return (
     <main className="min-h-screen bg-surface py-12 md:py-16">
       <div className="mx-auto max-w-3xl px-4 md:max-w-4xl md:px-6">
-        <p className="font-sans text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+        <p className="font-sans text-xs font-semibold uppercase tracking-[0.12em] text-text-mute">
           Ошибка 404
         </p>
         <h1 className="mt-2 font-heading text-3xl font-normal text-ink md:text-4xl">
           Страница не найдена
         </h1>
-        <p className="mt-4 max-w-xl font-sans text-[15px] leading-relaxed text-muted">
+        <p className="mt-4 max-w-xl font-sans text-[15px] leading-relaxed text-text-mute">
           Ссылка устарела или адрес введён с опечаткой. Попробуйте поиск или перейдите в
           разделы ниже.
         </p>
@@ -48,14 +48,14 @@ export default async function NotFound() {
           <h2 className="font-heading text-lg text-ink md:text-xl">Поиск по сайту</h2>
           <form method="get" action="/search" className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
             <label className="min-w-0 flex-1 font-sans text-sm text-ink">
-              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-text-mute">
                 Запрос
               </span>
               <input
                 type="search"
                 name="q"
                 placeholder="Ключевые слова"
-                className="w-full min-h-11 border border-ink/15 bg-white px-3 py-2 text-base text-ink placeholder:text-muted focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
+                className="w-full min-h-11 border border-ink/15 bg-white px-3 py-2 text-base text-ink placeholder:text-text-mute focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30"
               />
             </label>
             <button

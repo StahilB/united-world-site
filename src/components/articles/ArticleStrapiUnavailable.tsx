@@ -5,7 +5,7 @@ export function ArticleStrapiUnavailable() {
       <h1 className="font-heading text-2xl text-ink">
         Сервис временно недоступен
       </h1>
-      <p className="mt-4 font-sans text-muted">
+      <p className="mt-4 font-sans text-text-mute">
         Не удалось загрузить материал. Попробуйте позже.
       </p>
     </main>

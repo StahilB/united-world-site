@@ -25,7 +25,7 @@ export function SectionRubricFilters({
       <div className="mb-6 lg:mb-0 lg:hidden">
         <label
           htmlFor="rubric-filter-mobile"
-          className="mb-1 block font-sans text-xs font-semibold uppercase tracking-wide text-muted"
+          className="mb-1 block font-sans text-xs font-semibold uppercase tracking-wide text-text-mute"
         >
           {label}
         </label>
@@ -51,7 +51,7 @@ export function SectionRubricFilters({
         className="hidden w-[220px] shrink-0 lg:block"
         aria-label={`Фильтр: ${label}`}
       >
-        <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+        <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-mute">
           {label}
         </p>
         <ul className="mt-3 space-y-0.5 border-t border-neutral-200 pt-3">

@@ -50,7 +50,7 @@ function ArticleCard({ article }: { article: Article }) {
             {article.title}
           </h2>
           <time
-            className="mt-3 font-sans text-[12px] text-muted"
+            className="mt-3 font-sans text-[12px] text-text-mute"
             dateTime={article.publishedAt}
           >
             {formatDateRu(article.publishedAt)}
@@ -133,7 +133,7 @@ export default async function AuthorPage({
             <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl">
               {author.name}
             </h1>
-            <p className="mt-3 max-w-3xl font-sans text-base leading-relaxed text-muted">
+            <p className="mt-3 max-w-3xl font-sans text-base leading-relaxed text-text-mute">
               {author.bio || ""}
             </p>
           </div>
@@ -141,7 +141,7 @@ export default async function AuthorPage({
 
         <section className="pt-10">
           {articles.length === 0 ? (
-            <p className="font-sans text-base text-muted">
+            <p className="font-sans text-base text-text-mute">
               У этого автора пока нет публикаций
             </p>
           ) : (

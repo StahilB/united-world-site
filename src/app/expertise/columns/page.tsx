@@ -63,7 +63,7 @@ function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
           <div className="font-sans text-[18px] font-bold leading-snug text-ink group-hover:text-gold-deep">
             {a.name}
           </div>
-          <p className="mt-2 overflow-hidden font-sans text-sm leading-relaxed text-muted [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
+          <p className="mt-2 overflow-hidden font-sans text-sm leading-relaxed text-text-mute [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
             {a.bio || " "}
           </p>
         </div>
@@ -101,7 +101,7 @@ export default async function ExpertiseColumnsPage() {
         </h1>
 
         {authors.length === 0 ? (
-          <p className="mt-10 font-sans text-base text-muted">
+          <p className="mt-10 font-sans text-base text-text-mute">
             Пока нет авторов с колонками
           </p>
         ) : (

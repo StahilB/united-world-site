@@ -127,7 +127,7 @@ export default async function SectionPage({
             Назад
           </Link>
         ) : null}
-        <span className="text-muted">
+        <span className="text-text-mute">
           Страница {page} из {pageCount}
         </span>
         {page < pageCount ? (

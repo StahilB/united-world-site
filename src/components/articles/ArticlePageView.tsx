@@ -320,7 +320,7 @@ export function ArticlePageView({
 
               {readAlso.length > 0 && (
                 <div>
-                  <p className="font-heading text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+                  <p className="font-heading text-[11px] font-semibold uppercase tracking-[0.18em] text-text-mute">
                     Читайте также
                   </p>
                   <div className="mt-4 space-y-6">

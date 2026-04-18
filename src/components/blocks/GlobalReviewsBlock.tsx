@@ -54,11 +54,11 @@ function MainArticleBlock({ article }: { article: GlobalReviewsMainArticle }) {
           {article.title}
         </h3>
       </Link>
-      <p className="mt-3 font-sans text-base leading-relaxed text-muted line-clamp-2">
+      <p className="mt-3 font-sans text-base leading-relaxed text-text-mute line-clamp-2">
         {article.excerpt}
       </p>
       <time
-        className="mt-3 block font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-muted"
+        className="mt-3 block font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-text-mute"
         dateTime={article.dateIso}
       >
         {article.date}
@@ -86,7 +86,7 @@ export function GlobalReviewsBlock({
         <div className="mt-8 space-y-10 lg:hidden">
           <MainArticleBlock article={mainArticle} />
           <div>
-            <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-text-mute">
               Самое читаемое
             </p>
             <PopularList items={popularArticles} startIndex={1} />
@@ -96,7 +96,7 @@ export function GlobalReviewsBlock({
         {/* Desktop: три колонки 25% / 50% / 25% */}
         <div className="mt-10 hidden gap-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
           <div className={`border-r ${COL_BORDER} pr-6`}>
-            <p className="mb-5 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            <p className="mb-5 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-text-mute">
               Самое читаемое
             </p>
             <PopularList items={leftPopular} startIndex={1} />

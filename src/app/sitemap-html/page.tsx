@@ -47,7 +47,7 @@ export default async function SitemapHtmlPage() {
         <section className="mt-10">
           <h2 className="font-heading text-2xl font-normal text-ink">Разделы</h2>
           {sections.length === 0 ? (
-            <p className="mt-3 font-sans text-sm text-muted">Разделы пока не найдены.</p>
+            <p className="mt-3 font-sans text-sm text-text-mute">Разделы пока не найдены.</p>
           ) : (
             <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {sections.map((s) => (
@@ -67,7 +67,7 @@ export default async function SitemapHtmlPage() {
         <section className="mt-12">
           <h2 className="font-heading text-2xl font-normal text-ink">Статьи</h2>
           {articles.length === 0 ? (
-            <p className="mt-3 font-sans text-sm text-muted">Статьи пока не найдены.</p>
+            <p className="mt-3 font-sans text-sm text-text-mute">Статьи пока не найдены.</p>
           ) : (
             <ul className="mt-4 space-y-2">
               {articles.map((a) => (

@@ -38,7 +38,7 @@ export default function GlobalErrorPage({ error, reset }: GlobalErrorPageProps) 
           <h1 className="font-heading text-3xl text-ink md:text-4xl">
             Критическая ошибка
           </h1>
-          <p className="mt-4 font-sans text-base text-muted">
+          <p className="mt-4 font-sans text-base text-text-mute">
             Временная проблема на стороне сайта. Попробуйте обновить страницу.
           </p>
           <button
@@ -49,7 +49,7 @@ export default function GlobalErrorPage({ error, reset }: GlobalErrorPageProps) 
             Перезагрузить
           </button>
           {process.env.NODE_ENV !== "production" ? (
-            <p className="mt-6 break-words font-mono text-xs text-muted">
+            <p className="mt-6 break-words font-mono text-xs text-text-mute">
               {error.message}
             </p>
           ) : null}

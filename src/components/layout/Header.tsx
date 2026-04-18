@@ -340,7 +340,7 @@ export function Header({ sections }: HeaderProps) {
                   <span className="font-heading text-[32px] font-normal uppercase leading-tight tracking-[0.12em] text-ink">
                     ЕДИНЫЙ МИР
                   </span>
-                  <span className="mt-1 block text-xs leading-snug text-muted">
+                  <span className="mt-1 block text-xs leading-snug text-text-mute">
                     Центр мониторинга и оценки проблем современности
                   </span>
                 </Link>

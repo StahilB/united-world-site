@@ -36,7 +36,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           <h1 className="font-heading text-3xl font-normal text-ink md:text-4xl">
             Новости
           </h1>
-          <p className="mt-4 max-w-xl font-sans text-[15px] text-muted">
+          <p className="mt-4 max-w-xl font-sans text-[15px] text-text-mute">
             Раздел «Новости» не найден в Strapi. Выполните{" "}
             <code className="rounded bg-surface px-1 text-sm">npm run seed-sections</code>{" "}
             в каталоге <code className="rounded bg-surface px-1 text-sm">strapi</code>{" "}
@@ -56,7 +56,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           <h1 className="font-heading text-3xl font-normal text-ink md:text-4xl">
             {strapiSection.name}
           </h1>
-          <p className="mt-4 font-sans text-[15px] text-muted">
+          <p className="mt-4 font-sans text-[15px] text-text-mute">
             Раздел не привязан к дереву навигации. Проверьте родителя «О центре» в Strapi.
           </p>
         </div>
@@ -89,7 +89,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
             Назад
           </Link>
         ) : null}
-        <span className="text-muted">
+        <span className="text-text-mute">
           Страница {page} из {pageCount}
         </span>
         {page < pageCount ? (
@@ -111,7 +111,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         </h1>
 
         <nav
-          className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 font-sans text-sm text-muted"
+          className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 font-sans text-sm text-text-mute"
           aria-label="Хлебные крошки"
         >
           <Link href="/" className="transition-colors hover:text-gold-deep">

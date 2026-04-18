@@ -129,7 +129,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             Назад
           </Link>
         ) : null}
-        <span className="text-muted">
+        <span className="text-text-mute">
           Страница {page} из {pageCount}
         </span>
         {page < pageCount ? (
@@ -149,7 +149,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl">
           Поиск
         </h1>
-        <p className="mt-2 max-w-2xl font-sans text-[15px] leading-relaxed text-muted">
+        <p className="mt-2 max-w-2xl font-sans text-[15px] leading-relaxed text-text-mute">
           Укажите запрос и при необходимости сузьте выборку фильтрами. Параметры
           сохраняются в адресе страницы — ссылку можно передать коллегам.
         </p>
