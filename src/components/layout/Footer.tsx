@@ -20,13 +20,13 @@ const navLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-[#0F1B2D] text-white/90">
+    <footer className="bg-ink text-white/90">
       <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-20">
         <div className="grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-12 lg:gap-16">
           {/* Колонка 1 */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 md:pr-4">
             <Link href="/" className="inline-flex w-fit shrink-0">
-              <div className="flex h-28 w-28 items-center justify-center rounded-2xl bg-white/90 p-3">
+              <div className="flex h-24 w-24 items-center justify-center bg-white/95 p-3">
                 <Image
                   src="/images/logo_1.png"
                   alt="Единый Мир"
@@ -47,7 +47,7 @@ export function Footer() {
               <span className="text-white/50">E-mail: </span>
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
-                className="text-white/85 underline decoration-white/25 underline-offset-2 transition-colors hover:text-accent hover:decoration-accent"
+                className="text-white/85 underline decoration-white/25 underline-offset-2 transition-colors hover:text-gold-light hover:decoration-gold-light"
               >
                 {CONTACT_EMAIL}
               </a>
@@ -90,7 +90,7 @@ export function Footer() {
                   type="email"
                   autoComplete="email"
                   placeholder="E-mail"
-                  className="min-h-10 w-full flex-1 border border-white/15 bg-white/5 px-3 font-sans text-[13px] text-white placeholder:text-white/35 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/40"
+                  className="min-h-10 w-full flex-1 border border-white/15 bg-white/5 px-3 font-sans text-[13px] text-white placeholder:text-white/35 focus:border-gold-light/60 focus:outline-none focus:ring-1 focus:ring-gold-light/40"
                 />
                 <button
                   type="button"
@@ -142,7 +142,7 @@ export function Footer() {
               </div>
               <a
                 href={`mailto:${CONTACT_EMAIL}?subject=Вопрос%20в%20АНО%20«Единый%20Мир»`}
-                className="inline-flex min-h-10 items-center justify-center bg-accent px-5 font-sans text-[12px] font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-accentLight"
+                className="inline-flex min-h-10 items-center justify-center bg-gold px-5 font-sans text-[12px] font-semibold uppercase tracking-[0.08em] text-ink transition-colors hover:bg-gold-light"
               >
                 Написать нам
               </a>
