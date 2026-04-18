@@ -2,70 +2,53 @@
 
 import { useState, useEffect } from "react";
 
-const STORAGE_KEY = "migration_banner_dismissed_v1";
+const STORAGE_KEY = "migration_banner_v2_dismissed";
 
 export function MigrationBanner() {
-  const [visible, setVisible] = useState(false);
+  // mounted защищает от flash при SSR → клиенте
+  const [mounted, setMounted] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  // Показываем баннер только после mount (чтобы не было flash)
-  // и только если в sessionStorage нет флага закрытия
   useEffect(() => {
+    setMounted(true);
     try {
-      const dismissed = sessionStorage.getItem(STORAGE_KEY);
-      if (!dismissed) {
-        setVisible(true);
+      if (sessionStorage.getItem(STORAGE_KEY) === "1") {
+        setDismissed(true);
       }
     } catch {
-      setVisible(true);
+      // sessionStorage может быть недоступен в приватных режимах — игнорируем
     }
   }, []);
 
-  const dismiss = () => {
+  // На сервере и до mount показываем placeholder (держим высоту)
+  // чтобы не было прыжка контента при появлении
+  if (!mounted) {
+    return <div className="h-[44px] bg-primary" aria-hidden="true" />;
+  }
+
+  if (dismissed) return null;
+
+  const handleDismiss = () => {
     try {
       sessionStorage.setItem(STORAGE_KEY, "1");
     } catch {}
-    setVisible(false);
+    setDismissed(true);
   };
-
-  if (!visible) return null;
 
   return (
     <div
       role="region"
       aria-label="Информация о переезде сайта"
-      style={{
-        background: "#0F1B2D",
-        color: "#FFF8F0",
-        padding: "10px 16px",
-        fontSize: "14px",
-        lineHeight: 1.5,
-        borderBottom: "2px solid #C4A35A",
-        position: "relative",
-        zIndex: 40,
-      }}
+      className="relative z-[60] border-b-2 border-accent bg-primary px-4 py-2.5 text-surface"
     >
-      <div
-        style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "16px",
-          flexWrap: "wrap",
-          paddingRight: "40px",
-        }}
-      >
+      <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 pr-10 text-center text-sm leading-snug sm:text-base">
         <span>
           Мы переезжаем на новый сайт. Актуальные материалы смотрите на{" "}
           <a
             href="https://old.anounitedworld.com"
+            className="font-semibold text-accent underline underline-offset-2 transition hover:text-surface"
+            target="_blank"
             rel="noopener noreferrer"
-            style={{
-              color: "#C4A35A",
-              textDecoration: "underline",
-              fontWeight: 600,
-            }}
           >
             old.anounitedworld.com
           </a>
@@ -73,29 +56,9 @@ export function MigrationBanner() {
       </div>
       <button
         type="button"
-        onClick={dismiss}
+        onClick={handleDismiss}
         aria-label="Закрыть объявление"
-        style={{
-          position: "absolute",
-          right: "16px",
-          top: "50%",
-          transform: "translateY(-50%)",
-          background: "transparent",
-          border: "none",
-          color: "#FFF8F0",
-          cursor: "pointer",
-          fontSize: "20px",
-          lineHeight: 1,
-          padding: "4px 8px",
-          opacity: 0.7,
-          transition: "opacity 0.2s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.opacity = "1";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = "0.7";
-        }}
+        className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 text-xl leading-none text-surface/70 transition hover:text-surface"
       >
         ×
       </button>
