@@ -90,8 +90,17 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // Old WordPress URLs -> new routes (if migration missed some links).
-      // { source: "/category/:slug", destination: "/section/:slug", permanent: true },
+      { source: "/category/:slug", destination: "/section/:slug", permanent: true },
+      { source: "/category/:slug/", destination: "/section/:slug", permanent: true },
+      { source: "/tag/:slug", destination: "/search?q=:slug", permanent: true },
+      { source: "/tag/:slug/", destination: "/search?q=:slug", permanent: true },
+      // WordPress: страницы автора часто со слэшем; канон — без слэша (как в Next.js)
+      { source: "/author/:slug/", destination: "/author/:slug", permanent: true },
+      { source: "/wp-admin", destination: "/", permanent: false },
+      { source: "/wp-admin/:path*", destination: "/", permanent: false },
+      { source: "/wp-login.php", destination: "/", permanent: false },
+      { source: "/feed", destination: "/rss.xml", permanent: true },
+      { source: "/feed/", destination: "/rss.xml", permanent: true },
     ];
   },
 };
