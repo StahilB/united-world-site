@@ -21,27 +21,25 @@ const navLinks = [
 export function Footer() {
   return (
     <footer className="bg-ink text-white/90">
-      <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-20">
-        <div className="grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-12 lg:gap-16">
-          {/* Колонка 1 */}
-          <div className="flex flex-col gap-6 md:pr-4">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:px-8 md:py-20">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-10 lg:gap-12">
+          {/* Колонка 1 — бренд */}
+          <div className="flex flex-col gap-5">
             <Link href="/" className="inline-flex w-fit shrink-0">
-              <div className="flex h-24 w-24 items-center justify-center bg-white/95 p-3">
-                <Image
-                  src="/images/logo_1.png"
-                  alt="Единый Мир"
-                  width={96}
-                  height={96}
-                  className="max-h-full max-w-full object-contain"
-                  sizes="96px"
-                  unoptimized
-                />
-              </div>
+              <Image
+                src="/images/logo_1.png"
+                alt="Единый Мир"
+                width={88}
+                height={88}
+                className="h-[88px] w-[88px] object-contain"
+                sizes="88px"
+                unoptimized
+              />
             </Link>
             <p className="max-w-sm font-sans text-[13px] leading-relaxed text-white/70">
               Автономная некоммерческая организация «Единый Мир» — аналитический
-              центр, который изучает международную повестку, региональные процессы
-              и глобальные вызовы современности.
+              центр, который изучает международную повестку, региональные
+              процессы и глобальные вызовы современности.
             </p>
             <div className="font-sans text-[13px] leading-relaxed text-white/70">
               <span className="text-white/50">E-mail: </span>
@@ -54,11 +52,14 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Колонка 2 */}
+          {/* Колонка 2 — навигация */}
           <nav
             className="flex flex-col gap-3 font-sans text-[13px]"
             aria-label="Навигация в подвале"
           >
+            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+              Навигация
+            </p>
             {navLinks.map((item) => (
               <Link
                 key={item.href}
@@ -70,38 +71,38 @@ export function Footer() {
             ))}
           </nav>
 
-          {/* Колонка 3 */}
-          <div className="flex flex-col gap-8">
+          {/* Колонка 3 — подписка */}
+          <div className="flex flex-col gap-5">
             <div>
               <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
                 Подписка
               </p>
-              <p className="mt-2 font-sans text-[13px] leading-relaxed text-white/65">
-                Новости и дайджесты материалов — оставьте адрес, мы подготовим
-                рассылку.
+              <p className="mt-3 font-sans text-[13px] leading-relaxed text-white/65">
+                Новости и дайджесты материалов — оставьте адрес, мы
+                подготовим рассылку.
               </p>
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <label htmlFor="footer-subscribe-email" className="sr-only">
-                  E-mail для подписки
-                </label>
-                <input
-                  id="footer-subscribe-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="E-mail"
-                  className="min-h-10 w-full flex-1 border border-white/15 bg-white/5 px-3 font-sans text-[13px] text-white placeholder:text-white/35 focus:border-gold-light/60 focus:outline-none focus:ring-1 focus:ring-gold-light/40"
-                />
-                <button
-                  type="button"
-                  className="min-h-10 shrink-0 border border-white/20 px-4 font-sans text-[12px] font-medium uppercase tracking-wide text-white/90 transition-colors hover:border-white/35 hover:bg-white/5"
-                >
-                  Подписаться
-                </button>
-              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <label htmlFor="footer-subscribe-email" className="sr-only">
+                E-mail для подписки
+              </label>
+              <input
+                id="footer-subscribe-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="E-mail"
+                className="min-h-10 w-full flex-1 border border-white/15 bg-white/5 px-3 font-sans text-[13px] text-white placeholder:text-white/35 focus:border-gold-light/60 focus:outline-none focus:ring-1 focus:ring-gold-light/40"
+              />
+              <button
+                type="button"
+                className="min-h-10 shrink-0 border border-white/20 px-4 font-sans text-[12px] font-medium uppercase tracking-wide text-white/90 transition-colors hover:border-white/35 hover:bg-white/5"
+              >
+                Подписаться
+              </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-wrap items-center gap-5 pt-2">
               <div className="flex items-center gap-4">
                 <a
                   href={SOCIAL_URLS.telegram}
@@ -152,7 +153,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 md:flex-row md:items-center md:justify-between md:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 md:flex-row md:items-center md:justify-between md:px-8">
           <p className="font-sans text-[11px] leading-relaxed text-white/45">
             © 2024-2026 АНО «Единый Мир»
           </p>
