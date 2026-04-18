@@ -38,37 +38,30 @@ export default async function HomePage() {
   let popularRes = emptyArticles;
   let poolRes = emptyArticles;
   let regionsRes = emptyRegions;
+  let fetchFailed = false;
 
-  const [latestResult, popularResult, poolResult, regionsResult] =
-    await Promise.allSettled([
+  try {
+    const results = await Promise.all([
       getLatestArticles(4),
       getPopularArticles(7),
       getArticles({ pageSize: 100, page: 1 }),
       getRegions(),
     ]);
-
-  if (latestResult.status === "fulfilled") {
-    latestRes = latestResult.value;
-  } else {
-    console.error("[HomePage] latest fetch failed:", latestResult.reason);
+    latestRes = results[0];
+    popularRes = results[1];
+    poolRes = results[2];
+    regionsRes = results[3];
+  } catch (e) {
+    console.error("[HomePage] Strapi fetch failed:", e);
+    fetchFailed = true;
   }
 
-  if (popularResult.status === "fulfilled") {
-    popularRes = popularResult.value;
-  } else {
-    console.error("[HomePage] popular fetch failed:", popularResult.reason);
-  }
-
-  if (poolResult.status === "fulfilled") {
-    poolRes = poolResult.value;
-  } else {
-    console.error("[HomePage] pool fetch failed:", poolResult.reason);
-  }
-
-  if (regionsResult.status === "fulfilled") {
-    regionsRes = regionsResult.value;
-  } else {
-    console.error("[HomePage] regions fetch failed:", regionsResult.reason);
+  if (
+    fetchFailed &&
+    popularRes.data.length === 0 &&
+    latestRes.data.length === 0
+  ) {
+    throw new Error("Strapi unavailable during ISR build — will retry");
   }
 
   let thematicItems: ThematicBlockItem[] = [];

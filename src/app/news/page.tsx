@@ -67,14 +67,13 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   const current = path[path.length - 1];
   const origin = getStrapiUrl();
 
-  const articlesRes = await getArticlesBySection(SLUG, page, PAGE_SIZE).catch(
-    () => null,
+  const articlesRes = await getArticlesBySection(SLUG, page, PAGE_SIZE);
+
+  const articles: Article[] = articlesRes.data.map((a) =>
+    mapStrapiArticleToArticle(a, origin),
   );
 
-  const articles: Article[] =
-    articlesRes?.data?.map((a) => mapStrapiArticleToArticle(a, origin)) ?? [];
-
-  const pageCount = articlesRes?.meta?.pagination?.pageCount ?? 1;
+  const pageCount = articlesRes.meta?.pagination?.pageCount ?? 1;
 
   const paginationNav =
     pageCount > 1 ? (
