@@ -144,9 +144,7 @@ export default async function SectionPage({
   const subsectionsBlock =
     current.children.length > 0 ? (
       <section className="mt-10" aria-label="Подразделы">
-        <h2 className="mb-4 font-heading text-xl font-normal text-primary md:text-2xl">
-          Подразделы
-        </h2>
+        <h2 className="h-section mb-4">Подразделы</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {current.children.map((ch) => (
             <Link
@@ -163,9 +161,7 @@ export default async function SectionPage({
 
   const materialsBlock = (
     <>
-      <h2 className="mt-12 font-heading text-2xl font-normal text-primary md:text-[1.65rem]">
-        Материалы
-      </h2>
+      <h2 className="h-section mt-16">Материалы</h2>
       <div className="mt-6">
         <ArticleRubricGrid
           embedded
@@ -179,45 +175,46 @@ export default async function SectionPage({
   );
 
   return (
-    <main className="min-h-screen bg-white py-10 md:py-14">
-      <div className="mx-auto max-w-6xl px-4 md:px-6">
+    <main className="min-h-screen bg-paper py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-6 md:px-8">
         <JsonLd
           data={breadcrumbSchema([
             { name: "Главная", url: "/" },
             ...path.map((s) => ({ name: s.name, url: getSectionHref(s.slug) })),
           ])}
         />
-        <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl lg:text-[2.75rem]">
-          {current.name}
-        </h1>
 
         <nav
-          className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 font-sans text-sm text-muted"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 font-sans text-[12px] text-text-mute"
           aria-label="Хлебные крошки"
         >
-          <Link href="/" className="transition-colors hover:text-accent">
+          <Link href="/" className="transition-colors hover:text-gold-deep">
             Главная
           </Link>
           {path.slice(0, -1).map((s) => (
             <span key={s.id} className="flex items-center gap-2">
-              <span aria-hidden className="text-neutral-400">
-                /
+              <span aria-hidden className="text-rule">
+                ›
               </span>
               <Link
                 href={getSectionHref(s.slug)}
-                className="transition-colors hover:text-accent"
+                className="transition-colors hover:text-gold-deep"
               >
                 {s.name}
               </Link>
             </span>
           ))}
           <span className="flex items-center gap-2">
-            <span aria-hidden className="text-neutral-400">
-              /
+            <span aria-hidden className="text-rule">
+              ›
             </span>
-            <span className="text-primary">{current.name}</span>
+            <span className="text-ink/70">{current.name}</span>
           </span>
         </nav>
+
+        <h1 className="mt-6 font-heading text-[32px] font-bold leading-tight tracking-tight text-ink md:text-[44px] lg:text-[52px]">
+          {current.name}
+        </h1>
 
         {showSidebar && sidebarMode ? (
           <div className="mt-8 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 lg:items-start">
