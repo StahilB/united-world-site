@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const linkClass =
-  "text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline";
+  "text-sm font-normal text-secondary transition-colors hover:text-ink hover:underline";
 
 const REGIONS: Array<{ label: string; href: string }> = [
   { label: "Россия", href: "/region/rossiya" },
@@ -48,7 +48,7 @@ export function MegaMenu() {
     <div className="bg-white">
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-8 md:grid-cols-2">
         <div>
-          <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-ink">
             ПО РЕГИОНАМ
           </p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-2">
@@ -73,7 +73,7 @@ export function MegaMenu() {
           </div>
         </div>
         <div>
-          <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-ink">
             ПО ТЕМАМ
           </p>
           <ul className="space-y-2">
@@ -91,13 +91,13 @@ export function MegaMenu() {
         <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
           <Link
             href="/section/situativnyy-analiz"
-            className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
+            className="text-xs font-semibold uppercase tracking-[0.06em] text-ink hover:underline"
           >
             Ситуативный анализ
           </Link>
           <Link
             href="/section/globalnye-obzory"
-            className="text-xs font-semibold uppercase tracking-[0.06em] text-primary hover:underline"
+            className="text-xs font-semibold uppercase tracking-[0.06em] text-ink hover:underline"
           >
             Глобальные обзоры
           </Link>

@@ -4,7 +4,7 @@ export default function ExpertiseHubPage() {
   return (
     <main className="min-h-screen bg-white py-12 md:py-16">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <h1 className="font-heading text-3xl font-normal tracking-tight text-primary md:text-4xl">
+        <h1 className="font-heading text-3xl font-normal tracking-tight text-ink md:text-4xl">
           Экспертиза
         </h1>
         <p className="mt-4 max-w-2xl font-sans text-base text-secondary">

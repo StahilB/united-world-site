@@ -23,7 +23,7 @@ export function MigrationBanner() {
   // На сервере и до mount показываем placeholder (держим высоту)
   // чтобы не было прыжка контента при появлении
   if (!mounted) {
-    return <div className="h-[44px] bg-primary" aria-hidden="true" />;
+    return <div className="h-[44px] bg-ink" aria-hidden="true" />;
   }
 
   if (dismissed) return null;
@@ -39,7 +39,7 @@ export function MigrationBanner() {
     <div
       role="region"
       aria-label="Информация о переезде сайта"
-      className="relative z-[60] border-b-2 border-accent bg-primary px-4 py-2.5 text-surface"
+      className="relative z-[60] border-b-2 border-accent bg-ink px-4 py-2.5 text-surface"
     >
       <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 pr-10 text-center text-sm leading-snug sm:text-base">
         <span>

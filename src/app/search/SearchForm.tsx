@@ -46,14 +46,14 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
           {FORMATS.map((f) => (
             <label
               key={f}
-              className="inline-flex cursor-pointer items-center gap-1.5 font-sans text-[13px] text-primary"
+              className="inline-flex cursor-pointer items-center gap-1.5 font-sans text-[13px] text-ink"
             >
               <input
                 type="checkbox"
                 name="format"
                 value={f}
                 defaultChecked={defaults.formats.includes(f)}
-                className="h-3.5 w-3.5 rounded border-primary/25 text-accent focus:ring-accent"
+                className="h-3.5 w-3.5 rounded border-ink/25 text-accent focus:ring-accent"
               />
               {f}
             </label>
@@ -61,14 +61,14 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
         </div>
       </fieldset>
 
-      <label className="flex min-w-[140px] flex-col gap-1 font-sans text-[13px] text-primary">
+      <label className="flex min-w-[140px] flex-col gap-1 font-sans text-[13px] text-ink">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
           Регион
         </span>
         <select
           name="region"
           defaultValue={defaults.region}
-          className="min-h-10 border border-primary/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
         >
           <option value="">Все регионы</option>
           {regions.map((r) => (
@@ -79,14 +79,14 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
         </select>
       </label>
 
-      <label className="flex min-w-[160px] flex-col gap-1 font-sans text-[13px] text-primary">
+      <label className="flex min-w-[160px] flex-col gap-1 font-sans text-[13px] text-ink">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
           Тема
         </span>
         <select
           name="category"
           defaultValue={defaults.category}
-          className="min-h-10 border border-primary/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
         >
           <option value="">Все темы</option>
           {categories.map((c) => (
@@ -97,7 +97,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
         </select>
       </label>
 
-      <label className="flex min-w-[120px] flex-col gap-1 font-sans text-[13px] text-primary">
+      <label className="flex min-w-[120px] flex-col gap-1 font-sans text-[13px] text-ink">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
           Дата от
         </span>
@@ -105,11 +105,11 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
           type="date"
           name="dateFrom"
           defaultValue={defaults.dateFrom}
-          className="min-h-10 border border-primary/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
         />
       </label>
 
-      <label className="flex min-w-[120px] flex-col gap-1 font-sans text-[13px] text-primary">
+      <label className="flex min-w-[120px] flex-col gap-1 font-sans text-[13px] text-ink">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
           Дата до
         </span>
@@ -117,18 +117,18 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
           type="date"
           name="dateTo"
           defaultValue={defaults.dateTo}
-          className="min-h-10 border border-primary/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
         />
       </label>
 
-      <label className="flex min-w-[180px] flex-col gap-1 font-sans text-[13px] text-primary">
+      <label className="flex min-w-[180px] flex-col gap-1 font-sans text-[13px] text-ink">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
           Автор
         </span>
         <select
           name="author"
           defaultValue={defaults.author}
-          className="min-h-10 border border-primary/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="min-h-10 border border-ink/15 bg-white px-2 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
         >
           <option value="">Все авторы</option>
           {authors.map((a) => (
@@ -144,7 +144,7 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
   return (
     <form method="get" action="/search" className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:gap-4">
-        <label className="min-w-0 flex-1 font-sans text-[13px] text-primary">
+        <label className="min-w-0 flex-1 font-sans text-[13px] text-ink">
           <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">
             Запрос
           </span>
@@ -153,12 +153,12 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
             name="q"
             defaultValue={defaults.q}
             placeholder="Ключевые слова в заголовке"
-            className="w-full min-h-11 border border-primary/15 bg-white px-3 py-2 font-sans text-base text-primary placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+            className="w-full min-h-11 border border-ink/15 bg-white px-3 py-2 font-sans text-base text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
           />
         </label>
         <button
           type="submit"
-          className="min-h-11 shrink-0 bg-primary px-6 font-sans text-[12px] font-semibold uppercase tracking-wide text-white transition-colors hover:bg-secondary"
+          className="min-h-11 shrink-0 bg-ink px-6 font-sans text-[12px] font-semibold uppercase tracking-wide text-white transition-colors hover:bg-secondary"
         >
           Найти
         </button>
@@ -167,11 +167,11 @@ export function SearchForm({ defaults, regions, categories, authors }: SearchFor
       {wide ? (
         filterFields
       ) : (
-        <details className="rounded-sm border border-primary/10 bg-surface/50">
-          <summary className="cursor-pointer px-4 py-3 font-sans text-sm font-semibold text-primary">
+        <details className="rounded-sm border border-ink/10 bg-surface/50">
+          <summary className="cursor-pointer px-4 py-3 font-sans text-sm font-semibold text-ink">
             Фильтры
           </summary>
-          <div className="border-t border-primary/10 px-4 py-4">{filterFields}</div>
+          <div className="border-t border-ink/10 px-4 py-4">{filterFields}</div>
         </details>
       )}
     </form>

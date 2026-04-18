@@ -46,7 +46,7 @@ function ArticleCard({ article }: { article: Article }) {
           <span className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
             {rubric}
           </span>
-          <h2 className="font-heading text-xl font-normal leading-snug tracking-tight text-primary transition-colors group-hover:text-accent md:text-[22px]">
+          <h2 className="font-heading text-xl font-normal leading-snug tracking-tight text-ink transition-colors group-hover:text-accent md:text-[22px]">
             {article.title}
           </h2>
           <time
@@ -130,7 +130,7 @@ export default async function AuthorPage({
           />
 
           <div className="min-w-0">
-            <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl">
+            <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl">
               {author.name}
             </h1>
             <p className="mt-3 max-w-3xl font-sans text-base leading-relaxed text-muted">

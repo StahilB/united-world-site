@@ -32,7 +32,7 @@ function MobileSectionNode({
           e.preventDefault();
           onClose();
         }}
-        className="block border-b border-neutral-200 py-3 font-sans text-sm font-semibold uppercase tracking-wide text-primary"
+        className="block border-b border-neutral-200 py-3 font-sans text-sm font-semibold uppercase tracking-wide text-ink"
         style={{ paddingLeft: indent }}
       >
         {node.name}
@@ -56,7 +56,7 @@ function MobileSectionNode({
   return (
     <details className="group border-b border-neutral-200">
       <summary
-        className="cursor-pointer list-none py-3 font-sans text-sm font-semibold uppercase tracking-wide text-primary [&::-webkit-details-marker]:hidden"
+        className="cursor-pointer list-none py-3 font-sans text-sm font-semibold uppercase tracking-wide text-ink [&::-webkit-details-marker]:hidden"
         style={{ paddingLeft: indent }}
       >
         <span className="flex items-center justify-between gap-2 pr-1">
@@ -114,13 +114,13 @@ export function MobileMenu({ sections, isOpen, onClose }: MobileMenuProps) {
       aria-label="Меню"
     >
       <div className="flex items-center justify-between border-b border-accent px-4 py-3">
-        <span className="font-heading text-lg font-semibold text-primary">
+        <span className="font-heading text-lg font-semibold text-ink">
           Меню
         </span>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-10 w-10 items-center justify-center text-primary"
+          className="flex h-10 w-10 items-center justify-center text-ink"
           aria-label="Закрыть меню"
         >
           <svg
@@ -142,7 +142,7 @@ export function MobileMenu({ sections, isOpen, onClose }: MobileMenuProps) {
           <Link
             href="/search"
             onClick={onClose}
-            className="mb-1 flex items-center gap-3 border-b border-neutral-200 py-3 pl-1 font-sans text-sm font-semibold uppercase tracking-wide text-primary transition-colors hover:text-accent"
+            className="mb-1 flex items-center gap-3 border-b border-neutral-200 py-3 pl-1 font-sans text-sm font-semibold uppercase tracking-wide text-ink transition-colors hover:text-accent"
           >
             <svg
               width="20"

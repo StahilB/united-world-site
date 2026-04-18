@@ -122,7 +122,7 @@ export default async function SectionPage({
         {page > 1 ? (
           <Link
             href={`/section/${slug}${articlesQuery(page - 1, activeFilter)}`}
-            className="font-semibold text-primary transition-colors hover:text-accent"
+            className="font-semibold text-ink transition-colors hover:text-accent"
           >
             Назад
           </Link>
@@ -133,7 +133,7 @@ export default async function SectionPage({
         {page < pageCount ? (
           <Link
             href={`/section/${slug}${articlesQuery(page + 1, activeFilter)}`}
-            className="font-semibold text-primary transition-colors hover:text-accent"
+            className="font-semibold text-ink transition-colors hover:text-accent"
           >
             Вперёд
           </Link>
@@ -150,7 +150,7 @@ export default async function SectionPage({
             <Link
               key={ch.id}
               href={getSectionHref(ch.slug)}
-              className="rounded border border-neutral-200 bg-surface px-4 py-3 font-sans text-sm text-primary shadow-sm transition-colors hover:border-accent hover:text-accent"
+              className="rounded border border-neutral-200 bg-surface px-4 py-3 font-sans text-sm text-ink shadow-sm transition-colors hover:border-accent hover:text-accent"
             >
               {ch.name}
             </Link>

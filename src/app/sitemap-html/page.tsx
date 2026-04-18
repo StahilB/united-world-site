@@ -40,12 +40,12 @@ export default async function SitemapHtmlPage() {
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <h1 className="font-heading text-3xl font-normal text-primary md:text-4xl">
+        <h1 className="font-heading text-3xl font-normal text-ink md:text-4xl">
           Карта сайта
         </h1>
 
         <section className="mt-10">
-          <h2 className="font-heading text-2xl font-normal text-primary">Разделы</h2>
+          <h2 className="font-heading text-2xl font-normal text-ink">Разделы</h2>
           {sections.length === 0 ? (
             <p className="mt-3 font-sans text-sm text-muted">Разделы пока не найдены.</p>
           ) : (
@@ -54,7 +54,7 @@ export default async function SitemapHtmlPage() {
                 <li key={s.id}>
                   <Link
                     href={`/section/${s.slug}`}
-                    className="font-sans text-sm text-primary underline decoration-primary/20 underline-offset-2 hover:text-accent"
+                    className="font-sans text-sm text-ink underline decoration-ink/20 underline-offset-2 hover:text-accent"
                   >
                     {s.name}
                   </Link>
@@ -65,7 +65,7 @@ export default async function SitemapHtmlPage() {
         </section>
 
         <section className="mt-12">
-          <h2 className="font-heading text-2xl font-normal text-primary">Статьи</h2>
+          <h2 className="font-heading text-2xl font-normal text-ink">Статьи</h2>
           {articles.length === 0 ? (
             <p className="mt-3 font-sans text-sm text-muted">Статьи пока не найдены.</p>
           ) : (
@@ -74,7 +74,7 @@ export default async function SitemapHtmlPage() {
                 <li key={a.slug}>
                   <Link
                     href={`/articles/${a.slug}`}
-                    className="font-sans text-sm text-primary underline decoration-primary/20 underline-offset-2 hover:text-accent"
+                    className="font-sans text-sm text-ink underline decoration-ink/20 underline-offset-2 hover:text-accent"
                   >
                     {a.title}
                   </Link>

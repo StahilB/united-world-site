@@ -284,7 +284,7 @@ export function ArticlePageView({
               <section className="mt-14 max-w-[700px]" aria-labelledby="similar">
                 <h2
                   id="similar"
-                  className="font-heading text-xl text-primary md:text-2xl"
+                  className="font-heading text-xl text-ink md:text-2xl"
                 >
                   Похожие статьи
                 </h2>
@@ -300,7 +300,7 @@ export function ArticlePageView({
               <section className="mt-14 max-w-[900px]" aria-labelledby="read-more-bottom">
                 <h2
                   id="read-more-bottom"
-                  className="font-heading text-xl text-primary md:text-2xl"
+                  className="font-heading text-xl text-ink md:text-2xl"
                 >
                   Читайте также
                 </h2>

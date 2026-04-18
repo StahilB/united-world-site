@@ -60,7 +60,7 @@ function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
         )}
 
         <div className="min-w-0 flex-1">
-          <div className="font-sans text-[18px] font-bold leading-snug text-primary group-hover:text-accent">
+          <div className="font-sans text-[18px] font-bold leading-snug text-ink group-hover:text-accent">
             {a.name}
           </div>
           <p className="mt-2 overflow-hidden font-sans text-sm leading-relaxed text-muted [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
@@ -96,7 +96,7 @@ export default async function ExpertiseColumnsPage() {
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl lg:text-[2.75rem]">
+        <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl lg:text-[2.75rem]">
           Авторские колонки
         </h1>
 

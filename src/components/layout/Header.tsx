@@ -76,12 +76,12 @@ function BurgerIcon() {
 }
 
 const navLinkClass =
-  "text-[13px] font-normal uppercase tracking-[0.05em] text-primary transition-colors duration-200 hover:text-accent";
+  "text-[13px] font-normal uppercase tracking-[0.05em] text-ink transition-colors duration-200 hover:text-accent";
 
 const navSepClass = "text-[13px] text-neutral-400 select-none";
 
 const dropLinkClass =
-  "text-sm font-normal text-secondary transition-colors hover:text-primary hover:underline";
+  "text-sm font-normal text-secondary transition-colors hover:text-ink hover:underline";
 
 function SectionMegaPanel({ root }: { root: Section }) {
   const cols = root.children.filter((c) => c.children.length > 0);
@@ -107,7 +107,7 @@ function SectionMegaPanel({ root }: { root: Section }) {
         >
           {cols.map((col) => (
             <div key={col.id}>
-              <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+              <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-ink">
                 {col.name}
               </p>
               <ul className="space-y-2">
@@ -143,7 +143,7 @@ function MegaLeavesRow({ leaves }: { leaves: Section[] }) {
         <Link
           key={l.id}
           href={getSectionHref(l.slug)}
-          className="text-xs font-semibold uppercase tracking-[0.06em] text-primary transition-colors hover:text-accent hover:underline"
+          className="text-xs font-semibold uppercase tracking-[0.06em] text-ink transition-colors hover:text-accent hover:underline"
         >
           {l.name}
         </Link>
@@ -275,7 +275,7 @@ export function Header({ sections }: HeaderProps) {
           aria-hidden={isScrolled}
         >
           {/* Row 1 */}
-          <div className="flex h-8 shrink-0 items-center justify-between bg-primary px-3 text-white md:px-6">
+          <div className="flex h-8 shrink-0 items-center justify-between bg-ink px-3 text-white md:px-6">
             <CurrentDate className="text-[11px] text-white/95 md:text-xs" />
             <div className="flex items-center gap-3 md:gap-4">
               <a
@@ -337,7 +337,7 @@ export function Header({ sections }: HeaderProps) {
               </div>
               <div className="mx-2 flex min-w-0 shrink flex-col items-center justify-center px-1 text-center sm:mx-4">
                 <Link href="/" className="group block no-underline">
-                  <span className="font-heading text-[32px] font-normal uppercase leading-tight tracking-[0.12em] text-primary">
+                  <span className="font-heading text-[32px] font-normal uppercase leading-tight tracking-[0.12em] text-ink">
                     ЕДИНЫЙ МИР
                   </span>
                   <span className="mt-1 block text-xs leading-snug text-muted">
@@ -428,7 +428,7 @@ export function Header({ sections }: HeaderProps) {
               <HeaderSearch />
               <button
                 type="button"
-                className="flex h-10 w-10 shrink-0 items-center justify-center text-primary md:hidden"
+                className="flex h-10 w-10 shrink-0 items-center justify-center text-ink md:hidden"
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-menu"
                 aria-label="Открыть меню"

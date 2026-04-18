@@ -41,7 +41,7 @@ export default async function TeamPage() {
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-primary md:text-4xl">
+        <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl">
           Команда
         </h1>
         <p className="mt-4 max-w-[800px] font-sans text-[15px] leading-relaxed text-muted">
@@ -52,7 +52,7 @@ export default async function TeamPage() {
         <section className="mt-12" aria-labelledby="team-core">
           <h2
             id="team-core"
-            className="font-heading text-2xl font-normal text-primary md:text-[1.65rem]"
+            className="font-heading text-2xl font-normal text-ink md:text-[1.65rem]"
           >
             Команда
           </h2>
@@ -60,19 +60,19 @@ export default async function TeamPage() {
             {core.map((m) => (
               <article
                 key={m.name}
-                className="border border-primary/10 bg-surface/60 p-5 shadow-sm"
+                className="border border-ink/10 bg-surface/60 p-5 shadow-sm"
               >
-                <h3 className="font-heading text-lg font-normal text-primary">
+                <h3 className="font-heading text-lg font-normal text-ink">
                   {m.name}
                 </h3>
                 {m.role ? (
-                  <p className="mt-2 font-sans text-[14px] leading-snug text-primary/90">
+                  <p className="mt-2 font-sans text-[14px] leading-snug text-ink/90">
                     {m.role}
                   </p>
                 ) : null}
                 {m.directions ? (
                   <p className="mt-3 font-sans text-[13px] leading-relaxed text-muted">
-                    <span className="font-semibold text-primary/80">
+                    <span className="font-semibold text-ink/80">
                       Направления:{" "}
                     </span>
                     {m.directions}
@@ -92,7 +92,7 @@ export default async function TeamPage() {
         <section className="mt-16" aria-labelledby="team-experts">
           <h2
             id="team-experts"
-            className="font-heading text-2xl font-normal text-primary md:text-[1.65rem]"
+            className="font-heading text-2xl font-normal text-ink md:text-[1.65rem]"
           >
             Эксперты
           </h2>
@@ -100,9 +100,9 @@ export default async function TeamPage() {
             {experts.map((m) => (
               <article
                 key={m.name}
-                className="border border-primary/10 bg-white p-6 shadow-sm"
+                className="border border-ink/10 bg-white p-6 shadow-sm"
               >
-                <h3 className="font-heading text-xl font-normal text-primary">
+                <h3 className="font-heading text-xl font-normal text-ink">
                   {m.name}
                 </h3>
                 {m.role ? (
@@ -117,7 +117,7 @@ export default async function TeamPage() {
                 ) : null}
                 {m.directions ? (
                   <p className="mt-4 font-sans text-[13px] leading-relaxed text-muted">
-                    <span className="font-semibold text-primary/80">
+                    <span className="font-semibold text-ink/80">
                       Направления:{" "}
                     </span>
                     {m.directions}

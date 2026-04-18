@@ -31,7 +31,7 @@ export function SectionRubricFilters({
         </label>
         <select
           id="rubric-filter-mobile"
-          className="w-full min-h-11 border border-neutral-200 bg-white px-3 py-2 font-sans text-sm text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+          className="w-full min-h-11 border border-neutral-200 bg-white px-3 py-2 font-sans text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
           value={selectedFilter ?? ""}
           onChange={(e) => {
             const v = e.target.value;
@@ -60,8 +60,8 @@ export function SectionRubricFilters({
               href={base}
               className={`block rounded px-2 py-1.5 font-sans text-sm transition-colors ${
                 !selectedFilter
-                  ? "bg-primary/8 font-semibold text-primary"
-                  : "text-secondary hover:bg-surface hover:text-primary"
+                  ? "bg-ink/8 font-semibold text-ink"
+                  : "text-secondary hover:bg-surface hover:text-ink"
               }`}
             >
               Все
@@ -73,8 +73,8 @@ export function SectionRubricFilters({
                 href={`${base}?filter=${encodeURIComponent(it.slug)}`}
                 className={`block rounded px-2 py-1.5 font-sans text-sm transition-colors ${
                   selectedFilter === it.slug
-                    ? "bg-primary/8 font-semibold text-primary"
-                    : "text-secondary hover:bg-surface hover:text-primary"
+                    ? "bg-ink/8 font-semibold text-ink"
+                    : "text-secondary hover:bg-surface hover:text-ink"
                 }`}
               >
                 {it.name}
