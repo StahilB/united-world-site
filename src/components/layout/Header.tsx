@@ -12,6 +12,7 @@ import {
   VkIcon,
   YouTubeIcon,
 } from "@/components/ui/SocialIcons";
+import { CurrentDate } from "./CurrentDate";
 import { HeaderSearch } from "./HeaderSearch";
 import { MobileMenu } from "./MobileMenu";
 
@@ -275,12 +276,7 @@ export function Header({ sections }: HeaderProps) {
         >
           {/* Row 1 */}
           <div className="flex h-8 shrink-0 items-center justify-between bg-primary px-3 text-white md:px-6">
-            <time
-              dateTime="2026-04-04"
-              className="text-[11px] text-white/95 md:text-xs"
-            >
-              4 апреля 2026
-            </time>
+            <CurrentDate className="text-[11px] text-white/95 md:text-xs" />
             <div className="flex items-center gap-3 md:gap-4">
               <a
                 href={SOCIAL_URLS.telegram}
