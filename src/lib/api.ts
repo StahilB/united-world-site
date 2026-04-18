@@ -244,6 +244,30 @@ export async function getPopularArticles(
   );
 }
 
+/**
+ * Самые читаемые среди опубликованных за последние N дней.
+ * Для hero на главной, чтобы не вылезали старые статьи.
+ */
+export async function getRecentPopularArticles(
+  limit: number,
+  days: number = 90,
+): Promise<StrapiCollectionResponse<StrapiArticle>> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const isoSince = since.toISOString();
+
+  const search = new URLSearchParams();
+  search.set("sort[0]", "views_count:desc");
+  search.set("pagination[pageSize]", String(limit));
+  search.set("pagination[page]", "1");
+  search.set("filters[publication_date][$gte]", isoSince);
+  appendArticleListPopulate(search);
+
+  return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
+    `/api/articles?${search.toString()}`,
+  );
+}
+
 export async function getLatestArticles(
   limit: number,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {

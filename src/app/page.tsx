@@ -8,6 +8,7 @@ import {
   getArticles,
   getLatestArticles,
   getPopularArticles,
+  getRecentPopularArticles,
   getRegions,
 } from "@/lib/api";
 import { THEMATIC_BLOCK_THEMES } from "@/lib/thematic-block";
@@ -43,7 +44,7 @@ export default async function HomePage() {
   try {
     const results = await Promise.all([
       getLatestArticles(4),
-      getPopularArticles(7),
+      getRecentPopularArticles(7, 90),
       getArticles({ pageSize: 100, page: 1 }),
       getRegions(),
     ]);
@@ -51,6 +52,17 @@ export default async function HomePage() {
     popularRes = results[1];
     poolRes = results[2];
     regionsRes = results[3];
+
+    if (popularRes.data.length < 5) {
+      try {
+        const fallback = await getPopularArticles(7);
+        if (fallback.data.length > popularRes.data.length) {
+          popularRes = fallback;
+        }
+      } catch {
+        // игнорируем — используем то, что есть
+      }
+    }
   } catch (e) {
     console.error("[HomePage] Strapi fetch failed:", e);
     fetchFailed = true;
