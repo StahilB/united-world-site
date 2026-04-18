@@ -126,8 +126,8 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${sourceSans3.variable} h-full antialiased`}
     >
       <head>
-        <link rel="preconnect" href="http://72.56.250.143:1337" />
-        <link rel="dns-prefetch" href="http://72.56.250.143:1337" />
+        <link rel="preconnect" href="https://admin.anounitedworld.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://admin.anounitedworld.com" />
       </head>
       <body className={`${sourceSans3.className} min-h-full`}>
         <JsonLd data={organizationSchema()} />

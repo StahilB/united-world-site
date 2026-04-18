@@ -28,7 +28,7 @@ const nextConfig = {
       },
       {
         protocol: "http",
-        hostname: "72.56.250.143",
+        hostname: "85.239.42.204",
         port: "1337",
         pathname: "/uploads/**",
       },
@@ -41,6 +41,11 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "anounitedworld.com",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "admin.anounitedworld.com",
         pathname: "/uploads/**",
       },
       {

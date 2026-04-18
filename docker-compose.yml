@@ -46,13 +46,13 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        NEXT_PUBLIC_STRAPI_URL: ${NEXT_PUBLIC_STRAPI_URL:-http://72.56.250.143:1337}
+        NEXT_PUBLIC_STRAPI_URL: ${NEXT_PUBLIC_STRAPI_URL:-http://85.239.42.204:1337}
     restart: unless-stopped
     environment:
       NODE_ENV: production
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}
       STRAPI_TOKEN: ${STRAPI_TOKEN:-}
-      NEXT_PUBLIC_STRAPI_URL: ${NEXT_PUBLIC_STRAPI_URL:-http://72.56.250.143:1337}
+      NEXT_PUBLIC_STRAPI_URL: ${NEXT_PUBLIC_STRAPI_URL:-http://85.239.42.204:1337}
       REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
 
   telegram-bot:
@@ -65,7 +65,7 @@ services:
       CHANNEL_ID: ${CHANNEL_ID:?set CHANNEL_ID}
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}
       STRAPI_TOKEN: ${STRAPI_TOKEN:?set STRAPI_TOKEN}
-      SITE_URL: ${SITE_URL:-http://72.56.250.143}
+      SITE_URL: ${SITE_URL:-http://85.239.42.204}
       REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
       NODE_ENV: production
 
@@ -77,8 +77,8 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     depends_on:
       - nextjs
       - strapi
