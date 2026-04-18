@@ -131,7 +131,7 @@
   }
 
   .static-page-body ul {
-    @apply my-5 list-disc space-y-2 pl-6 text-primary/95;
+    @apply my-5 list-disc space-y-2 pl-6 text-ink/95;
   }
 
   .static-page-body li {
@@ -139,10 +139,10 @@
   }
 
   .static-page-body a {
-    @apply text-accent underline decoration-accent/30 underline-offset-2 transition-colors hover:text-primary hover:decoration-primary/40;
+    @apply text-gold-deep underline decoration-gold-deep/30 underline-offset-2 transition-colors hover:text-ink hover:decoration-ink/40;
   }
 
   .static-page-body strong {
-    @apply font-semibold text-primary;
+    @apply font-semibold text-ink;
   }
 }

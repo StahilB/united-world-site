@@ -29,14 +29,6 @@ const config: Config = {
         "gold-light": "#E8C774",
         // Alert
         alert: "#B7361C",
-
-        // Legacy aliases — указывают на новые значения
-        primary: "#0D2A5C",
-        secondary: "#1E3F7A",
-        accent: "#C99A3A",
-        accentLight: "#E8C774",
-        surface: "#F5F6F9",
-        muted: "#4E5A73",
       },
       fontFamily: {
         sans: ["var(--font-source-sans-3)", "system-ui", "sans-serif"],
