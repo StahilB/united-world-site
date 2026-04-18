@@ -20,19 +20,22 @@ const navLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-ink text-white/90">
+    <footer className="bg-ink-deep text-white/90">
       <div className="mx-auto max-w-6xl px-6 py-16 md:px-8 md:py-20">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-10 lg:gap-12">
           {/* Колонка 1 — бренд */}
           <div className="flex flex-col gap-5">
+            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+              О центре
+            </p>
             <Link href="/" className="inline-flex w-fit shrink-0">
               <Image
                 src="/images/logo_1.png"
                 alt="Единый Мир"
-                width={88}
-                height={88}
-                className="h-[88px] w-[88px] object-contain"
-                sizes="88px"
+                width={80}
+                height={80}
+                className="h-[80px] w-[80px] object-contain"
+                sizes="80px"
                 unoptimized
               />
             </Link>
