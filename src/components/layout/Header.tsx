@@ -316,7 +316,7 @@ export function Header({ sections }: HeaderProps) {
               </a>
               <Link
                 href="/support"
-                className="rounded-sm bg-accent px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-accentLight md:text-xs"
+                className="rounded-sm bg-accent px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-gold-light md:text-xs"
               >
                 Поддержать
               </Link>
