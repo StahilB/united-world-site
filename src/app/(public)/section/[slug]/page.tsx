@@ -116,7 +116,7 @@ export default async function SectionPage({
   const paginationNav =
     pageCount > 1 ? (
       <nav
-        className="mt-12 flex flex-wrap items-center justify-center gap-4 font-sans text-sm text-secondary"
+        className="mt-12 flex flex-wrap items-center justify-center gap-4 font-sans text-sm text-ink-soft"
         aria-label="Страницы"
       >
         {page > 1 ? (

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const linkClass =
-  "text-sm font-normal text-secondary transition-colors hover:text-ink hover:underline";
+  "text-sm font-normal text-ink-soft transition-colors hover:text-ink hover:underline";
 
 const REGIONS: Array<{ label: string; href: string }> = [
   { label: "Россия", href: "/region/rossiya" },

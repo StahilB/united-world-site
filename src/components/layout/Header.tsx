@@ -81,7 +81,7 @@ const navLinkClass =
 const navSepClass = "text-[13px] text-neutral-400 select-none";
 
 const dropLinkClass =
-  "text-sm font-normal text-secondary transition-colors hover:text-ink hover:underline";
+  "text-sm font-normal text-ink-soft transition-colors hover:text-ink hover:underline";
 
 function SectionMegaPanel({ root }: { root: Section }) {
   const cols = root.children.filter((c) => c.children.length > 0);

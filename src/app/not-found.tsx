@@ -60,7 +60,7 @@ export default async function NotFound() {
             </label>
             <button
               type="submit"
-              className="min-h-11 shrink-0 bg-ink px-6 font-sans text-[12px] font-semibold uppercase tracking-wide text-white transition-colors hover:bg-secondary"
+              className="min-h-11 shrink-0 bg-ink px-6 font-sans text-[12px] font-semibold uppercase tracking-wide text-white transition-colors hover:bg-ink-soft"
             >
               Найти
             </button>

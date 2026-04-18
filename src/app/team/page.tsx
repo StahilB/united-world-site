@@ -106,7 +106,7 @@ export default async function TeamPage() {
                   {m.name}
                 </h3>
                 {m.role ? (
-                  <p className="mt-2 font-sans text-[14px] font-medium text-secondary">
+                  <p className="mt-2 font-sans text-[14px] font-medium text-ink-soft">
                     {m.role}
                   </p>
                 ) : null}
