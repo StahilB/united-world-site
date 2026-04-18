@@ -144,6 +144,7 @@ export default async function HomePage() {
         <Link href="/expertise">Экспертиза</Link>
         <Link href="/about">О центре</Link>
       </nav>
+
       {mainArticle && (
         <HeroTopBlock
           mainArticle={mainArticle}
@@ -151,31 +152,17 @@ export default async function HomePage() {
         />
       )}
 
-      {hasLatest && (
-        <section className="py-12 md:py-16">
-          <LatestArticlesBlock articles={latestArticles} />
-        </section>
-      )}
+      {hasLatest && <LatestArticlesBlock articles={latestArticles} />}
 
-      {hasRegional && (
-        <section className="py-12 md:py-16">
-          <RegionalReviewsBlock items={regionalItems} />
-        </section>
-      )}
+      {hasRegional && <RegionalReviewsBlock items={regionalItems} />}
 
-      {hasThematic && (
-        <section className="py-12 md:py-16">
-          <ThematicBlock items={thematicItems} />
-        </section>
-      )}
+      {hasThematic && <ThematicBlock items={thematicItems} />}
 
       {hasExpert && (
-        <section className="py-12 md:py-16">
-          <ExpertForumBlock
-            opinions={expertOpinions}
-            interviews={expertInterviews}
-          />
-        </section>
+        <ExpertForumBlock
+          opinions={expertOpinions}
+          interviews={expertInterviews}
+        />
       )}
     </main>
   );
