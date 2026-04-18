@@ -338,7 +338,7 @@ function createStrapiClient({ baseUrl, token }) {
     };
 
     if (excerpt) {
-      data.excerpt = excerpt.slice(0, 300);
+      data.excerpt = excerpt;
     }
 
     if (authorId != null) {

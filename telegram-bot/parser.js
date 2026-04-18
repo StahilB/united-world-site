@@ -101,6 +101,7 @@ function normalizeFormatSlug(slug) {
  *   regionSlug: string | null,
  *   format: string | null,
  *   authorName: string | null,
+ *   excerpt: string | null,
  *   bodyText: string,
  * } | { ok: false, error: string }}
  */
@@ -135,12 +136,34 @@ function parseFirstMessage(raw) {
       ? lines[authorIdx].replace(/^автор\s*:\s*/i, "").trim() || null
       : null;
 
-  let bodyStartIdx = authorIdx >= 0 ? authorIdx + 1 : Math.max(tagLineIdx + 1, 1);
-  // Skip empty lines after author/hashtags
-  while (bodyStartIdx < lines.length && !lines[bodyStartIdx].trim()) {
-    bodyStartIdx += 1;
+  // Starting cursor for body extraction (after author or hashtags).
+  let cursorIdx = authorIdx >= 0 ? authorIdx + 1 : Math.max(tagLineIdx + 1, 1);
+  // Skip empty lines
+  while (cursorIdx < lines.length && !lines[cursorIdx].trim()) {
+    cursorIdx += 1;
   }
-  const bodyText = lines.slice(bodyStartIdx).join("\n").trim();
+
+  // Optional "Аннотация:" / "Excerpt:" block — multi-line until blank line.
+  let excerpt = null;
+  const excerptMarker = /^(аннотация|excerpt|описание)\s*:\s*(.*)$/i;
+  if (cursorIdx < lines.length && excerptMarker.test(lines[cursorIdx].trim())) {
+    const firstMatch = lines[cursorIdx].trim().match(excerptMarker);
+    const firstLineTail = firstMatch && firstMatch[2] ? firstMatch[2].trim() : "";
+    const excerptLines = firstLineTail ? [firstLineTail] : [];
+    cursorIdx += 1;
+    // Collect subsequent non-empty lines into excerpt.
+    while (cursorIdx < lines.length && lines[cursorIdx].trim()) {
+      excerptLines.push(lines[cursorIdx].trim());
+      cursorIdx += 1;
+    }
+    excerpt = excerptLines.join(" ").trim() || null;
+    // Skip blank lines after excerpt before body starts.
+    while (cursorIdx < lines.length && !lines[cursorIdx].trim()) {
+      cursorIdx += 1;
+    }
+  }
+
+  const bodyText = lines.slice(cursorIdx).join("\n").trim();
 
   if (!bodyText) {
     return {
@@ -157,6 +180,7 @@ function parseFirstMessage(raw) {
     regionSlug,
     format,
     authorName,
+    excerpt,
     bodyText,
   };
 }

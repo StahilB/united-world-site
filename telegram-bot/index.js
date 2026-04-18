@@ -403,6 +403,7 @@ async function handleChannelPost(ctx) {
       regionSlug: resolveRegionSlug(parsed.regionSlug),
       format: parsed.format,
       authorName: parsed.authorName,
+      excerptOverride: parsed.excerpt || null,
       bodyParts: [parsed.bodyText],
       photoFileId: photoFileId || null,
       timer: null,
