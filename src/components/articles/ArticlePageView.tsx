@@ -34,21 +34,23 @@ function RelatedCard({ article: a }: { article: Article }) {
   return (
     <Link
       href={`/articles/${a.slug}`}
-      className="group block border-b border-primary/10 pb-5 last:border-b-0 last:pb-0"
+      className="group block border-b border-rule pb-5 last:border-b-0 last:pb-0"
     >
-      <div className="relative aspect-video w-full overflow-hidden rounded-sm bg-surface">
+      <div className="relative aspect-video w-full overflow-hidden bg-paper-mute">
         <Image
           src={a.coverImage}
           alt=""
           fill
           className="object-cover transition-opacity group-hover:opacity-90"
-          sizes="(max-width: 1024px) 100vw, 200px"
+          sizes="(max-width: 1024px) 100vw, 260px"
         />
       </div>
-      <p className="mt-2 font-heading text-[15px] font-normal leading-snug text-primary group-hover:text-accent">
+      <p className="kicker mt-3 line-clamp-1">
+        {a.categories[0]?.name ?? a.format}
+      </p>
+      <p className="mt-1.5 font-heading text-[15px] font-bold leading-snug text-ink group-hover:text-gold-deep">
         {a.title}
       </p>
-      <p className="mt-1 font-sans text-[11px] text-muted">{a.format}</p>
     </Link>
   );
 }
@@ -57,25 +59,22 @@ function SimilarCardWide({ article: a }: { article: Article }) {
   return (
     <Link
       href={`/articles/${a.slug}`}
-      className="group flex flex-col border border-primary/10 bg-white md:flex-row"
+      className="group flex min-w-0 flex-col overflow-hidden bg-paper-warm transition-[transform] duration-200 ease-out hover:-translate-y-[2px] md:flex-row"
     >
-      <div className="relative aspect-video min-h-[120px] w-full shrink-0 md:w-[40%]">
+      <div className="relative aspect-[16/10] w-full shrink-0 md:aspect-[4/3] md:w-[38%]">
         <Image
           src={a.coverImage}
           alt=""
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           sizes="(max-width: 768px) 100vw, 33vw"
         />
       </div>
-      <div className="flex flex-1 flex-col justify-center p-4">
-        <span
-          className="font-sans text-[11px] font-semibold uppercase tracking-wide"
-          style={{ color: a.categories[0]?.color ?? "#B8952C" }}
-        >
+      <div className="flex flex-1 flex-col justify-center p-5 md:p-6">
+        <p className="kicker line-clamp-1">
           {a.categories[0]?.name ?? a.format}
-        </span>
-        <h3 className="mt-2 font-heading text-lg font-normal leading-snug text-primary group-hover:text-accent">
+        </p>
+        <h3 className="mt-2 font-heading text-[18px] font-bold leading-snug tracking-tight text-ink transition-colors group-hover:text-gold-deep md:text-[19px]">
           {a.title}
         </h3>
       </div>
@@ -332,20 +331,21 @@ export function ArticlePageView({
                 </div>
               )}
 
-              <div className="rounded-sm border border-primary/10 bg-white p-4">
-                <p className="font-heading text-sm text-primary">
-                  Подписка в Telegram
+              <div className="bg-ink p-5 text-white">
+                <p className="kicker text-gold-light">Подписка</p>
+                <p className="mt-3 font-heading text-[17px] font-bold leading-snug">
+                  Дайджест в Telegram
                 </p>
-                <p className="mt-2 font-sans text-[13px] leading-relaxed text-muted">
+                <p className="mt-2 font-sans text-[13px] leading-relaxed text-white/70">
                   Краткие выжимки материалов и анонсы — без лишнего шума.
                 </p>
                 <a
                   href={SOCIAL_URLS.telegram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-4 inline-flex min-h-10 items-center justify-center bg-[#229ED9] px-4 font-sans text-[12px] font-semibold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
+                  className="mt-4 inline-flex min-h-10 items-center justify-center bg-gold px-4 font-sans text-[12px] font-semibold uppercase tracking-[0.08em] text-ink transition-colors hover:bg-gold-light"
                 >
-                  Telegram
+                  Открыть канал
                 </a>
               </div>
             </div>
