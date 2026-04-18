@@ -21,9 +21,6 @@
       "targetField": "title",
       "required": true
     },
-    "content": {
-      "type": "blocks"
-    },
     "excerpt": {
       "type": "text"
     },
@@ -33,6 +30,13 @@
       "allowedTypes": [
         "images"
       ]
+    },
+    "content_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
     },
     "author": {
       "type": "relation",
@@ -93,12 +97,8 @@
     "telegram_message_id": {
       "type": "biginteger"
     },
-    "content_html": {
-      "type": "customField",
-      "customField": "plugin::ckeditor5.CKEditor",
-      "options": {
-        "preset": "defaultHtml"
-      }
+    "content": {
+      "type": "blocks"
     }
   }
 }
