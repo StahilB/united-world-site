@@ -6,13 +6,17 @@ require("dotenv").config();
 
 console.log("[boot] telegram-bot starting...");
 
-const { Telegraf } = require("telegraf");
+const path = require("path");
+const fs = require("fs");
+const { Telegraf, Input } = require("telegraf");
 const {
   parseFirstMessage,
   telegramToHtml,
   resolveCategorySlug,
   resolveRegionSlug,
+  normalizeFormatSlug,
 } = require("./parser");
+const { parseDocxArticle } = require("./docx-parser");
 const { createStrapiClient } = require("./strapi-client");
 const { slugFromTitle, readingTimeMinutes } = require("./utils");
 
@@ -29,6 +33,9 @@ const BOT_TOKEN = requireEnv("BOT_TOKEN");
 const CHANNEL_ID = requireEnv("CHANNEL_ID");
 const STRAPI_URL = requireEnv("STRAPI_URL");
 const STRAPI_TOKEN = requireEnv("STRAPI_TOKEN");
+const STRAPI_PUBLIC_URL = (
+  process.env.STRAPI_PUBLIC_URL || STRAPI_URL
+).replace(/\/$/, "");
 const SITE_URL = process.env.SITE_URL || "http://localhost:3000";
 
 const strapi = createStrapiClient({
@@ -276,8 +283,238 @@ function formatHelpText() {
     "Первый абзац текста…",
     "",
     "Дальше можно слать продолжение отдельными сообщениями.",
-    "Команды: /publish /cancel /status /recent",
+    "Команды: /publish /cancel /status /recent /template",
+    "Или отправьте .docx по шаблону (/template).",
   ].join("\n");
+}
+
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function sendTemplateDocument(ctx) {
+  try {
+    const msg = ctx.message || ctx.channelPost;
+    if (!msg?.chat?.id) return;
+    const templatePath = path.join(
+      __dirname,
+      "Шаблон_статьи_АНО_Единый_Мир.docx",
+    );
+    if (!fs.existsSync(templatePath)) {
+      await ctx.telegram.sendMessage(
+        msg.chat.id,
+        "❌ Файл шаблона не найден на сервере.",
+        { reply_to_message_id: msg.message_id },
+      );
+      return;
+    }
+    await ctx.telegram.sendDocument(msg.chat.id, Input.fromLocalFile(templatePath), {
+      reply_to_message_id: msg.message_id,
+      caption:
+        "Скачайте этот шаблон, заполните поля и отправьте заполненный .docx боту. Изображения вставляйте прямо в текст — первое по порядку станет обложкой.",
+    });
+  } catch (e) {
+    console.error("[bot/template] error:", e);
+    const msg = ctx.message || ctx.channelPost;
+    if (msg?.chat?.id) {
+      await ctx.telegram.sendMessage(
+        msg.chat.id,
+        "❌ Не удалось отправить шаблон.",
+        { reply_to_message_id: msg.message_id },
+      );
+    }
+  }
+}
+
+/**
+ * @param {import('telegraf').Context} ctx
+ */
+async function handleDocumentUpload(ctx) {
+  try {
+    const msg = ctx.message || ctx.channelPost;
+    const chatId = String(msg?.chat?.id ?? "");
+    if (chatId !== String(CHANNEL_ID)) {
+      console.log(`[docx] skip wrong chat ${chatId}`);
+      return;
+    }
+
+    const doc = msg.document;
+    if (!doc) return;
+
+    const mime = doc.mime_type || "";
+    const fname = doc.file_name || "";
+    const isDocx =
+      mime ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      fname.toLowerCase().endsWith(".docx");
+
+    if (!isDocx) {
+      await ctx.telegram.sendMessage(msg.chat.id, "❌ Я понимаю только файлы .docx по стандартному шаблону. Получите шаблон через /template.", {
+        reply_to_message_id: msg.message_id,
+      });
+      return;
+    }
+
+    if (doc.file_size && doc.file_size > 20 * 1024 * 1024) {
+      await ctx.telegram.sendMessage(msg.chat.id, "❌ Файл слишком большой (>20 МБ).", {
+        reply_to_message_id: msg.message_id,
+      });
+      return;
+    }
+
+    await ctx.telegram.sendMessage(msg.chat.id, "📥 Получил файл, разбираю...", {
+      reply_to_message_id: msg.message_id,
+    });
+
+    const fileLink = await ctx.telegram.getFileLink(doc.file_id);
+    const res = await fetch(fileLink.href);
+    const arrayBuf = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuf);
+
+    const parsed = await parseDocxArticle(buffer);
+    if (!parsed.ok) {
+      await ctx.telegram.sendMessage(msg.chat.id, `❌ ${parsed.error}`, {
+        reply_to_message_id: msg.message_id,
+      });
+      return;
+    }
+
+    const { meta, bodyHtml, images, warnings } = parsed;
+
+    if (warnings && warnings.length > 0) {
+      console.warn("[docx] mammoth warnings:", warnings);
+    }
+
+    const categorySlug = meta.category
+      ? resolveCategorySlug(meta.category)
+      : null;
+    const regionSlug = meta.region
+      ? resolveRegionSlug(meta.region.replace(/\s+/g, "_"))
+      : null;
+    const format = meta.format ? normalizeFormatSlug(meta.format) : null;
+
+    if (meta.format && !format) {
+      await ctx.telegram.sendMessage(
+        msg.chat.id,
+        `❌ Неизвестный формат «${meta.format}». Допустимо: анализ, мнение, интервью, колонка, обзор.`,
+        { reply_to_message_id: msg.message_id },
+      );
+      return;
+    }
+
+    let coverImageId = null;
+    let bodyHtmlFinal = bodyHtml;
+
+    for (const img of images) {
+      const mimePart = (img.contentType || "image/png").split("/")[1] || "png";
+      const ext = mimePart.replace(/[^a-z0-9]/gi, "") || "png";
+      const filename = `article-img-${Date.now()}-${img.index}.${ext}`;
+      const uploaded = await strapi.uploadMedia(
+        img.buffer,
+        filename,
+        img.contentType || "image/png",
+      );
+      if (!uploaded) {
+        console.warn(`[docx] image #${img.index} upload failed, skipping`);
+        const ph = escapeRegExp(`__IMG_PLACEHOLDER_${img.index}__`);
+        bodyHtmlFinal = bodyHtmlFinal.replace(
+          new RegExp(`<img[^>]*src=["']?${ph}["']?[^>]*>`, "gi"),
+          "",
+        );
+        continue;
+      }
+      if (img.index === 0) {
+        coverImageId = uploaded.id;
+        const ph = escapeRegExp(`__IMG_PLACEHOLDER_${img.index}__`);
+        bodyHtmlFinal = bodyHtmlFinal.replace(
+          new RegExp(`<img[^>]*src=["']?${ph}["']?[^>]*>`, "gi"),
+          "",
+        );
+      } else {
+        const imgUrl = uploaded.url.startsWith("http")
+          ? uploaded.url
+          : `${STRAPI_PUBLIC_URL}${uploaded.url}`;
+        const ph = escapeRegExp(`__IMG_PLACEHOLDER_${img.index}__`);
+        bodyHtmlFinal = bodyHtmlFinal.replace(
+          new RegExp(ph, "g"),
+          imgUrl,
+        );
+      }
+    }
+
+    const authorId = meta.author ? await ensureAuthorId(meta.author) : null;
+
+    let categoryId = null;
+    if (categorySlug) {
+      const c = await strapi.findCategoryBySlug(categorySlug);
+      if (c) categoryId = c.id;
+    }
+
+    let regionId = null;
+    if (regionSlug) {
+      const r = await strapi.findRegionBySlug(regionSlug);
+      if (r) regionId = r.id;
+    }
+
+    const plainText = bodyHtmlFinal.replace(/<[^>]+>/g, " ").trim();
+    const readingTime = readingTimeMinutes(plainText);
+
+    const result = await createArticleWithUniqueSlug(meta.title, async (slug) =>
+      strapi.createArticle({
+        title: meta.title,
+        slug,
+        htmlBody: bodyHtmlFinal,
+        excerpt: meta.excerpt,
+        format: format || "анализ",
+        authorId,
+        categoryId,
+        regionId,
+        coverImageId,
+        readingTime,
+        publicationDate: new Date().toISOString(),
+      }),
+    );
+
+    if (!result) {
+      await ctx.telegram.sendMessage(msg.chat.id, "❌ Не удалось создать статью в Strapi.", {
+        reply_to_message_id: msg.message_id,
+      });
+      return;
+    }
+
+    const url = articleUrl(result.slug);
+    await ctx.telegram.sendMessage(
+      msg.chat.id,
+      `✅ Статья опубликована!\n\n` +
+        `📰 ${meta.title}\n` +
+        `🔗 ${url}\n\n` +
+        `Картинок: ${images.length} (${coverImageId ? "обложка есть" : "без обложки"})`,
+      { reply_to_message_id: msg.message_id, disable_web_page_preview: false },
+    );
+  } catch (e) {
+    console.error("[bot/docx] error:", e);
+    const msg = ctx.message || ctx.channelPost;
+    if (msg?.chat?.id) {
+      await ctx.telegram.sendMessage(
+        msg.chat.id,
+        `❌ Ошибка обработки: ${e.message || String(e)}`,
+        { reply_to_message_id: msg.message_id },
+      );
+    }
+  }
+}
+
+/**
+ * Маршрут: документы → docx, иначе текст статьи.
+ * @param {import('telegraf').Context} ctx
+ */
+async function routeChannelUpdate(ctx) {
+  const msg = ctx.message || ctx.channelPost;
+  if (!msg) return;
+  if (msg.document) {
+    return handleDocumentUpload(ctx);
+  }
+  return handleChannelPost(ctx);
 }
 
 /**
@@ -377,6 +614,10 @@ async function handleChannelPost(ctx) {
     }
     return;
   }
+  if (lower === "/template" || lower.startsWith("/template@")) {
+    await sendTemplateDocument(ctx);
+    return;
+  }
 
   // Ignore unknown commands so they don't enter article body
   if (trimmed.startsWith("/")) {
@@ -463,10 +704,10 @@ const bot = new Telegraf(BOT_TOKEN, {
   telegram: telegramOpts,
 });
 
-// Events in channel posts
+// Events in channel posts (документы → docx, иначе текст статьи)
 bot.on("channel_post", (ctx) => {
   console.log(`[event] channel_post from chat ${ctx.chat?.id}`);
-  return handleChannelPost(ctx);
+  return routeChannelUpdate(ctx);
 });
 
 // Events in group/supergroup/private chats
@@ -474,7 +715,7 @@ bot.on("message", (ctx) => {
   console.log(
     `[event] message from chat ${ctx.chat?.id} (type=${ctx.chat?.type})`,
   );
-  return handleChannelPost(ctx);
+  return routeChannelUpdate(ctx);
 });
 
 // Also listen to edits
