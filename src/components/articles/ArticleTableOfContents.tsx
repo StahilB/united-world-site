@@ -44,22 +44,20 @@ export function ArticleTableOfContents({ headings }: ArticleTableOfContentsProps
   if (headings.length === 0) return null;
 
   return (
-    <nav aria-label="Оглавление" className="border-b border-primary/10 pb-6">
-      <p className="font-heading text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-        Оглавление
-      </p>
-      <ul className="mt-3 space-y-2 font-sans text-[13px] leading-snug">
+    <nav aria-label="Оглавление" className="border-b border-rule pb-6">
+      <p className="kicker">Оглавление</p>
+      <ul className="mt-4 space-y-2.5 font-sans text-[13px] leading-snug">
         {headings.map((h) => (
           <li
             key={h.id}
-            className={h.level === 3 ? "pl-3 border-l border-primary/15" : ""}
+            className={h.level === 3 ? "border-l border-rule pl-3" : ""}
           >
             <a
               href={`#${h.id}`}
               className={`block transition-colors ${
                 activeId === h.id
-                  ? "font-medium text-accent"
-                  : "text-primary/75 hover:text-accent"
+                  ? "font-semibold text-gold-deep"
+                  : "text-text-mute hover:text-ink"
               }`}
             >
               {h.text}
