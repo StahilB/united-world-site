@@ -61,7 +61,29 @@ export default async function HomePage() {
     popularRes.data.length === 0 &&
     latestRes.data.length === 0
   ) {
-    throw new Error("Strapi unavailable during ISR build — will retry");
+    return (
+      <main className="flex min-h-screen flex-col">
+        <section className="bg-paper-warm section-home">
+          <div className="container-site">
+            <p className="kicker">Загрузка материалов</p>
+            <h1 className="h-display mt-4">
+              Аналитические материалы обновляются
+            </h1>
+            <p className="mt-6 lead max-w-xl">
+              Контент будет доступен через несколько секунд. Если страница
+              не загружается дольше, напишите нам на{" "}
+              <a
+                href="mailto:official@anounitedworld.com"
+                className="underline decoration-gold-deep/40 underline-offset-2 hover:text-gold-deep"
+              >
+                official@anounitedworld.com
+              </a>
+              .
+            </p>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   let thematicItems: ThematicBlockItem[] = [];
