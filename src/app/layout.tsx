@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Source_Sans_3 } from "next/font/google";
 import { YandexMetrica } from "@/components/analytics/YandexMetrica";
+import { MascotWidget } from "@/components/mascot/MascotWidget";
+import { TextSelectionPopup } from "@/components/mascot/TextSelectionPopup";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/layout/Footer";
 import { MigrationBanner } from "@/components/layout/MigrationBanner";
@@ -137,6 +139,8 @@ export default function RootLayout({
         <SiteHeader />
         {children}
         <Footer />
+        <MascotWidget />
+        <TextSelectionPopup />
         <YandexMetrica />
       </body>
     </html>
