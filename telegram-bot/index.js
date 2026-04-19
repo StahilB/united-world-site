@@ -367,9 +367,46 @@ async function handleDocumentUpload(ctx) {
     });
 
     const fileLink = await ctx.telegram.getFileLink(doc.file_id);
-    const res = await fetch(fileLink.href);
-    const arrayBuf = await res.arrayBuffer();
-    const buffer = Buffer.from(arrayBuf);
+
+    // Telegram CDN иногда возвращает fetch failed на первой попытке —
+    // делаем 3 попытки с паузами (1с → 2с → 4с).
+    let buffer = null;
+    let lastError = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      let timeout;
+      try {
+        const controller = new AbortController();
+        timeout = setTimeout(() => controller.abort(), 30_000);
+        const res = await fetch(fileLink.href, { signal: controller.signal });
+        clearTimeout(timeout);
+        timeout = undefined;
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} from Telegram CDN`);
+        }
+        const arrayBuf = await res.arrayBuffer();
+        buffer = Buffer.from(arrayBuf);
+        break;
+      } catch (e) {
+        if (timeout) clearTimeout(timeout);
+        lastError = e;
+        console.warn(
+          `[docx] download attempt ${attempt}/3 failed: ${e.message}`,
+        );
+        if (attempt < 3) {
+          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt - 1)));
+        }
+      }
+    }
+
+    if (!buffer) {
+      console.error("[docx] download failed after 3 attempts:", lastError);
+      await ctx.telegram.sendMessage(
+        msg.chat.id,
+        `❌ Не удалось скачать файл из Telegram (${lastError?.message || "unknown"}). Попробуйте отправить ещё раз.`,
+        { reply_to_message_id: msg.message_id },
+      );
+      return;
+    }
 
     const parsed = await parseDocxArticle(buffer);
     if (!parsed.ok) {
