@@ -307,7 +307,7 @@ export async function POST(req: NextRequest) {
 
   const maxTokens = Number.parseInt(process.env.MASCOT_MAX_TOKENS || "500", 10);
   const system = buildSystemPrompt(body);
-  const provider = (process.env.MASCOT_PROVIDER || "anthropic").toLowerCase();
+  const provider = (process.env.MASCOT_PROVIDER || "openai").toLowerCase();
 
   if (provider === "openai") {
     return streamOpenAI(system, body.messages, maxTokens);
