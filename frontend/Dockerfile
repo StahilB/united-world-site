@@ -1,10 +1,21 @@
 # Next.js 14 — standalone output (see next.config.mjs `output: "standalone"`)
-FROM node:20-alpine AS deps
+# Base: Alpine + Mozilla CA bundle + Russian trusted roots (GigaChat / Сбер TLS)
+FROM node:20-alpine AS base
+RUN apk add --no-cache ca-certificates wget \
+  && mkdir -p /usr/local/share/ca-certificates/russian-trusted \
+  && wget -q -O /usr/local/share/ca-certificates/russian-trusted/russian_trusted_root_ca_pem.crt \
+    https://gu-st.ru/content/lending/russian_trusted_root_ca_pem.crt \
+  && wget -q -O /usr/local/share/ca-certificates/russian-trusted/russian_trusted_sub_ca_pem.crt \
+    https://gu-st.ru/content/lending/russian_trusted_sub_ca_pem.crt \
+  && chmod 644 /usr/local/share/ca-certificates/russian-trusted/*.crt \
+  && update-ca-certificates
+
+FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:20-alpine AS builder
+FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -28,7 +39,7 @@ ENV NEXT_PUBLIC_YM_WEBVISOR=${NEXT_PUBLIC_YM_WEBVISOR}
 
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

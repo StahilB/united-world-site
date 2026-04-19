@@ -1,6 +1,23 @@
 import { randomUUID } from "crypto";
+import { Agent, fetch as undiciFetch } from "undici";
+import type { Dispatcher } from "undici";
+
+type UndiciResponse = Awaited<ReturnType<typeof undiciFetch>>;
 import { MASCOT_SYSTEM_PROMPT } from "@/lib/mascot/system-prompt";
 import type { MascotMessage, MascotRequest } from "@/lib/mascot/types";
+
+/** Только для GigaChat: опционально отключить проверку TLS (диагностика). По умолчанию выкл. */
+let gigachatInsecureAgent: Agent | undefined;
+
+function getGigaChatDispatcher(): Dispatcher | undefined {
+  if (process.env.GIGACHAT_ALLOW_INSECURE_SSL !== "true") {
+    return undefined;
+  }
+  if (!gigachatInsecureAgent) {
+    gigachatInsecureAgent = new Agent({ connect: { rejectUnauthorized: false } });
+  }
+  return gigachatInsecureAgent;
+}
 
 export function buildSystemPrompt(body: MascotRequest): string {
   let system = MASCOT_SYSTEM_PROMPT;
@@ -248,16 +265,24 @@ async function getGigaChatAccessToken(): Promise<string | null> {
     process.env.GIGACHAT_OAUTH_URL?.trim() ||
     "https://ngw.devices.sberbank.ru:9443/api/v2/oauth";
 
-  const res = await fetch(oauthUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-      RqUID: randomUUID(),
-      Authorization: `Basic ${authKey}`,
-    },
-    body: new URLSearchParams({ scope }),
-  });
+  const dispatcher = getGigaChatDispatcher();
+  let res: UndiciResponse;
+  try {
+    res = await undiciFetch(oauthUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+        RqUID: randomUUID(),
+        Authorization: `Basic ${authKey}`,
+      },
+      body: new URLSearchParams({ scope }),
+      dispatcher,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`GigaChat OAuth network error: ${msg}`);
+  }
 
   if (!res.ok) {
     const t = await res.text();
@@ -435,20 +460,33 @@ export async function streamGigaChat(system: string, messages: MascotMessage[], 
     })),
   ];
 
-  const res = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: gigachatMessages,
-      max_tokens: maxTokens,
-      stream: true,
-    }),
-  });
+  const dispatcher = getGigaChatDispatcher();
+  let res: UndiciResponse;
+  try {
+    res = await undiciFetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: gigachatMessages,
+        max_tokens: maxTokens,
+        stream: true,
+      }),
+      dispatcher,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return new Response(
+      JSON.stringify({
+        error: `GigaChat chat network error: ${msg.slice(0, 400)}`,
+      }),
+      { status: 502, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
   if (!res.ok) {
     const t = await res.text();
@@ -467,7 +505,9 @@ export async function streamGigaChat(system: string, messages: MascotMessage[], 
     });
   }
 
-  const out = openaiCompatibleSseStream(res.body);
+  const out = openaiCompatibleSseStream(
+    res.body as ReadableStream<Uint8Array>,
+  );
   return new Response(out, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
