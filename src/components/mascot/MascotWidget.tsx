@@ -154,8 +154,8 @@ export function MascotWidget() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Закрыть чат с Мудрым Котом" : "Открыть чат с Мудрым Котом"}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-ink-deep text-gold shadow-lg transition-transform duration-200 hover:scale-[1.08] relative"
+        aria-label={open ? "Свернуть чат с Мудрым Котом" : "Открыть чат с Мудрым Котом"}
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-ink-deep text-gold shadow-lg transition-transform duration-200 hover:scale-[1.08]"
       >
         <MascotIcon size={32} />
         {hasUnread && (
@@ -167,7 +167,7 @@ export function MascotWidget() {
       {open && (
         <div
           data-mascot-chat
-          className="fixed bottom-[92px] right-6 z-40 flex w-[min(380px,calc(100vw-3rem))] flex-col overflow-hidden bg-white shadow-2xl"
+          className="fixed bottom-[88px] right-6 z-50 flex w-[min(380px,calc(100vw-3rem))] flex-col overflow-hidden bg-white shadow-2xl"
           style={{ height: "min(520px, calc(100vh - 7.5rem))" }}
         >
           {/* Шапка */}
@@ -186,7 +186,7 @@ export function MascotWidget() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Закрыть"
+              aria-label="Свернуть чат"
               className="text-white/70 transition-colors hover:text-white"
             >
               <svg
@@ -196,8 +196,9 @@ export function MascotWidget() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
+                strokeLinecap="round"
               >
-                <path d="M6 6l12 12M18 6L6 18" />
+                <path d="M5 13l7 3 7-3" />
               </svg>
             </button>
           </div>
