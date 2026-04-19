@@ -159,16 +159,39 @@ async function convertDocxToHtml(buffer) {
 }
 
 /**
- * Удаляет первую <table> из HTML (мета-таблица — в html через mammoth
- * тоже попадает; мы её оттуда выкидываем, потому что данные уже разобраны).
+ * Удаляет всё, что относится к шаблону и не должно попадать в тело
+ * статьи: заголовочные параграфы ДО таблицы, саму таблицу, и параграф-
+ * разделитель «— — — ТЕКСТ СТАТЬИ НИЖЕ — — —» сразу после неё.
  */
-function stripFirstTable(html) {
+function stripTemplateHeader(html) {
   const idx = html.indexOf("<table");
   if (idx === -1) return html;
   const endIdx = html.indexOf("</table>", idx);
   if (endIdx === -1) return html;
   const cutTo = endIdx + "</table>".length;
-  return (html.slice(0, idx) + html.slice(cutTo)).trim();
+
+  // После </table> может идти разделитель "— — — ТЕКСТ СТАТЬИ НИЖЕ — — —"
+  // Это параграф, в котором большая часть текста — тире/дефисы/em-dash.
+  // Убираем до 3 таких параграфов подряд на всякий случай.
+  const afterTable = html.slice(cutTo);
+  const sepRe = /^\s*<p>(\s*<strong>)?([\s\S]*?)(<\/strong>\s*)?<\/p>/;
+  let remainder = afterTable;
+  for (let i = 0; i < 3; i++) {
+    const m = remainder.match(sepRe);
+    if (!m) break;
+    const inner = m[2].replace(/<[^>]+>/g, "").trim();
+    // Считаем разделителем параграф, где 60%+ символов —
+    // тире/дефисы/em-dash/пробелы/текст «ТЕКСТ СТАТЬИ»
+    const isDivider =
+      inner.length > 0 &&
+      (/^[\s\-–—_=*]+$/.test(inner) ||
+        /текст\s+статьи/i.test(inner) ||
+        (inner.match(/[\-–—]/g) || []).length / inner.length > 0.25);
+    if (!isDivider) break;
+    remainder = remainder.slice(m[0].length);
+  }
+
+  return remainder.trim();
 }
 
 /**
@@ -208,7 +231,7 @@ async function parseDocxArticle(fileBuffer) {
     const { html: rawHtml, images, messages } = await convertDocxToHtml(
       fileBuffer,
     );
-    const bodyHtml = stripFirstTable(rawHtml);
+    const bodyHtml = stripTemplateHeader(rawHtml);
 
     return {
       ok: true,
