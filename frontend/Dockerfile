@@ -8,7 +8,14 @@ RUN apk add --no-cache ca-certificates wget \
   && wget -q -O /usr/local/share/ca-certificates/russian-trusted/russian_trusted_sub_ca_pem.crt \
     https://gu-st.ru/content/lending/russian_trusted_sub_ca_pem.crt \
   && chmod 644 /usr/local/share/ca-certificates/russian-trusted/*.crt \
+  && cat /usr/local/share/ca-certificates/russian-trusted/russian_trusted_root_ca_pem.crt \
+       /usr/local/share/ca-certificates/russian-trusted/russian_trusted_sub_ca_pem.crt \
+       > /etc/ssl/certs/russian-trusted-bundle.pem \
+  && chmod 644 /etc/ssl/certs/russian-trusted-bundle.pem \
   && update-ca-certificates
+
+# Node (undici / TLS) подхватывает доп. корни из файла; см. https://nodejs.org/api/cli.html#node_extra_ca_certsfile
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/russian-trusted-bundle.pem
 
 FROM base AS deps
 WORKDIR /app
