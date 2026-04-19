@@ -35,7 +35,7 @@ const META_FIELD_ALIASES = {
  */
 function cellTextFromXml(cellXml) {
   // <w:tc> → <w:p>... → <w:r>... → <w:t>...</w:t>
-  const re = /<w:t[^>]*>([\s\S]*?)<\/w:t>/g;
+  const re = /<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g;
   const parts = [];
   let m;
   while ((m = re.exec(cellXml)) !== null) {
@@ -50,17 +50,17 @@ function cellTextFromXml(cellXml) {
  */
 function extractFirstTable(documentXml) {
   // Ищем первую <w:tbl>...</w:tbl>
-  const tblMatch = documentXml.match(/<w:tbl[\s\S]*?<\/w:tbl>/);
+  const tblMatch = documentXml.match(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/);
   if (!tblMatch) return null;
   const tblXml = tblMatch[0];
 
   // Для каждого <w:tr> получаем массив текстов ячеек.
-  const rowRe = /<w:tr[\s\S]*?<\/w:tr>/g;
+  const rowRe = /<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g;
   const rows = [];
   let rowMatch;
   while ((rowMatch = rowRe.exec(tblXml)) !== null) {
     const rowXml = rowMatch[0];
-    const cellRe = /<w:tc[\s\S]*?<\/w:tc>/g;
+    const cellRe = /<w:tc(?:\s[^>]*)?>[\s\S]*?<\/w:tc>/g;
     const cells = [];
     let cellMatch;
     while ((cellMatch = cellRe.exec(rowXml)) !== null) {
