@@ -7,6 +7,7 @@ import {
   streamOpenAI,
   streamYandex,
 } from "@/lib/mascot/chat-providers";
+import { buildMascotRetrievalContext } from "@/lib/mascot/retrieval";
 import type { MascotRequest } from "@/lib/mascot/types";
 
 export const runtime = "nodejs";
@@ -68,7 +69,25 @@ export async function POST(req: NextRequest) {
   }
 
   const maxTokens = Number.parseInt(process.env.MASCOT_MAX_TOKENS || "500", 10);
-  const system = buildSystemPrompt(body);
+  const lastUserMessage =
+    [...body.messages].reverse().find((m) => m.role === "user")?.content ?? "";
+  let retrievalContext = "";
+  if (lastUserMessage.trim()) {
+    try {
+      const resolved = await buildMascotRetrievalContext(lastUserMessage);
+      retrievalContext = resolved.contextText;
+    } catch (e) {
+      console.error(
+        `[mascot] ${JSON.stringify({
+          provider: "retrieval",
+          phase: "strategy_resolver",
+          message: e instanceof Error ? e.message : String(e),
+        })}`,
+      );
+    }
+  }
+  const mergedContext = [body.context, retrievalContext].filter(Boolean).join("\n\n");
+  const system = buildSystemPrompt({ ...body, context: mergedContext });
   const provider = (process.env.MASCOT_PROVIDER || "gigachat").toLowerCase();
 
   switch (provider) {
