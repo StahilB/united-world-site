@@ -28,6 +28,18 @@ export async function GET(): Promise<Response> {
     return Number.isFinite(ts) && ts >= TWO_DAYS_AGO;
   });
 
+  // Если за последние 2 дня нет статей — Google News не обходит этот
+  // sitemap и не ожидает там записей. Но отдавать пустой <urlset> без
+  // <url> нельзя — валидатор жалуется "Missing XML tag: url". Решение:
+  // когда items пусты, отдаём 404 (Google воспримет как "sitemap пока
+  // недоступен") вместо битого XML.
+  if (items.length === 0) {
+    return new Response("News sitemap is empty (no articles in the last 48 hours)", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+
   const body = items
     .map((article) => {
       const publicationDate = article.publication_date || article.publishedAt || new Date().toISOString();
