@@ -11,10 +11,15 @@ RUN apk add --no-cache ca-certificates wget openssl \
   && openssl s_client -showcerts -connect ngw.devices.sberbank.ru:9443 -servername ngw.devices.sberbank.ru < /dev/null 2>/dev/null \
       | awk '/-----BEGIN CERTIFICATE-----/{flag=1} flag{print} /-----END CERTIFICATE-----/{flag=0; print ""}' \
       > /tmp/sber-gigachat-chain.pem \
-  && cat /usr/local/share/ca-certificates/russian-trusted/russian_trusted_root_ca_pem.crt \
+  && : > /etc/ssl/certs/russian-trusted-bundle.pem \
+  && for cert in \
+       /usr/local/share/ca-certificates/russian-trusted/russian_trusted_root_ca_pem.crt \
        /usr/local/share/ca-certificates/russian-trusted/russian_trusted_sub_ca_pem.crt \
-       /tmp/sber-gigachat-chain.pem \
-       > /etc/ssl/certs/russian-trusted-bundle.pem \
+       /tmp/sber-gigachat-chain.pem; do \
+       tr -d '\r' < "$cert" \
+         | awk '/-----BEGIN CERTIFICATE-----/{in_cert=1} in_cert{print} /-----END CERTIFICATE-----/{in_cert=0; print ""}' \
+         >> /etc/ssl/certs/russian-trusted-bundle.pem; \
+     done \
   && chmod 644 /etc/ssl/certs/russian-trusted-bundle.pem \
   && update-ca-certificates
 
