@@ -1,15 +1,19 @@
 # Next.js 14 — standalone output (see next.config.mjs `output: "standalone"`)
 # Base: Alpine + Mozilla CA bundle + Russian trusted roots (GigaChat / Сбер TLS)
 FROM node:20-alpine AS base
-RUN apk add --no-cache ca-certificates wget \
+RUN apk add --no-cache ca-certificates wget openssl \
   && mkdir -p /usr/local/share/ca-certificates/russian-trusted \
   && wget -q -O /usr/local/share/ca-certificates/russian-trusted/russian_trusted_root_ca_pem.crt \
     https://gu-st.ru/content/lending/russian_trusted_root_ca_pem.crt \
   && wget -q -O /usr/local/share/ca-certificates/russian-trusted/russian_trusted_sub_ca_pem.crt \
     https://gu-st.ru/content/lending/russian_trusted_sub_ca_pem.crt \
   && chmod 644 /usr/local/share/ca-certificates/russian-trusted/*.crt \
+  && openssl s_client -showcerts -connect ngw.devices.sberbank.ru:9443 -servername ngw.devices.sberbank.ru < /dev/null 2>/dev/null \
+      | awk '/-----BEGIN CERTIFICATE-----/{flag=1} flag{print} /-----END CERTIFICATE-----/{flag=0; print ""}' \
+      > /tmp/sber-gigachat-chain.pem \
   && cat /usr/local/share/ca-certificates/russian-trusted/russian_trusted_root_ca_pem.crt \
        /usr/local/share/ca-certificates/russian-trusted/russian_trusted_sub_ca_pem.crt \
+       /tmp/sber-gigachat-chain.pem \
        > /etc/ssl/certs/russian-trusted-bundle.pem \
   && chmod 644 /etc/ssl/certs/russian-trusted-bundle.pem \
   && update-ca-certificates
