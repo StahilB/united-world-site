@@ -24,6 +24,10 @@ const QUICK_PROMPTS = [
   "Последние материалы",
 ];
 
+const USER_ERROR_TEMPORARY =
+  "Помощник временно недоступен. Попробуйте еще раз через несколько секунд.";
+const USER_ERROR_RETRY = "Не удалось получить ответ. Повторите запрос чуть позже.";
+
 export function MascotWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
@@ -86,10 +90,10 @@ export function MascotWidget() {
         });
 
         if (!res.ok) {
-          const err = await res
-            .json()
-            .catch(() => ({ error: "Ошибка сервера" }));
-          throw new Error(err.error || `HTTP ${res.status}`);
+          if (res.status === 429) {
+            throw new Error("RATE_LIMIT");
+          }
+          throw new Error("SERVICE_UNAVAILABLE");
         }
 
         const reader = res.body?.getReader();
@@ -112,12 +116,18 @@ export function MascotWidget() {
       } catch (e) {
         const error = e as Error;
         if (error.name !== "AbortError") {
+          const uiMessage =
+            error.message === "RATE_LIMIT"
+              ? "Слишком много запросов. Подождите минуту."
+              : error.message === "SERVICE_UNAVAILABLE"
+                ? USER_ERROR_TEMPORARY
+                : USER_ERROR_RETRY;
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
                 ? {
                     ...m,
-                    content: `Ой, что-то пошло не так: ${error.message}`,
+                    content: uiMessage,
                   }
                 : m,
             ),

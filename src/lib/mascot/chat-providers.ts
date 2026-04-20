@@ -3,6 +3,7 @@ import { Agent, fetch as undiciFetch } from "undici";
 import type { Dispatcher } from "undici";
 
 type UndiciResponse = Awaited<ReturnType<typeof undiciFetch>>;
+type UndiciRequestInit = NonNullable<Parameters<typeof undiciFetch>[1]>;
 import { MASCOT_SYSTEM_PROMPT } from "@/lib/mascot/system-prompt";
 import type { MascotMessage, MascotRequest } from "@/lib/mascot/types";
 
@@ -17,6 +18,59 @@ function getGigaChatDispatcher(): Dispatcher | undefined {
     gigachatInsecureAgent = new Agent({ connect: { rejectUnauthorized: false } });
   }
   return gigachatInsecureAgent;
+}
+
+type MascotProvider = "anthropic" | "openai" | "gigachat" | "yandex";
+type ErrorPhase = "oauth_token" | "model_request" | "stream_handling" | "response_parsing";
+
+const USER_ERROR_TEMPORARY =
+  "Помощник временно недоступен. Попробуйте еще раз через несколько секунд.";
+const USER_ERROR_RETRY = "Не удалось получить ответ. Повторите запрос чуть позже.";
+const REQUEST_TIMEOUT_MS = Number.parseInt(process.env.MASCOT_REQUEST_TIMEOUT_MS || "25000", 10);
+const OAUTH_TIMEOUT_MS = Number.parseInt(process.env.MASCOT_OAUTH_TIMEOUT_MS || "12000", 10);
+
+function logMascotFailure(params: {
+  provider: MascotProvider;
+  phase: ErrorPhase;
+  status?: number;
+  message: string;
+}) {
+  console.error(
+    `[mascot] ${JSON.stringify({
+      provider: params.provider,
+      phase: params.phase,
+      status: params.status,
+      message: params.message.slice(0, 500),
+    })}`,
+  );
+}
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort("timeout"), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function undiciFetchWithTimeout(
+  url: string,
+  init: UndiciRequestInit,
+  timeoutMs: number,
+): Promise<UndiciResponse> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort("timeout"), timeoutMs);
+  try {
+    return await undiciFetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function buildSystemPrompt(body: MascotRequest): string {
@@ -34,6 +88,7 @@ export function buildSystemPrompt(body: MascotRequest): string {
 function parseSseDataLines(
   buffer: string,
   onJson: (data: unknown) => void,
+  provider?: MascotProvider,
 ): string {
   const lines = buffer.split("\n");
   const incomplete = lines.pop() ?? "";
@@ -45,7 +100,13 @@ function parseSseDataLines(
     try {
       onJson(JSON.parse(payload));
     } catch {
-      // ignore
+      if (provider) {
+        logMascotFailure({
+          provider,
+          phase: "response_parsing",
+          message: "Malformed SSE data line ignored",
+        });
+      }
     }
   }
   return incomplete;
@@ -94,6 +155,11 @@ function anthropicTextStream(upstream: ReadableStream<Uint8Array>): ReadableStre
           });
         }
       } catch (e) {
+        logMascotFailure({
+          provider: "anthropic",
+          phase: "stream_handling",
+          message: e instanceof Error ? e.message : String(e),
+        });
         controller.error(e);
         return;
       }
@@ -102,7 +168,10 @@ function anthropicTextStream(upstream: ReadableStream<Uint8Array>): ReadableStre
   });
 }
 
-function openaiCompatibleSseStream(upstream: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+function openaiCompatibleSseStream(
+  upstream: ReadableStream<Uint8Array>,
+  provider: MascotProvider,
+): ReadableStream<Uint8Array> {
   const reader = upstream.getReader();
   const decoder = new TextDecoder();
   let lineBuffer = "";
@@ -123,7 +192,7 @@ function openaiCompatibleSseStream(upstream: ReadableStream<Uint8Array>): Readab
             if (piece) {
               controller.enqueue(enc.encode(piece));
             }
-          });
+          }, provider);
         }
         if (lineBuffer.trim()) {
           parseSseDataLines(`${lineBuffer}\n`, (json) => {
@@ -134,9 +203,14 @@ function openaiCompatibleSseStream(upstream: ReadableStream<Uint8Array>): Readab
             if (piece) {
               controller.enqueue(enc.encode(piece));
             }
-          });
+          }, provider);
         }
       } catch (e) {
+        logMascotFailure({
+          provider,
+          phase: "stream_handling",
+          message: e instanceof Error ? e.message : String(e),
+        });
         controller.error(e);
         return;
       }
@@ -169,7 +243,7 @@ function yandexSseStream(upstream: ReadableStream<Uint8Array>): ReadableStream<U
               controller.enqueue(enc.encode(text.slice(lastText.length)));
               lastText = text;
             }
-          });
+          }, "yandex");
         }
         if (lineBuffer.trim()) {
           parseSseDataLines(`${lineBuffer}\n`, (json) => {
@@ -181,9 +255,14 @@ function yandexSseStream(upstream: ReadableStream<Uint8Array>): ReadableStream<U
               controller.enqueue(enc.encode(text.slice(lastText.length)));
               lastText = text;
             }
-          });
+          }, "yandex");
         }
       } catch (e) {
+        logMascotFailure({
+          provider: "yandex",
+          phase: "stream_handling",
+          message: e instanceof Error ? e.message : String(e),
+        });
         controller.error(e);
         return;
       }
@@ -241,6 +320,11 @@ function yandexNdjsonStream(upstream: ReadableStream<Uint8Array>): ReadableStrea
           }
         }
       } catch (e) {
+        logMascotFailure({
+          provider: "yandex",
+          phase: "stream_handling",
+          message: e instanceof Error ? e.message : String(e),
+        });
         controller.error(e);
         return;
       }
@@ -268,7 +352,7 @@ async function getGigaChatAccessToken(): Promise<string | null> {
   const dispatcher = getGigaChatDispatcher();
   let res: UndiciResponse;
   try {
-    res = await undiciFetch(oauthUrl, {
+    res = await undiciFetchWithTimeout(oauthUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -278,22 +362,49 @@ async function getGigaChatAccessToken(): Promise<string | null> {
       },
       body: new URLSearchParams({ scope }),
       dispatcher,
-    });
+    }, OAUTH_TIMEOUT_MS);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    logMascotFailure({
+      provider: "gigachat",
+      phase: "oauth_token",
+      message: msg,
+    });
     throw new Error(`GigaChat OAuth network error: ${msg}`);
   }
 
   if (!res.ok) {
     const t = await res.text();
+    logMascotFailure({
+      provider: "gigachat",
+      phase: "oauth_token",
+      status: res.status,
+      message: t.slice(0, 300) || res.statusText,
+    });
     throw new Error(`GigaChat OAuth: ${res.status} ${t.slice(0, 300)}`);
   }
 
-  const data = (await res.json()) as {
-    access_token: string;
-    expires_at?: number;
-  };
+  let data: { access_token: string; expires_at?: number };
+  try {
+    data = (await res.json()) as {
+      access_token: string;
+      expires_at?: number;
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logMascotFailure({
+      provider: "gigachat",
+      phase: "response_parsing",
+      message: `OAuth JSON parse failed: ${msg}`,
+    });
+    throw new Error("GigaChat OAuth: invalid JSON response");
+  }
   if (!data.access_token) {
+    logMascotFailure({
+      provider: "gigachat",
+      phase: "response_parsing",
+      message: "OAuth response has no access_token",
+    });
     throw new Error("GigaChat OAuth: нет access_token в ответе");
   }
 
@@ -324,30 +435,52 @@ export async function streamAnthropic(system: string, messages: MascotMessage[],
     content: m.content,
   }));
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      system,
-      messages: anthropicMessages,
-      stream: true,
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(
+      "https://api.anthropic.com/v1/messages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: maxTokens,
+          system,
+          messages: anthropicMessages,
+          stream: true,
+        }),
+      },
+      REQUEST_TIMEOUT_MS,
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logMascotFailure({
+      provider: "anthropic",
+      phase: "model_request",
+      message: msg,
+    });
+    return new Response(JSON.stringify({ error: USER_ERROR_TEMPORARY }), {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   if (!res.ok) {
     const t = await res.text();
-    return new Response(
-      JSON.stringify({
-        error: `Anthropic: ${t.slice(0, 400) || res.statusText}`,
-      }),
-      { status: res.status, headers: { "Content-Type": "application/json" } },
-    );
+    logMascotFailure({
+      provider: "anthropic",
+      phase: "model_request",
+      status: res.status,
+      message: t.slice(0, 400) || res.statusText,
+    });
+    return new Response(JSON.stringify({ error: USER_ERROR_RETRY }), {
+      status: res.status,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   if (!res.body) {
@@ -385,28 +518,50 @@ export async function streamOpenAI(system: string, messages: MascotMessage[], ma
     })),
   ];
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: openaiMessages,
-      max_tokens: maxTokens,
-      stream: true,
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: openaiMessages,
+          max_tokens: maxTokens,
+          stream: true,
+        }),
+      },
+      REQUEST_TIMEOUT_MS,
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logMascotFailure({
+      provider: "openai",
+      phase: "model_request",
+      message: msg,
+    });
+    return new Response(JSON.stringify({ error: USER_ERROR_TEMPORARY }), {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   if (!res.ok) {
     const t = await res.text();
-    return new Response(
-      JSON.stringify({
-        error: `OpenAI: ${t.slice(0, 400) || res.statusText}`,
-      }),
-      { status: res.status, headers: { "Content-Type": "application/json" } },
-    );
+    logMascotFailure({
+      provider: "openai",
+      phase: "model_request",
+      status: res.status,
+      message: t.slice(0, 400) || res.statusText,
+    });
+    return new Response(JSON.stringify({ error: USER_ERROR_RETRY }), {
+      status: res.status,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   if (!res.body) {
@@ -416,7 +571,7 @@ export async function streamOpenAI(system: string, messages: MascotMessage[], ma
     });
   }
 
-  const out = openaiCompatibleSseStream(res.body);
+  const out = openaiCompatibleSseStream(res.body, "openai");
   return new Response(out, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
@@ -441,7 +596,12 @@ export async function streamGigaChat(system: string, messages: MascotMessage[], 
     accessToken = t;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return new Response(JSON.stringify({ error: msg.slice(0, 400) }), {
+    logMascotFailure({
+      provider: "gigachat",
+      phase: "oauth_token",
+      message: msg,
+    });
+    return new Response(JSON.stringify({ error: USER_ERROR_TEMPORARY }), {
       status: 502,
       headers: { "Content-Type": "application/json" },
     });
@@ -463,7 +623,7 @@ export async function streamGigaChat(system: string, messages: MascotMessage[], 
   const dispatcher = getGigaChatDispatcher();
   let res: UndiciResponse;
   try {
-    res = await undiciFetch(apiUrl, {
+    res = await undiciFetchWithTimeout(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -477,25 +637,32 @@ export async function streamGigaChat(system: string, messages: MascotMessage[], 
         stream: true,
       }),
       dispatcher,
-    });
+    }, REQUEST_TIMEOUT_MS);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    logMascotFailure({
+      provider: "gigachat",
+      phase: "model_request",
+      message: msg,
+    });
     return new Response(
-      JSON.stringify({
-        error: `GigaChat chat network error: ${msg.slice(0, 400)}`,
-      }),
+      JSON.stringify({ error: USER_ERROR_TEMPORARY }),
       { status: 502, headers: { "Content-Type": "application/json" } },
     );
   }
 
   if (!res.ok) {
     const t = await res.text();
-    return new Response(
-      JSON.stringify({
-        error: `GigaChat: ${t.slice(0, 400) || res.statusText}`,
-      }),
-      { status: res.status, headers: { "Content-Type": "application/json" } },
-    );
+    logMascotFailure({
+      provider: "gigachat",
+      phase: "model_request",
+      status: res.status,
+      message: t.slice(0, 400) || res.statusText,
+    });
+    return new Response(JSON.stringify({ error: USER_ERROR_RETRY }), {
+      status: res.status,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   if (!res.body) {
@@ -507,6 +674,7 @@ export async function streamGigaChat(system: string, messages: MascotMessage[], 
 
   const out = openaiCompatibleSseStream(
     res.body as ReadableStream<Uint8Array>,
+    "gigachat",
   );
   return new Response(out, {
     headers: {
@@ -551,28 +719,50 @@ export async function streamYandex(system: string, messages: MascotMessage[], ma
     headers["x-folder-id"] = folderId;
   }
 
-  const res = await fetch(completionUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      modelUri,
-      completionOptions: {
-        stream: true,
-        temperature: 0.3,
-        maxTokens: String(maxTokens),
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(
+      completionUrl,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          modelUri,
+          completionOptions: {
+            stream: true,
+            temperature: 0.3,
+            maxTokens: String(maxTokens),
+          },
+          messages: yandexMessages,
+        }),
       },
-      messages: yandexMessages,
-    }),
-  });
+      REQUEST_TIMEOUT_MS,
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logMascotFailure({
+      provider: "yandex",
+      phase: "model_request",
+      message: msg,
+    });
+    return new Response(JSON.stringify({ error: USER_ERROR_TEMPORARY }), {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   if (!res.ok) {
     const t = await res.text();
-    return new Response(
-      JSON.stringify({
-        error: `Yandex: ${t.slice(0, 400) || res.statusText}`,
-      }),
-      { status: res.status, headers: { "Content-Type": "application/json" } },
-    );
+    logMascotFailure({
+      provider: "yandex",
+      phase: "model_request",
+      status: res.status,
+      message: t.slice(0, 400) || res.statusText,
+    });
+    return new Response(JSON.stringify({ error: USER_ERROR_RETRY }), {
+      status: res.status,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   if (!res.body) {
