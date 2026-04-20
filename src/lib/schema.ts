@@ -11,16 +11,23 @@ export function organizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "NGO",
-    name: "АНО «Центр мониторинга и оценки проблем современности «Единый Мир»",
-    alternateName: "АНО «Единый Мир»",
-    url: SITE_URL,
-    logo: `${SITE_URL}/logo.png`,
+    name: "Автономная некоммерческая организация «Центр мониторинга и оценки проблем современности «Единый Мир»",
+    legalName:
+      "Автономная некоммерческая организация «Центр мониторинга и оценки проблем современности «Единый Мир»",
+    alternateName: [
+      "АНО «Единый Мир»",
+      "Центр мониторинга и оценки проблем современности",
+    ],
+    url: "https://anounitedworld.com",
+    logo: "https://anounitedworld.com/icon-512.png",
+    foundingDate: "2024-11-05",
+    taxID: "1300013041",
     description: "Независимый аналитический центр общественной дипломатии",
     email: "official@anounitedworld.com",
     telephone: "+7-927-274-75-50",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "ул. Лихачева, д. 22, кв. 18",
+      streetAddress: "ул. Лихачёва, д. 22, кв. 18",
       addressLocality: "Саранск",
       addressRegion: "Республика Мордовия",
       postalCode: "430031",
