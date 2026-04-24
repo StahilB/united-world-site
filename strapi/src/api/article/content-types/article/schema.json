@@ -16,12 +16,18 @@
       "type": "string",
       "required": true
     },
+    "title_en": {
+      "type": "string"
+    },
     "slug": {
       "type": "uid",
       "targetField": "title",
       "required": true
     },
     "excerpt": {
+      "type": "text"
+    },
+    "excerpt_en": {
       "type": "text"
     },
     "cover_image": {
@@ -32,6 +38,13 @@
       ]
     },
     "content_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
+    "content_html_en": {
       "type": "customField",
       "customField": "plugin::ckeditor5.CKEditor",
       "options": {
@@ -79,6 +92,10 @@
       ]
     },
     "is_global_review": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_translated_en": {
       "type": "boolean",
       "default": false
     },

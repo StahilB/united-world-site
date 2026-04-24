@@ -15,6 +15,9 @@
       "type": "string",
       "required": true
     },
+    "name_en": {
+      "type": "string"
+    },
     "slug": {
       "type": "uid",
       "targetField": "name",
@@ -37,6 +40,9 @@
       "default": 0
     },
     "description": {
+      "type": "text"
+    },
+    "description_en": {
       "type": "text"
     },
     "is_visible_in_menu": {

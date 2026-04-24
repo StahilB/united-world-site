@@ -18,7 +18,21 @@
         "preset": "defaultHtml"
       }
     },
+    "about_html_en": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
     "cooperation_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
+    "cooperation_html_en": {
       "type": "customField",
       "customField": "plugin::ckeditor5.CKEditor",
       "options": {
@@ -32,7 +46,21 @@
         "preset": "defaultHtml"
       }
     },
+    "contacts_html_en": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
     "support_html": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
+    "support_html_en": {
       "type": "customField",
       "customField": "plugin::ckeditor5.CKEditor",
       "options": {

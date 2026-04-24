@@ -15,12 +15,18 @@
       "type": "string",
       "required": true
     },
+    "name_en": {
+      "type": "string"
+    },
     "slug": {
       "type": "uid",
       "targetField": "name",
       "required": true
     },
     "bio": {
+      "type": "text"
+    },
+    "bio_en": {
       "type": "text"
     },
     "photo": {
