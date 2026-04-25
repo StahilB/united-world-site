@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/types";
+import { localizeHref } from "@/lib/i18n/types";
 
 const linkClass =
   "text-sm font-normal text-ink-soft transition-colors hover:text-ink hover:underline";
@@ -39,7 +42,8 @@ const CATEGORIES: Array<{ label: string; href: string }> = [
   },
 ];
 
-export function MegaMenu() {
+export function MegaMenu({ locale = "ru" }: { locale?: Locale }) {
+  const dict = getDictionary(locale);
   const mid = Math.ceil(REGIONS.length / 2);
   const colA = REGIONS.slice(0, mid);
   const colB = REGIONS.slice(mid);
@@ -49,13 +53,13 @@ export function MegaMenu() {
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-8 md:grid-cols-2">
         <div>
           <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-ink">
-            ПО РЕГИОНАМ
+            {dict.rubric.filterByRegion}
           </p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-2">
             <ul className="space-y-2">
               {colA.map((r) => (
                 <li key={r.href}>
-                  <Link href={r.href} className={linkClass}>
+                  <Link href={localizeHref(r.href, locale)} className={linkClass}>
                     {r.label}
                   </Link>
                 </li>
@@ -64,7 +68,7 @@ export function MegaMenu() {
             <ul className="space-y-2">
               {colB.map((r) => (
                 <li key={r.href}>
-                  <Link href={r.href} className={linkClass}>
+                  <Link href={localizeHref(r.href, locale)} className={linkClass}>
                     {r.label}
                   </Link>
                 </li>
@@ -74,12 +78,12 @@ export function MegaMenu() {
         </div>
         <div>
           <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-ink">
-            ПО ТЕМАМ
+            {dict.rubric.filterByTopic}
           </p>
           <ul className="space-y-2">
             {CATEGORIES.map((c) => (
               <li key={c.href}>
-                <Link href={c.href} className={linkClass}>
+                <Link href={localizeHref(c.href, locale)} className={linkClass}>
                   {c.label}
                 </Link>
               </li>
@@ -90,13 +94,13 @@ export function MegaMenu() {
       <div className="border-t border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
           <Link
-            href="/section/situativnyy-analiz"
+            href={localizeHref("/section/situativnyy-analiz", locale)}
             className="text-xs font-semibold uppercase tracking-[0.06em] text-ink hover:underline"
           >
             Ситуативный анализ
           </Link>
           <Link
-            href="/section/globalnye-obzory"
+            href={localizeHref("/section/globalnye-obzory", locale)}
             className="text-xs font-semibold uppercase tracking-[0.06em] text-ink hover:underline"
           >
             Глобальные обзоры

@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/layout/Footer";
 import { MigrationBanner } from "@/components/layout/MigrationBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { getServerLocale } from "@/lib/i18n/server-locale";
 import { organizationSchema, websiteSchema } from "@/lib/schema";
 import "./globals.css";
 
@@ -128,14 +129,15 @@ export const metadata: Metadata = {
   category: "News",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getServerLocale();
   return (
     <html
-      lang="ru"
+      lang={locale === "en" ? "en" : "ru"}
       className={`${playfairDisplay.variable} ${sourceSans3.variable} h-full antialiased`}
     >
       <head>

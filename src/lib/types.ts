@@ -22,6 +22,14 @@ export interface Region {
   description?: string;
 }
 
+export interface SectionTreeNode {
+  id: string;
+  name: string;
+  name_en?: string | null;
+  slug: string;
+  children: SectionTreeNode[];
+}
+
 /** Главная статья блока «Глобальные обзоры» на главной */
 export interface GlobalReviewsMainArticle {
   title: string;

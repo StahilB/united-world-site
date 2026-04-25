@@ -13,6 +13,7 @@ import type {
 export type Section = {
   id: number;
   name: string;
+  name_en?: string | null;
   slug: string;
   order: number;
   children: Section[];
@@ -784,6 +785,7 @@ function buildSectionTreeFromFlat(
     byId.set(s.id, {
       id: s.id,
       name: s.name,
+      name_en: s.name_en ?? null,
       slug: s.slug,
       order: s.order ?? 0,
       children: [],
@@ -819,6 +821,10 @@ function buildSectionTreeFromFlat(
  */
 export async function getSections(menuOnly = true): Promise<Section[]> {
   const search = new URLSearchParams();
+  search.set("fields[0]", "name");
+  search.set("fields[1]", "slug");
+  search.set("fields[2]", "order");
+  search.set("fields[3]", "name_en");
   search.set("populate[0]", "parent");
   search.set("sort[0]", "order:asc");
   search.set("pagination[pageSize]", "100");

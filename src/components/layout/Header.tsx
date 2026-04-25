@@ -15,6 +15,10 @@ import {
 import { CurrentDate } from "./CurrentDate";
 import { HeaderSearch } from "./HeaderSearch";
 import { MobileMenu } from "./MobileMenu";
+import { LanguageSwitch } from "./LanguageSwitch";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { localizeHref } from "@/lib/i18n/types";
 
 /** Сжать шапку при scrollY > 150 */
 const SCROLL_COLLAPSE_Y = 150;
@@ -83,7 +87,7 @@ const navSepClass = "text-[13px] text-neutral-400 select-none";
 const dropLinkClass =
   "text-sm font-normal text-ink-soft transition-colors hover:text-ink hover:underline";
 
-function SectionMegaPanel({ root }: { root: Section }) {
+function SectionMegaPanel({ root, locale }: { root: Section; locale: Locale }) {
   const cols = root.children.filter((c) => c.children.length > 0);
   const leaves = root.children.filter((c) => c.children.length === 0);
 
@@ -108,16 +112,16 @@ function SectionMegaPanel({ root }: { root: Section }) {
           {cols.map((col) => (
             <div key={col.id}>
               <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-ink">
-                {col.name}
+                {locale === "en" ? (col.name_en || col.name) : col.name}
               </p>
               <ul className="space-y-2">
                 {col.children.map((item) => (
                   <li key={item.id}>
                     <Link
-                      href={getSectionHref(item.slug)}
+                      href={localizeHref(getSectionHref(item.slug), locale)}
                       className={dropLinkClass}
                     >
-                      {item.name}
+                      {locale === "en" ? (item.name_en || item.name) : item.name}
                     </Link>
                   </li>
                 ))}
@@ -131,21 +135,27 @@ function SectionMegaPanel({ root }: { root: Section }) {
         <div className="mx-auto max-w-6xl border-t border-neutral-200" />
       ) : null}
 
-      {leaves.length > 0 ? <MegaLeavesRow leaves={leaves} /> : null}
+      {leaves.length > 0 ? <MegaLeavesRow leaves={leaves} locale={locale} /> : null}
     </div>
   );
 }
 
-function MegaLeavesRow({ leaves }: { leaves: Section[] }) {
+function MegaLeavesRow({
+  leaves,
+  locale,
+}: {
+  leaves: Section[];
+  locale: Locale;
+}) {
   return (
     <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
       {leaves.map((l) => (
         <Link
           key={l.id}
-          href={getSectionHref(l.slug)}
+          href={localizeHref(getSectionHref(l.slug), locale)}
           className="text-xs font-semibold uppercase tracking-[0.06em] text-ink transition-colors hover:text-gold-deep hover:underline"
         >
-          {l.name}
+          {locale === "en" ? (l.name_en || l.name) : l.name}
         </Link>
       ))}
     </div>
@@ -154,9 +164,12 @@ function MegaLeavesRow({ leaves }: { leaves: Section[] }) {
 
 export type HeaderProps = {
   sections: Section[];
+  locale?: Locale;
 };
 
-export function Header({ sections }: HeaderProps) {
+export function Header({ sections, locale = "ru" }: HeaderProps) {
+  const dict = getDictionary(locale);
+  const navSections = sections.filter((root) => root.slug !== "en");
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeRoot, setActiveRoot] = useState<Section | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -315,10 +328,10 @@ export function Header({ sections }: HeaderProps) {
                 <YouTubeIcon size={16} />
               </a>
               <Link
-                href="/support"
+                href={localizeHref("/support", locale)}
                 className="rounded-sm bg-gold px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-gold-light md:text-xs"
               >
-                Поддержать
+                {dict.common.support}
               </Link>
             </div>
           </div>
@@ -327,21 +340,21 @@ export function Header({ sections }: HeaderProps) {
           <div className="bg-white">
             <div className="mx-auto flex max-w-6xl items-center px-3 py-2.5 md:px-6 md:py-3">
               <div className="flex min-w-0 flex-1 items-center justify-start">
-                <Link href="/" className="inline-flex shrink-0">
+                <Link href={localizeHref("/", locale)} className="inline-flex shrink-0">
                   <LogoMark
                     heightPx={92}
                     priority
-                    alt="АНО «Единый Мир»"
+                    alt={dict.header.siteName}
                   />
                 </Link>
               </div>
               <div className="mx-2 flex min-w-0 shrink flex-col items-center justify-center px-1 text-center sm:mx-4">
-                <Link href="/" className="group block no-underline">
+                <Link href={localizeHref("/", locale)} className="group block no-underline">
                   <span className="font-heading text-[32px] font-normal uppercase leading-tight tracking-[0.12em] text-ink">
-                    ЕДИНЫЙ МИР
+                    {dict.header.siteName.toUpperCase()}
                   </span>
                   <span className="mt-1 block text-xs leading-snug text-text-mute">
-                    Центр мониторинга и оценки проблем современности
+                    {dict.header.siteSubtitle}
                   </span>
                 </Link>
               </div>
@@ -373,8 +386,8 @@ export function Header({ sections }: HeaderProps) {
               }`}
             >
               <Link
-                href="/"
-                aria-label="Единый мир — на главную"
+                href={localizeHref("/", locale)}
+                aria-label={`${dict.header.siteName} — ${dict.common.backToHome.toLowerCase()}`}
                 className={`inline-flex shrink-0 ${
                   isScrolled ? "pointer-events-auto" : "pointer-events-none"
                 }`}
@@ -388,7 +401,7 @@ export function Header({ sections }: HeaderProps) {
               className="hidden items-center justify-center gap-2 md:flex"
               aria-label="Основное меню"
             >
-              {sections.map((root, i) => (
+              {navSections.map((root, i) => (
                 <Fragment key={root.id}>
                   {i > 0 ? <span className={navSepClass}>|</span> : null}
                   <div
@@ -397,31 +410,20 @@ export function Header({ sections }: HeaderProps) {
                       openRootMenu(root.children.length > 0 ? root : null)
                     }
                   >
-                    {root.slug === "en" ? (
-                      <a
-                        href="#"
-                        className={`${navLinkClass}${activeRoot?.id === root.id ? " text-gold-deep" : ""}`}
-                        onClick={(e) => e.preventDefault()}
-                        aria-current={
-                          activeRoot?.id === root.id ? "true" : undefined
-                        }
-                      >
-                        {root.name}
-                      </a>
-                    ) : (
-                      <Link
-                        href={getSectionHref(root.slug)}
-                        className={`${navLinkClass}${activeRoot?.id === root.id ? " text-gold-deep" : ""}`}
-                        aria-current={
-                          activeRoot?.id === root.id ? "true" : undefined
-                        }
-                      >
-                        {root.name}
-                      </Link>
-                    )}
+                    <Link
+                      href={localizeHref(getSectionHref(root.slug), locale)}
+                      className={`${navLinkClass}${activeRoot?.id === root.id ? " text-gold-deep" : ""}`}
+                      aria-current={
+                        activeRoot?.id === root.id ? "true" : undefined
+                      }
+                    >
+                      {locale === "en" ? (root.name_en || root.name) : root.name}
+                    </Link>
                   </div>
                 </Fragment>
               ))}
+              <span className={navSepClass}>|</span>
+              <LanguageSwitch className={navLinkClass} />
             </nav>
 
             <div className="flex justify-self-end items-center gap-1 md:min-w-0 md:gap-2">
@@ -431,7 +433,7 @@ export function Header({ sections }: HeaderProps) {
                 className="flex h-10 w-10 shrink-0 items-center justify-center text-ink md:hidden"
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-menu"
-                aria-label="Открыть меню"
+                aria-label={locale === "en" ? "Open menu" : "Открыть меню"}
                 onClick={() => setMobileOpen(true)}
               >
                 <BurgerIcon />
@@ -444,7 +446,7 @@ export function Header({ sections }: HeaderProps) {
               className="absolute left-0 right-0 top-full z-[60] hidden w-full border-t-2 border-gold bg-white shadow-lg md:block"
               onMouseEnter={clearNavLeaveTimer}
             >
-              <SectionMegaPanel root={activeRoot} />
+              <SectionMegaPanel root={activeRoot} locale={locale} />
             </div>
           ) : null}
         </div>
@@ -459,7 +461,8 @@ export function Header({ sections }: HeaderProps) {
 
       <div id="mobile-menu">
         <MobileMenu
-          sections={sections}
+          sections={navSections}
+          locale={locale}
           isOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
         />
