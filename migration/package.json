@@ -1,17 +1,13 @@
 {
-  "name": "united-world-migration",
+  "name": "ano-migration",
+  "version": "1.0.0",
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "migrate": "node migrate.js",
-    "fix-slugs": "node fix-slugs.js"
-  },
-  "engines": {
-    "node": ">=18"
+    "fetch": "node 01-fetch-en-articles.js",
+    "build-mapping": "node 02-build-mapping.js"
   },
   "dependencies": {
-    "cheerio": "^1.0.0",
-    "dotenv": "^16.4.5",
-    "form-data": "^4.0.0"
+    "dotenv": "^16.4.5"
   }
 }
