@@ -6,6 +6,7 @@ import type {
   StrapiRegion,
   StrapiSection,
 } from "./strapi-types";
+import type { Locale } from "./i18n/types";
 import type {
   Article,
   Author,
@@ -34,6 +35,28 @@ function authorPhotoUrl(media: StrapiMedia | null | undefined): string {
     return "";
   }
   return resolveStrapiAssetUrl(media.url);
+}
+
+/**
+ * Универсальный выбор локализованного значения с fallback на ru.
+ * Используется для name_en, description_en и подобных СПРАВОЧНЫХ полей.
+ *
+ * Для статей (title_en, content_html_en) НЕ используем fallback —
+ * там отдельная логика через is_translated_en (см. фильтрацию
+ * в Phase 3b/3c).
+ */
+function pickLocalized(
+  ruValue: string | null | undefined,
+  enValue: string | null | undefined,
+  locale: Locale,
+  fallback: string = "",
+): string {
+  if (locale === "en") {
+    if (enValue && enValue.trim()) return enValue;
+    // fallback на ru — лучше показать кириллицу чем пустоту
+    return ruValue ?? fallback;
+  }
+  return ruValue ?? fallback;
 }
 
 function authorFromStrapi(a: StrapiAuthor | null | undefined): Author {

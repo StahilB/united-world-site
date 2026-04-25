@@ -67,8 +67,10 @@ export interface StrapiAuthor {
   id: number;
   documentId?: string;
   name: string;
+  name_en?: string | null;
   slug: string;
   bio?: string | null;
+  bio_en?: string | null;
   email?: string | null;
   photo?: StrapiMedia | null;
   social_links?: Record<string, string> | null;
@@ -81,9 +83,11 @@ export interface StrapiCategory {
   id: number;
   documentId?: string;
   name: string;
+  name_en?: string | null;
   slug: string;
   color?: string | null;
   description?: string | null;
+  description_en?: string | null;
   createdAt?: string;
   updatedAt?: string;
   publishedAt?: string | null;
@@ -93,6 +97,7 @@ export interface StrapiRegion {
   id: number;
   documentId?: string;
   name: string;
+  name_en?: string | null;
   slug: string;
   cover_image?: StrapiMedia | null;
   createdAt?: string;
@@ -107,9 +112,11 @@ export interface StrapiSection {
   id: number;
   documentId?: string;
   name: string;
+  name_en?: string | null;
   slug: string;
   order?: number | null;
   description?: string | null;
+  description_en?: string | null;
   is_visible_in_menu?: boolean | null;
   parent?: { id: number; name?: string; slug?: string } | null;
   children?: StrapiSection[] | null;
@@ -128,6 +135,10 @@ export interface StrapiArticle {
   /** HTML из CKEditor (custom field), если разрешено в Public → Article */
   content_html?: string | null;
   excerpt?: string | null;
+  title_en?: string | null;
+  excerpt_en?: string | null;
+  content_html_en?: string | null;
+  is_translated_en?: boolean | null;
   cover_image?: StrapiMedia | null;
   author?: StrapiAuthor | null;
   categories?: StrapiCategory[] | null;
@@ -171,9 +182,13 @@ export interface StrapiStaticPage {
   id?: number;
   documentId?: string;
   about_html?: string | null;
+  about_html_en?: string | null;
   cooperation_html?: string | null;
+  cooperation_html_en?: string | null;
   contacts_html?: string | null;
+  contacts_html_en?: string | null;
   support_html?: string | null;
+  support_html_en?: string | null;
   team_members?: StrapiStaticTeamMember[] | null;
   createdAt?: string;
   updatedAt?: string;
