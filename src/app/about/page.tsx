@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
+import { getServerLocale } from "@/lib/i18n/server-locale";
 
 export const metadata: Metadata = {
   title: "Об организации",
@@ -9,10 +10,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
+  const locale = await getServerLocale();
   let html = "";
   try {
     const res = await getStaticPages();
-    html = res.data?.about_html ?? "";
+    html =
+      locale === "en"
+        ? (res.data?.about_html_en ?? res.data?.about_html ?? "")
+        : (res.data?.about_html ?? "");
   } catch (err) {
     console.error("[AboutPage] Failed to load static pages:", err);
   }

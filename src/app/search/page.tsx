@@ -11,6 +11,8 @@ import { getStrapiUrl } from "@/lib/strapi-config";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { Article } from "@/lib/types";
 import { SearchForm } from "./SearchForm";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export const metadata: Metadata = {
   title: "Поиск по сайту",
@@ -70,6 +72,8 @@ function buildQuery(
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   const q = pickString(searchParams.q);
   const formats = parseFormats(searchParams.format);
   const region = pickString(searchParams.region);
@@ -105,11 +109,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     dateTo: dateTo || undefined,
     page,
     pageSize: PAGE_SIZE,
+    locale,
   });
 
   const origin = getStrapiUrl();
   const articles: Article[] = res.data.map((a) =>
-    mapStrapiArticleToArticle(a, origin),
+    mapStrapiArticleToArticle(a, origin, locale),
   );
 
   const pagination = res.meta?.pagination;
@@ -179,7 +184,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             embedded
             hideHeading
             articles={articles}
-            emptyMessage="Нет статей по заданным условиям. Измените запрос или фильтры."
+            emptyMessage={dict.rubric.emptyMessage}
+            locale={locale}
           />
         </div>
         {paginationNav}

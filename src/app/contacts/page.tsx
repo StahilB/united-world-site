@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
+import { getServerLocale } from "@/lib/i18n/server-locale";
 
 export const metadata: Metadata = {
   title: "Контакты",
@@ -8,10 +9,14 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactsPage() {
+  const locale = await getServerLocale();
   let html = "";
   try {
     const res = await getStaticPages();
-    html = res.data?.contacts_html ?? "";
+    html =
+      locale === "en"
+        ? (res.data?.contacts_html_en ?? res.data?.contacts_html ?? "")
+        : (res.data?.contacts_html ?? "");
   } catch (err) {
     console.error("[ContactsPage] Failed to load static pages:", err);
   }

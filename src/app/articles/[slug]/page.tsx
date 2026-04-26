@@ -15,6 +15,9 @@ import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import type { Article } from "@/lib/types";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { localizeHref } from "@/lib/i18n/types";
 
 type ArticlePageProps = {
   params: { slug: string };
@@ -98,11 +101,13 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const slug = params.slug;
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   let raw = null;
   let strapiUnreachable = false;
 
   try {
-    raw = await getArticleBySlug(slug);
+    raw = await getArticleBySlug(slug, locale);
   } catch (e) {
     console.error(`[ArticlePage] Strapi fetch failed for /${slug}:`, e);
     strapiUnreachable = true;
@@ -115,14 +120,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!raw) {
     notFound();
   }
+  if (locale === "en" && !raw.is_translated_en) {
+    notFound();
+  }
 
   const origin = getStrapiUrl();
-  const article = mapStrapiArticleToArticle(raw, origin);
+  const article = mapStrapiArticleToArticle(raw, origin, locale);
 
   const { html, toc } = getArticleRenderedContent(
     article,
     raw.content,
-    raw.content_html,
+    locale === "en" ? (raw.content_html_en ?? raw.content_html) : raw.content_html,
   );
 
   let readAlso: Article[] = [];
@@ -130,18 +138,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   let related: Article[] = [];
   try {
     const [readAlsoRes, similarRes, relatedRes] = await Promise.all([
-      fetchReadAlsoArticles(article, 3),
-      fetchSimilarArticles(article, 3),
+      fetchReadAlsoArticles(article, 3, locale),
+      fetchSimilarArticles(article, 3, locale),
       getRelatedArticles(
         slug,
         raw.categories?.[0]?.slug || undefined,
         raw.region?.slug || undefined,
         4,
+        locale,
       ),
     ]);
     readAlso = readAlsoRes;
     similar = similarRes;
-    related = (relatedRes.data ?? []).map((a) => mapStrapiArticleToArticle(a, origin));
+    related = (relatedRes.data ?? []).map((a) =>
+      mapStrapiArticleToArticle(a, origin, locale),
+    );
   } catch (e) {
     console.error("[ArticlePage] related articles fetch failed:", e);
   }
@@ -175,7 +186,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 },
               ]
             : []),
-          { name: article.title, url: `/articles/${slug}` },
+          { name: article.title, url: localizeHref(`/articles/${slug}`, locale) },
         ])}
       />
       <ViewCounter articleId={raw.id} />
@@ -187,6 +198,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         similar={similar}
         related={related}
         tags={tags}
+        locale={locale}
+        dict={dict}
       />
     </>
   );

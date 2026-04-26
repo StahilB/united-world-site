@@ -35,7 +35,7 @@ export const viewport: Viewport = {
   themeColor: "#061739",
 };
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: "Единый Мир — аналитический центр общественной дипломатии",
@@ -60,13 +60,6 @@ export const metadata: Metadata = {
   creator: "АНО «Единый Мир»",
   publisher: "АНО «Единый Мир»",
   formatDetection: { email: false, address: false, telephone: false },
-  alternates: {
-    canonical: "/",
-    languages: {
-      "ru-RU": SITE_URL,
-      "en-US": "https://en.anounitedworld.com",
-    },
-  },
   openGraph: {
     type: "website",
     locale: "ru_RU",
@@ -128,6 +121,20 @@ export const metadata: Metadata = {
   },
   category: "News",
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  return {
+    ...baseMetadata,
+    alternates: {
+      canonical: locale === "en" ? "/en" : "/",
+      languages: {
+        ru: "/",
+        en: "/en",
+      },
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

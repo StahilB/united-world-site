@@ -27,12 +27,16 @@ import type {
 } from "@/lib/strapi-types";
 import type { GlobalReviewsMainArticle, ThematicBlockItem } from "@/lib/types";
 import { getStrapiUrl } from "@/lib/strapi-config";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export const revalidate = 300;
 
 const emptyArticles: StrapiCollectionResponse<StrapiArticle> = { data: [] };
 const emptyRegions: StrapiCollectionResponse<StrapiRegion> = { data: [] };
 export default async function HomePage() {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   const origin = getStrapiUrl();
 
   let latestRes = emptyArticles;
@@ -43,9 +47,9 @@ export default async function HomePage() {
 
   try {
     const results = await Promise.all([
-      getLatestArticles(4),
-      getRecentPopularArticles(7, 90),
-      getArticles({ pageSize: 100, page: 1 }),
+      getLatestArticles(4, locale),
+      getRecentPopularArticles(7, 90, locale),
+      getArticles({ pageSize: 100, page: 1, locale }),
       getRegions(),
     ]);
     latestRes = results[0];
@@ -55,7 +59,7 @@ export default async function HomePage() {
 
     if (popularRes.data.length < 5) {
       try {
-        const fallback = await getPopularArticles(7);
+        const fallback = await getPopularArticles(7, locale);
         if (fallback.data.length > popularRes.data.length) {
           popularRes = fallback;
         }
@@ -105,6 +109,7 @@ export default async function HomePage() {
         category: theme.slug,
         pageSize: 1,
         page: 1,
+        locale,
       }),
     ),
   );
@@ -122,7 +127,7 @@ export default async function HomePage() {
     }
     const raw = result.value?.data?.[0];
     if (!raw) return;
-    const a = mapStrapiArticleToArticle(raw, origin);
+    const a = mapStrapiArticleToArticle(raw, origin, locale);
     collected.push({
       category: {
         name: theme.name,
@@ -140,19 +145,19 @@ export default async function HomePage() {
   thematicItems = collected;
 
   const latestArticles = latestRes.data.map((a) =>
-    mapStrapiArticleToArticle(a, origin),
+    mapStrapiArticleToArticle(a, origin, locale),
   );
 
   const poolMapped = poolRes.data.map((a) =>
-    mapStrapiArticleToArticle(a, origin),
+    mapStrapiArticleToArticle(a, origin, locale),
   );
 
   const mainArticle: GlobalReviewsMainArticle | null = popularRes.data[0]
-    ? toGlobalReviewsMainArticle(popularRes.data[0], origin)
+    ? toGlobalReviewsMainArticle(popularRes.data[0], origin, locale)
     : null;
 
   const popularArticles = popularRes.data.slice(1).map((a) =>
-    toGlobalReviewsPopularArticle(a),
+    toGlobalReviewsPopularArticle(a, locale),
   );
 
   const globalReviewArticles = poolRes.data.filter(
@@ -162,6 +167,7 @@ export default async function HomePage() {
     regionsRes.data,
     globalReviewArticles.length > 0 ? globalReviewArticles : poolRes.data,
     origin,
+    locale,
   );
 
   const expertOpinions = toExpertOpinions(poolMapped);
@@ -174,9 +180,9 @@ export default async function HomePage() {
   return (
     <main className="flex min-h-screen flex-col">
       <nav aria-label="Главное меню" className="sr-only">
-        <Link href="/section/analitika">Аналитика</Link>
-        <Link href="/expertise">Экспертиза</Link>
-        <Link href="/about">О центре</Link>
+        <Link href="/section/analitika">{dict.header.navAnalytics}</Link>
+        <Link href="/expertise">{dict.header.navExpertise}</Link>
+        <Link href="/about">{dict.header.navAbout}</Link>
       </nav>
 
       {mainArticle && (

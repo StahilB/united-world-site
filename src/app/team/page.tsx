@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getStaticPages } from "@/lib/api";
 import type { StrapiStaticTeamMember } from "@/lib/strapi-types";
+import { getServerLocale } from "@/lib/i18n/server-locale";
 
 export const metadata: Metadata = {
   title: "Команда",
@@ -27,6 +28,7 @@ function normalizeMembers(raw: unknown): StrapiStaticTeamMember[] {
 }
 
 export default async function TeamPage() {
+  const locale = await getServerLocale();
   let team: StrapiStaticTeamMember[] = [];
   try {
     const res = await getStaticPages();
@@ -63,11 +65,15 @@ export default async function TeamPage() {
                 className="border border-ink/10 bg-paper-warm/60 p-5 shadow-sm"
               >
                 <h3 className="font-heading text-lg font-normal text-ink">
-                  {m.name}
+                  {locale === "en" ? ((m as unknown as { name_en?: string }).name_en ?? m.name) : m.name}
                 </h3>
                 {m.role ? (
                   <p className="mt-2 font-sans text-[14px] leading-snug text-ink/90">
-                    {m.role}
+                    {locale === "en"
+                      ? ((m as unknown as { role_en?: string; position_en?: string }).role_en ??
+                        (m as unknown as { position_en?: string }).position_en ??
+                        m.role)
+                      : m.role}
                   </p>
                 ) : null}
                 {m.directions ? (
@@ -75,7 +81,9 @@ export default async function TeamPage() {
                     <span className="font-semibold text-ink/80">
                       Направления:{" "}
                     </span>
-                    {m.directions}
+                    {locale === "en"
+                      ? ((m as unknown as { directions_en?: string }).directions_en ?? m.directions)
+                      : m.directions}
                   </p>
                 ) : null}
               </article>
@@ -103,16 +111,22 @@ export default async function TeamPage() {
                 className="border border-ink/10 bg-white p-6 shadow-sm"
               >
                 <h3 className="font-heading text-xl font-normal text-ink">
-                  {m.name}
+                  {locale === "en" ? ((m as unknown as { name_en?: string }).name_en ?? m.name) : m.name}
                 </h3>
                 {m.role ? (
                   <p className="mt-2 font-sans text-[14px] font-medium text-ink-soft">
-                    {m.role}
+                    {locale === "en"
+                      ? ((m as unknown as { role_en?: string; position_en?: string }).role_en ??
+                        (m as unknown as { position_en?: string }).position_en ??
+                        m.role)
+                      : m.role}
                   </p>
                 ) : null}
                 {m.bio ? (
                   <p className="mt-4 font-sans text-[15px] leading-relaxed text-text">
-                    {m.bio}
+                    {locale === "en"
+                      ? ((m as unknown as { bio_en?: string }).bio_en ?? m.bio)
+                      : m.bio}
                   </p>
                 ) : null}
                 {m.directions ? (
@@ -120,7 +134,9 @@ export default async function TeamPage() {
                     <span className="font-semibold text-ink/80">
                       Направления:{" "}
                     </span>
-                    {m.directions}
+                    {locale === "en"
+                      ? ((m as unknown as { directions_en?: string }).directions_en ?? m.directions)
+                      : m.directions}
                   </p>
                 ) : null}
               </article>

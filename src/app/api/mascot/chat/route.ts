@@ -69,6 +69,10 @@ export async function POST(req: NextRequest) {
   }
 
   const maxTokens = Number.parseInt(process.env.MASCOT_MAX_TOKENS || "500", 10);
+  const pageUrl = body.pageUrl || "";
+  const isEn = pageUrl.startsWith("/en/") || pageUrl === "/en";
+  const localeHint = isEn ? "language=en" : "language=ru";
+  const localeContext = `${localeHint}\npageUrl=${pageUrl}`;
   const lastUserMessage =
     [...body.messages].reverse().find((m) => m.role === "user")?.content ?? "";
   let retrievalContext = "";
@@ -86,7 +90,9 @@ export async function POST(req: NextRequest) {
       );
     }
   }
-  const mergedContext = [body.context, retrievalContext].filter(Boolean).join("\n\n");
+  const mergedContext = [localeContext, body.context, retrievalContext]
+    .filter(Boolean)
+    .join("\n\n");
   const system = buildSystemPrompt({ ...body, context: mergedContext });
   const provider = (process.env.MASCOT_PROVIDER || "gigachat").toLowerCase();
 

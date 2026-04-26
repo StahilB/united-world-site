@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
+import { getServerLocale } from "@/lib/i18n/server-locale";
 
 export const metadata: Metadata = {
   title: "Сотрудничество",
@@ -9,10 +10,14 @@ export const metadata: Metadata = {
 };
 
 export default async function CooperationPage() {
+  const locale = await getServerLocale();
   let html = "";
   try {
     const res = await getStaticPages();
-    html = res.data?.cooperation_html ?? "";
+    html =
+      locale === "en"
+        ? (res.data?.cooperation_html_en ?? res.data?.cooperation_html ?? "")
+        : (res.data?.cooperation_html ?? "");
   } catch (err) {
     console.error("[CooperationPage] Failed to load static pages:", err);
   }

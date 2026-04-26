@@ -83,7 +83,7 @@ export function MascotWidget() {
               userMsg,
             ].map(({ role, content }) => ({ role, content })),
             context,
-            pageUrl: typeof window !== "undefined" ? window.location.pathname : undefined,
+            pageUrl: typeof window !== "undefined" ? window.location.pathname : "/",
             pageTitle: typeof document !== "undefined" ? document.title : undefined,
           }),
           signal: abortRef.current.signal,

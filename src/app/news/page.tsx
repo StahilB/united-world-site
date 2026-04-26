@@ -11,6 +11,9 @@ import { getSectionHref } from "@/lib/navigation";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { Article } from "@/lib/types";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { localizeHref } from "@/lib/i18n/types";
 
 const SLUG = "novosti";
 const PAGE_SIZE = 12;
@@ -26,6 +29,8 @@ type NewsPageProps = {
 };
 
 export default async function NewsPage({ searchParams }: NewsPageProps) {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   const strapiSection = await getSectionBySlug(SLUG);
@@ -67,10 +72,10 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   const current = path[path.length - 1];
   const origin = getStrapiUrl();
 
-  const articlesRes = await getArticlesBySection(SLUG, page, PAGE_SIZE);
+  const articlesRes = await getArticlesBySection(SLUG, page, PAGE_SIZE, { locale });
 
   const articles: Article[] = articlesRes.data.map((a) =>
-    mapStrapiArticleToArticle(a, origin),
+    mapStrapiArticleToArticle(a, origin, locale),
   );
 
   const pageCount = articlesRes.meta?.pagination?.pageCount ?? 1;
@@ -114,8 +119,8 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 font-sans text-sm text-text-mute"
           aria-label="Хлебные крошки"
         >
-          <Link href="/" className="transition-colors hover:text-gold-deep">
-            Главная
+          <Link href={localizeHref("/", locale)} className="transition-colors hover:text-gold-deep">
+            {dict.common.breadcrumbHome}
           </Link>
           {path.slice(0, -1).map((s) => (
             <span key={s.id} className="flex items-center gap-2">
@@ -146,7 +151,8 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
             embedded
             hideHeading
             articles={articles}
-            emptyMessage="В этом разделе пока нет материалов"
+            emptyMessage={dict.rubric.emptyMessage}
+            locale={locale}
           />
         </div>
         {paginationNav}

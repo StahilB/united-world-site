@@ -5,15 +5,11 @@ import { SOCIAL_URLS } from "@/components/ui/SocialIcons";
 import type { Article } from "@/lib/types";
 import type { TocHeading } from "@/lib/article-content";
 import { replaceImgWithNextImage } from "@/lib/article-content";
+import { formatDate } from "@/lib/strapi-mappers";
+import type { Locale } from "@/lib/i18n/types";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { localizeHref } from "@/lib/i18n/types";
 import { ArticleTableOfContents } from "./ArticleTableOfContents";
-
-function formatPublished(iso: string): string {
-  return new Intl.DateTimeFormat("ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(iso));
-}
 
 function truncateTitle(title: string, max = 48): string {
   if (title.length <= max) return title;
@@ -28,12 +24,14 @@ type ArticlePageViewProps = {
   similar: Article[];
   related: Article[];
   tags: string[];
+  locale: Locale;
+  dict: Dictionary;
 };
 
-function RelatedCard({ article: a }: { article: Article }) {
+function RelatedCard({ article: a, locale }: { article: Article; locale: Locale }) {
   return (
     <Link
-      href={`/articles/${a.slug}`}
+      href={localizeHref(`/articles/${a.slug}`, locale)}
       className="group block border-b border-rule pb-5 last:border-b-0 last:pb-0"
     >
       <div className="relative aspect-video w-full overflow-hidden bg-paper-mute">
@@ -55,10 +53,10 @@ function RelatedCard({ article: a }: { article: Article }) {
   );
 }
 
-function SimilarCardWide({ article: a }: { article: Article }) {
+function SimilarCardWide({ article: a, locale }: { article: Article; locale: Locale }) {
   return (
     <Link
-      href={`/articles/${a.slug}`}
+      href={localizeHref(`/articles/${a.slug}`, locale)}
       className="group flex min-w-0 flex-col overflow-hidden bg-paper-warm transition-[transform] duration-200 ease-out hover:-translate-y-[2px] md:flex-row"
     >
       <div className="relative aspect-[16/10] w-full shrink-0 md:aspect-[4/3] md:w-[40%]">
@@ -90,16 +88,18 @@ export function ArticlePageView({
   similar,
   related,
   tags,
+  locale,
+  dict,
 }: ArticlePageViewProps) {
   const primaryCategory = article.categories[0];
   const firstSection = article.sections?.[0];
   const breadcrumbSectionLabel =
     firstSection?.name ?? primaryCategory?.name ?? article.format;
   const breadcrumbSectionHref = firstSection
-    ? `/section/${firstSection.slug}`
+      ? localizeHref(`/section/${firstSection.slug}`, locale)
     : primaryCategory
-      ? `/category/${primaryCategory.slug}`
-      : "/articles";
+      ? localizeHref(`/category/${primaryCategory.slug}`, locale)
+      : localizeHref("/news", locale);
   const articleChunks = replaceImgWithNextImage(html);
 
   return (
@@ -108,12 +108,12 @@ export function ArticlePageView({
         {/* Хлебные крошки */}
         <nav
           className="font-sans text-[12px] text-text-mute"
-          aria-label="Навигация по разделам"
+          aria-label={dict.common.breadcrumbHome}
         >
           <ol className="flex flex-wrap items-center gap-1.5">
             <li>
-              <Link href="/" className="transition-colors hover:text-gold-deep">
-                Главная
+              <Link href={localizeHref("/", locale)} className="transition-colors hover:text-gold-deep">
+                {dict.common.breadcrumbHome}
               </Link>
             </li>
             <li aria-hidden className="text-rule">
@@ -137,7 +137,7 @@ export function ArticlePageView({
         {/* Kicker-рубрика */}
         {primaryCategory && (
           <Link
-            href={`/category/${primaryCategory.slug}`}
+            href={localizeHref(`/category/${primaryCategory.slug}`, locale)}
             className="kicker mt-8 inline-block transition-colors hover:text-ink"
           >
             {primaryCategory.name}
@@ -166,7 +166,7 @@ export function ArticlePageView({
               size={32}
             />
             <Link
-              href={`/author/${article.author.slug}`}
+              href={localizeHref(`/author/${article.author.slug}`, locale)}
               className="font-semibold text-ink transition-colors hover:text-gold-deep"
             >
               {article.author.name}
@@ -176,12 +176,12 @@ export function ArticlePageView({
             ·
           </span>
           <time dateTime={article.publishedAt}>
-            {formatPublished(article.publishedAt)}
+            {formatDate(article.publishedAt, locale)}
           </time>
           <span aria-hidden className="text-rule">
             ·
           </span>
-          <span>{article.readingTime} мин чтения</span>
+          <span>{dict.common.readingMin(article.readingTime)}</span>
         </div>
 
         {/* Обложка */}
@@ -237,9 +237,9 @@ export function ArticlePageView({
               aria-labelledby="author-bottom"
             >
               <h2 id="author-bottom" className="sr-only">
-                Об авторе
+                {dict.article.authorBlockKicker}
               </h2>
-              <p className="kicker">Автор</p>
+              <p className="kicker">{dict.article.authorBlockKicker}</p>
               <div className="mt-4 flex gap-5">
                 <AuthorAvatar
                   name={article.author.name}
@@ -249,7 +249,7 @@ export function ArticlePageView({
                 />
                 <div className="min-w-0 flex-1">
                   <Link
-                    href={`/author/${article.author.slug}`}
+                    href={localizeHref(`/author/${article.author.slug}`, locale)}
                     className="font-heading text-[22px] font-bold text-ink transition-colors hover:text-gold-deep"
                   >
                     {article.author.name}
@@ -266,7 +266,7 @@ export function ArticlePageView({
             {/* Теги */}
             {tags.length > 0 && (
               <div className="mt-12 max-w-[720px]">
-                <p className="kicker">Теги</p>
+                <p className="kicker">{dict.article.tagsKicker}</p>
                 <ul className="mt-3 flex flex-wrap gap-2">
                   {tags.map((tag) => (
                     <li key={tag}>
@@ -286,11 +286,11 @@ export function ArticlePageView({
                   id="similar"
                   className="font-heading text-xl text-ink md:text-2xl"
                 >
-                  Похожие статьи
+                  {dict.article.similarArticles}
                 </h2>
                 <div className="mt-6 space-y-6">
                   {similar.map((a) => (
-                    <SimilarCardWide key={a.id} article={a} />
+                    <SimilarCardWide key={a.id} article={a} locale={locale} />
                   ))}
                 </div>
               </section>
@@ -302,11 +302,11 @@ export function ArticlePageView({
                   id="read-more-bottom"
                   className="font-heading text-xl text-ink md:text-2xl"
                 >
-                  Читайте также
+                  {dict.article.readAlso}
                 </h2>
                 <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                   {related.map((a) => (
-                    <SimilarCardWide key={a.id} article={a} />
+                    <SimilarCardWide key={a.id} article={a} locale={locale} />
                   ))}
                 </div>
               </section>
@@ -321,23 +321,23 @@ export function ArticlePageView({
               {readAlso.length > 0 && (
                 <div>
                   <p className="font-heading text-[11px] font-semibold uppercase tracking-[0.18em] text-text-mute">
-                    Читайте также
+                    {dict.article.readAlso}
                   </p>
                   <div className="mt-4 space-y-6">
                     {readAlso.map((a) => (
-                      <RelatedCard key={a.id} article={a} />
+                      <RelatedCard key={a.id} article={a} locale={locale} />
                     ))}
                   </div>
                 </div>
               )}
 
               <div className="bg-ink-deep p-5 text-white">
-                <p className="kicker text-gold-light">Подписка</p>
+                <p className="kicker text-gold-light">{dict.article.telegramSubscribe}</p>
                 <p className="mt-3 font-heading text-[17px] font-bold leading-snug">
-                  Дайджест в Telegram
+                  {dict.article.telegramTitle}
                 </p>
                 <p className="mt-2 font-sans text-[13px] leading-relaxed text-white/70">
-                  Краткие выжимки материалов и анонсы — без лишнего шума.
+                  {dict.article.telegramDescription}
                 </p>
                 <a
                   href={SOCIAL_URLS.telegram}
@@ -345,7 +345,7 @@ export function ArticlePageView({
                   rel="noopener noreferrer"
                   className="mt-4 inline-flex min-h-10 items-center justify-center bg-gold px-4 font-sans text-[12px] font-semibold uppercase tracking-[0.08em] text-ink transition-colors hover:bg-gold-light"
                 >
-                  Открыть канал
+                  {dict.article.telegramButton}
                 </a>
               </div>
             </div>

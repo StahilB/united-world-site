@@ -9,6 +9,7 @@ import type {
   StrapiSingleResponse,
   StrapiStaticPage,
 } from "./strapi-types";
+import type { Locale } from "./i18n/types";
 
 export type Section = {
   id: number;
@@ -114,6 +115,18 @@ async function strapiFetchNoStore<T>(path: string, init?: RequestInit): Promise<
 
 /** Populate relations for article list cards (matches spec). */
 function appendArticleListPopulate(params: URLSearchParams): void {
+  params.set("fields[0]", "title");
+  params.set("fields[1]", "title_en");
+  params.set("fields[2]", "excerpt");
+  params.set("fields[3]", "excerpt_en");
+  params.set("fields[4]", "is_translated_en");
+  params.set("fields[5]", "slug");
+  params.set("fields[6]", "format");
+  params.set("fields[7]", "publication_date");
+  params.set("fields[8]", "views_count");
+  params.set("fields[9]", "reading_time");
+  params.set("fields[10]", "is_global_review");
+
   // Strapi 5 REST: nested populate via bracket syntax
   params.set("populate[cover_image][fields][0]", "url");
   params.set("populate[cover_image][fields][1]", "width");
@@ -121,22 +134,35 @@ function appendArticleListPopulate(params: URLSearchParams): void {
 
   params.set("populate[author][fields][0]", "id");
   params.set("populate[author][fields][1]", "name");
-  params.set("populate[author][fields][2]", "slug");
-  params.set("populate[author][fields][3]", "bio");
+  params.set("populate[author][fields][2]", "name_en");
+  params.set("populate[author][fields][3]", "slug");
+  params.set("populate[author][fields][4]", "bio");
+  params.set("populate[author][fields][5]", "bio_en");
   params.set("populate[author][populate][photo][fields][0]", "url");
 
   params.set("populate[categories][fields][0]", "id");
   params.set("populate[categories][fields][1]", "name");
-  params.set("populate[categories][fields][2]", "slug");
-  params.set("populate[categories][fields][3]", "color");
+  params.set("populate[categories][fields][2]", "name_en");
+  params.set("populate[categories][fields][3]", "slug");
+  params.set("populate[categories][fields][4]", "color");
+  params.set("populate[categories][fields][5]", "description");
+  params.set("populate[categories][fields][6]", "description_en");
 
   params.set("populate[region][fields][0]", "id");
   params.set("populate[region][fields][1]", "name");
-  params.set("populate[region][fields][2]", "slug");
+  params.set("populate[region][fields][2]", "name_en");
+  params.set("populate[region][fields][3]", "slug");
 
   params.set("populate[sections][fields][0]", "id");
   params.set("populate[sections][fields][1]", "name");
-  params.set("populate[sections][fields][2]", "slug");
+  params.set("populate[sections][fields][2]", "name_en");
+  params.set("populate[sections][fields][3]", "slug");
+}
+
+function appendLocaleFilter(params: URLSearchParams, locale?: Locale): void {
+  if (locale === "en") {
+    params.set("filters[is_translated_en][$eq]", "true");
+  }
 }
 
 export type GetArticlesParams = {
@@ -152,6 +178,8 @@ export type GetArticlesParams = {
   format?: string;
   /** Глобальные обзоры (флаг в Strapi) */
   isGlobalReview?: boolean;
+  /** Если 'en' — фильтр только по переведенным материалам */
+  locale?: Locale;
 };
 
 /**
@@ -168,12 +196,14 @@ export async function getArticles(
     sort,
     format,
     isGlobalReview,
+    locale,
   } = params;
 
   const search = new URLSearchParams();
   search.set("pagination[page]", String(page));
   search.set("pagination[pageSize]", String(pageSize));
   appendArticleListPopulate(search);
+  appendLocaleFilter(search, locale);
 
   if (category) {
     search.set("filters[categories][slug][$eq]", category);
@@ -209,17 +239,23 @@ export async function getArticles(
  */
 export async function getArticleBySlug(
   slug: string,
+  locale?: Locale,
 ): Promise<StrapiArticle | null> {
   const search = new URLSearchParams();
   search.set("filters[slug][$eq]", slug);
   search.set("pagination[pageSize]", "1");
+  if (locale === "en") {
+    search.set("filters[is_translated_en][$eq]", "true");
+  }
 
   // Deep populate — author.photo + other relations used on article page
   search.set("populate[cover_image]", "true");
   search.set("populate[author][fields][0]", "id");
   search.set("populate[author][fields][1]", "name");
-  search.set("populate[author][fields][2]", "slug");
-  search.set("populate[author][fields][3]", "bio");
+  search.set("populate[author][fields][2]", "name_en");
+  search.set("populate[author][fields][3]", "slug");
+  search.set("populate[author][fields][4]", "bio");
+  search.set("populate[author][fields][5]", "bio_en");
   search.set("populate[author][populate][photo][fields][0]", "url");
   search.set("populate[categories]", "true");
   search.set("populate[region]", "true");
@@ -234,12 +270,14 @@ export async function getArticleBySlug(
 
 export async function getPopularArticles(
   limit: number,
+  locale?: Locale,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const search = new URLSearchParams();
   search.set("sort[0]", "views_count:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
+  appendLocaleFilter(search, locale);
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
     `/api/articles?${search.toString()}`,
   );
@@ -252,6 +290,7 @@ export async function getPopularArticles(
 export async function getRecentPopularArticles(
   limit: number,
   days: number = 90,
+  locale?: Locale,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const since = new Date();
   since.setDate(since.getDate() - days);
@@ -263,6 +302,7 @@ export async function getRecentPopularArticles(
   search.set("pagination[page]", "1");
   search.set("filters[publication_date][$gte]", isoSince);
   appendArticleListPopulate(search);
+  appendLocaleFilter(search, locale);
 
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
     `/api/articles?${search.toString()}`,
@@ -271,12 +311,14 @@ export async function getRecentPopularArticles(
 
 export async function getLatestArticles(
   limit: number,
+  locale?: Locale,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const search = new URLSearchParams();
   search.set("sort[0]", "publication_date:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
+  appendLocaleFilter(search, locale);
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
     `/api/articles?${search.toString()}`,
   );
@@ -287,6 +329,7 @@ export async function getRelatedArticles(
   categorySlug?: string,
   regionSlug?: string,
   limit = 4,
+  locale?: Locale,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const picked: StrapiArticle[] = [];
   const seen = new Set<string>([articleSlug]);
@@ -312,6 +355,7 @@ export async function getRelatedArticles(
     search.set("pagination[page]", "1");
     search.set("pagination[pageSize]", String(pageSize));
     appendArticleListPopulate(search);
+    appendLocaleFilter(search, locale);
     const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
       `/api/articles?${search.toString()}`,
       { next: { revalidate: 300 } },
@@ -334,7 +378,7 @@ export async function getRelatedArticles(
   }
 
   if (picked.length < limit) {
-    const latest = await getLatestArticles(Math.max(limit * 3, 12));
+    const latest = await getLatestArticles(Math.max(limit * 3, 12), locale);
     addUnique((latest.data ?? []).filter((a) => a.slug !== articleSlug));
   }
 
@@ -366,6 +410,7 @@ export function articlesByRegionRequestPath(regionId: number, limit: number): st
 export function articlesByCategoryRequestPath(
   categoryId: number,
   limit: number,
+  locale?: Locale,
 ): string {
   const search = new URLSearchParams();
   search.set("filters[categories][id][$eq]", String(categoryId));
@@ -373,6 +418,7 @@ export function articlesByCategoryRequestPath(
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
   appendArticleListPopulate(search);
+  appendLocaleFilter(search, locale);
   return `/api/articles?${search.toString()}`;
 }
 
@@ -382,9 +428,17 @@ export function articlesByCategoryRequestPath(
 export async function getArticlesByRegion(
   regionId: number,
   limit: number,
+  locale?: Locale,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
+  const search = new URLSearchParams();
+  search.set("filters[region][id][$eq]", String(regionId));
+  search.set("sort[0]", "publication_date:desc");
+  search.set("pagination[pageSize]", String(limit));
+  search.set("pagination[page]", "1");
+  appendArticleListPopulate(search);
+  appendLocaleFilter(search, locale);
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
-    articlesByRegionRequestPath(regionId, limit),
+    `/api/articles?${search.toString()}`,
   );
 }
 
@@ -394,9 +448,10 @@ export async function getArticlesByRegion(
 export async function getArticlesByCategory(
   categoryId: number,
   limit: number,
+  locale?: Locale,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
-    articlesByCategoryRequestPath(categoryId, limit),
+    articlesByCategoryRequestPath(categoryId, limit, locale),
   );
 }
 
@@ -449,6 +504,7 @@ export type GetArticlesByAuthorOptions = {
   format?: string;
   /** Slug раздела Section (many-to-many) */
   sectionSlug?: string;
+  locale?: Locale;
 };
 
 /**
@@ -503,6 +559,7 @@ export async function getArticlesByAuthor(
   if (options?.sectionSlug) {
     search.set("filters[sections][slug][$eq]", options.sectionSlug);
   }
+  appendLocaleFilter(search, options?.locale);
   search.set("sort[0]", "publication_date:desc");
   search.set("pagination[pageSize]", String(limit));
   search.set("pagination[page]", "1");
@@ -640,11 +697,15 @@ export async function getArticlesForColumnsSection(
 export async function getArticlesByAuthorColumns(
   authorSlug: string,
   limit: number,
+  locale?: Locale,
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const byId = new Map<number, StrapiArticle>();
   const sectionSlugs = await getColumnsSectionSlugs();
   for (const sectionSlug of sectionSlugs) {
-    const res = await getArticlesByAuthor(authorSlug, limit, { sectionSlug });
+    const res = await getArticlesByAuthor(authorSlug, limit, {
+      sectionSlug,
+      locale,
+    });
     for (const a of res.data ?? []) {
       byId.set(a.id, a);
     }
@@ -882,6 +943,7 @@ export async function getSectionBySlug(
 export type GetArticlesBySectionOptions = {
   /** Пересечение: статья должна быть и в текущей секции, и в этой (другая ветка рубрик). */
   filterSectionSlug?: string;
+  locale?: Locale;
 };
 
 /**
@@ -905,6 +967,7 @@ export async function getArticlesBySection(
   search.set("pagination[page]", String(page));
   search.set("pagination[pageSize]", String(pageSize));
   appendArticleListPopulate(search);
+  appendLocaleFilter(search, options?.locale);
   search.set("sort[0]", "publication_date:desc");
 
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
@@ -926,6 +989,7 @@ export type SearchArticlesParams = {
   dateTo?: string;
   page?: number;
   pageSize?: number;
+  locale?: Locale;
 };
 
 function normalizeDayStart(isoDate: string): string {
@@ -956,6 +1020,7 @@ export async function searchArticles(
     dateTo,
     page = 1,
     pageSize = 12,
+    locale,
   } = params;
 
   const qTrim = q?.trim() ?? "";
@@ -986,6 +1051,7 @@ export async function searchArticles(
   search.set("pagination[page]", String(page));
   search.set("pagination[pageSize]", String(pageSize));
   appendArticleListPopulate(search);
+  appendLocaleFilter(search, locale);
   search.set("sort[0]", "publication_date:desc");
 
   if (hasQ) {

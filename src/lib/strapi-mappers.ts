@@ -59,11 +59,14 @@ function pickLocalized(
   return ruValue ?? fallback;
 }
 
-function authorFromStrapi(a: StrapiAuthor | null | undefined): Author {
+function authorFromStrapi(
+  a: StrapiAuthor | null | undefined,
+  locale: Locale = "ru",
+): Author {
   if (!a) {
     return {
       id: "0",
-      name: "Редакция",
+      name: locale === "en" ? "Editorial" : "Редакция",
       slug: "editorial",
       bio: "",
       avatarUrl: "",
@@ -71,34 +74,37 @@ function authorFromStrapi(a: StrapiAuthor | null | undefined): Author {
   }
   return {
     id: String(a.id),
-    name: a.name,
+    name: pickLocalized(a.name, a.name_en, locale, a.name),
     slug: a.slug,
-    bio: a.bio ?? "",
+    bio: pickLocalized(a.bio, a.bio_en, locale, ""),
     avatarUrl: authorPhotoUrl(a.photo ?? undefined),
   };
 }
 
-function categoryFromStrapi(c: StrapiCategory): Category {
+function categoryFromStrapi(c: StrapiCategory, locale: Locale = "ru"): Category {
   return {
     id: String(c.id),
-    name: c.name,
+    name: pickLocalized(c.name, c.name_en, locale, c.name),
     slug: c.slug,
-    description: c.description ?? undefined,
+    description: pickLocalized(c.description, c.description_en, locale, "") || undefined,
     color: c.color ?? "#14213D",
   };
 }
 
-function regionFromStrapi(r: StrapiRegion | null | undefined): Region {
+function regionFromStrapi(
+  r: StrapiRegion | null | undefined,
+  locale: Locale = "ru",
+): Region {
   if (!r) {
     return {
       id: "0",
-      name: "—",
+      name: locale === "en" ? "—" : "—",
       slug: "unknown",
     };
   }
   return {
     id: String(r.id),
-    name: r.name,
+    name: pickLocalized(r.name, r.name_en, locale, r.name),
     slug: r.slug,
   };
 }
@@ -114,28 +120,41 @@ export function mapStrapiArticleToArticle(
   a: StrapiArticle,
   /** @deprecated Unused; media URLs use getPublicStrapiUrl(). Kept for call-site compatibility. */
   _origin: string = getStrapiUrl(),
+  locale: Locale = "ru",
 ): Article {
   const cats = (a.categories ?? [])
     .filter(Boolean)
-    .map((c) => categoryFromStrapi(c as StrapiCategory));
+    .map((c) => categoryFromStrapi(c as StrapiCategory, locale));
 
   const sections = (a.sections ?? [])
     .filter(Boolean)
     .map((s) => {
       const x = s as StrapiSection;
-      return { name: x.name, slug: x.slug };
+      return {
+        name: pickLocalized(x.name, x.name_en, locale, x.name),
+        slug: x.slug,
+      };
     });
+
+  const title =
+    locale === "en" && a.title_en && a.title_en.trim()
+      ? a.title_en
+      : a.title;
+  const excerpt =
+    locale === "en" && a.excerpt_en && a.excerpt_en.trim()
+      ? a.excerpt_en
+      : a.excerpt ?? "";
 
   return {
     id: String(a.id),
-    title: a.title,
+    title,
     slug: a.slug,
-    excerpt: a.excerpt ?? "",
+    excerpt,
     coverImage: mediaUrl(a.cover_image ?? undefined),
-    author: authorFromStrapi(a.author),
+    author: authorFromStrapi(a.author, locale),
     categories: cats,
     sections: sections.length > 0 ? sections : undefined,
-    region: regionFromStrapi(a.region),
+    region: regionFromStrapi(a.region, locale),
     format: a.format ?? "анализ",
     publishedAt: publishedIso(a),
     viewsCount: a.views_count ?? 0,
@@ -155,17 +174,30 @@ export function formatDateRu(iso: string): string {
   }
 }
 
+export function formatDate(iso: string, locale: Locale = "ru"): string {
+  try {
+    return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ru-RU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
 export function toGlobalReviewsMainArticle(
   a: StrapiArticle,
   origin: string = getStrapiUrl(),
+  locale: Locale = "ru",
 ): GlobalReviewsMainArticle {
-  const mapped = mapStrapiArticleToArticle(a, origin);
+  const mapped = mapStrapiArticleToArticle(a, origin, locale);
   const iso = publishedIso(a);
   const hasRealCover = Boolean(a.cover_image?.url);
   return {
     title: mapped.title,
     excerpt: mapped.excerpt ?? "",
-    date: formatDateRu(iso),
+    date: formatDate(iso, locale),
     dateIso: iso.slice(0, 10),
     href: `/articles/${mapped.slug}`,
     ...(hasRealCover ? { coverImage: mapped.coverImage } : {}),
@@ -174,9 +206,14 @@ export function toGlobalReviewsMainArticle(
 
 export function toGlobalReviewsPopularArticle(
   a: StrapiArticle,
+  locale: Locale = "ru",
 ): GlobalReviewsPopularArticle {
+  const title =
+    locale === "en" && a.title_en && a.title_en.trim()
+      ? a.title_en
+      : a.title;
   return {
-    title: a.title,
+    title,
     href: `/articles/${a.slug}`,
   };
 }
@@ -217,8 +254,9 @@ export function buildRegionalReviewItems(
   regions: StrapiRegion[],
   articles: StrapiArticle[],
   origin: string = getStrapiUrl(),
+  locale: Locale = "ru",
 ): RegionalReviewItem[] {
-  const mapped = articles.map((x) => mapStrapiArticleToArticle(x, origin));
+  const mapped = articles.map((x) => mapStrapiArticleToArticle(x, origin, locale));
   return regions.map((region) => {
     const article =
       mapped.find((ar) => ar.region.slug === region.slug) ?? mapped[0];
@@ -248,8 +286,9 @@ export function buildThematicBlockItems(
   categories: StrapiCategory[],
   articles: StrapiArticle[],
   origin: string = getStrapiUrl(),
+  locale: Locale = "ru",
 ): ThematicBlockItem[] {
-  const mapped = articles.map((x) => mapStrapiArticleToArticle(x, origin));
+  const mapped = articles.map((x) => mapStrapiArticleToArticle(x, origin, locale));
   return categories.map((cat) => {
     const article =
       mapped.find((ar) => ar.categories.some((c) => c.slug === cat.slug)) ??

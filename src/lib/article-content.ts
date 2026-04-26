@@ -5,6 +5,7 @@ import { getStrapiUrl } from "./strapi-config";
 import { strapiBlocksToHtml } from "./strapi-blocks-html";
 import { getArticlesByCategory as mockGetByCategory, mockArticles } from "./mock-data";
 import type { CSSProperties } from "react";
+import type { Locale } from "./i18n/types";
 
 function sortByDateDesc(articles: Article[]): Article[] {
   return [...articles].sort(
@@ -277,14 +278,15 @@ export function getArticleRenderedContent(
 export async function fetchReadAlsoArticles(
   article: Article,
   count: number,
+  locale: Locale = "ru",
 ): Promise<Article[]> {
   const primary = article.categories[0];
   if (!primary) return [];
   const origin = getStrapiUrl();
-  const res = await getArticlesByCategory(Number(primary.id), count + 8);
+  const res = await getArticlesByCategory(Number(primary.id), count + 8, locale);
   return sortByDateDesc(
     res.data
-      .map((a) => mapStrapiArticleToArticle(a, origin))
+      .map((a) => mapStrapiArticleToArticle(a, origin, locale))
       .filter((a) => a.slug !== article.slug),
   ).slice(0, count);
 }
@@ -293,18 +295,19 @@ export async function fetchReadAlsoArticles(
 export async function fetchSimilarArticles(
   article: Article,
   count: number,
+  locale: Locale = "ru",
 ): Promise<Article[]> {
   const origin = getStrapiUrl();
   const [catRes, regRes] = await Promise.all([
     article.categories[0]
-      ? getArticlesByCategory(Number(article.categories[0].id), 24)
+      ? getArticlesByCategory(Number(article.categories[0].id), 24, locale)
       : Promise.resolve({ data: [] }),
-    getArticlesByRegion(Number(article.region.id), 24),
+    getArticlesByRegion(Number(article.region.id), 24, locale),
   ]);
   const merged: Article[] = [];
   const seen = new Set<string>();
   for (const a of [...catRes.data, ...regRes.data]) {
-    const m = mapStrapiArticleToArticle(a, origin);
+    const m = mapStrapiArticleToArticle(a, origin, locale);
     if (m.slug === article.slug || seen.has(m.slug)) continue;
     seen.add(m.slug);
     merged.push(m);

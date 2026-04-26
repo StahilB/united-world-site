@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { formatDateRu } from "@/lib/strapi-mappers";
+import { formatDate } from "@/lib/strapi-mappers";
 import type { Article } from "@/lib/types";
+import type { Locale } from "@/lib/i18n/types";
+import { localizeHref } from "@/lib/i18n/types";
 
 function rubricLabel(article: Article): string {
   return article.categories[0]?.name ?? article.format;
@@ -13,6 +15,7 @@ export type ArticleRubricGridProps = {
   emptyMessage?: string;
   embedded?: boolean;
   hideHeading?: boolean;
+  locale?: Locale;
 };
 
 export function ArticleRubricGrid({
@@ -21,6 +24,7 @@ export function ArticleRubricGrid({
   embedded = false,
   hideHeading = false,
   heading = "",
+  locale = "ru",
 }: ArticleRubricGridProps) {
   const inner = (
     <div
@@ -49,7 +53,7 @@ export function ArticleRubricGrid({
           }`}
         >
           {articles.map((article) => {
-            const href = `/articles/${article.slug}`;
+            const href = localizeHref(`/articles/${article.slug}`, locale);
             return (
               <article
                 key={article.id}
@@ -79,7 +83,7 @@ export function ArticleRubricGrid({
                       className="meta mt-auto block pt-4"
                       dateTime={article.publishedAt}
                     >
-                      {formatDateRu(article.publishedAt)}
+                      {formatDate(article.publishedAt, locale)}
                     </time>
                   </div>
                 </Link>

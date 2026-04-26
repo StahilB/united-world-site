@@ -11,9 +11,13 @@ import {
 } from "@/lib/api";
 import { personSchema } from "@/lib/schema";
 import { getStrapiUrl, resolveStrapiAssetUrl } from "@/lib/strapi-config";
-import { formatDateRu, mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
+import { formatDate, mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { StrapiMedia } from "@/lib/strapi-types";
 import type { Article } from "@/lib/types";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/types";
+import { localizeHref } from "@/lib/i18n/types";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +28,8 @@ function authorPhotoPublicUrl(media: StrapiMedia | null | undefined): string | n
   return resolveStrapiAssetUrl(media.url);
 }
 
-function ArticleCard({ article }: { article: Article }) {
-  const href = `/articles/${article.slug}`;
+function ArticleCard({ article, locale }: { article: Article; locale: Locale }) {
+  const href = localizeHref(`/articles/${article.slug}`, locale);
   const rubric = article.categories[0]?.name ?? article.format;
   return (
     <article className="flex h-full min-h-0 flex-col bg-white">
@@ -53,7 +57,7 @@ function ArticleCard({ article }: { article: Article }) {
             className="mt-3 font-sans text-[12px] text-text-mute"
             dateTime={article.publishedAt}
           >
-            {formatDateRu(article.publishedAt)}
+            {formatDate(article.publishedAt, locale)}
           </time>
         </div>
       </Link>
@@ -90,6 +94,8 @@ export default async function AuthorPage({
   params,
   searchParams,
 }: AuthorPageProps) {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   const origin = getStrapiUrl();
   const slug = params.slug;
   const fromColumns = searchParams?.from === "columns";
@@ -100,9 +106,9 @@ export default async function AuthorPage({
   let articles: Article[] = [];
   try {
     const res = fromColumns
-      ? await getArticlesByAuthorColumns(slug, LIST_LIMIT)
-      : await getArticlesByAuthor(slug, LIST_LIMIT);
-    articles = res.data.map((a) => mapStrapiArticleToArticle(a, origin));
+      ? await getArticlesByAuthorColumns(slug, LIST_LIMIT, locale)
+      : await getArticlesByAuthor(slug, LIST_LIMIT, { locale });
+    articles = res.data.map((a) => mapStrapiArticleToArticle(a, origin, locale));
   } catch (e) {
     console.error("[AuthorPage] articles fetch failed:", e);
   }
@@ -142,12 +148,12 @@ export default async function AuthorPage({
         <section className="pt-10">
           {articles.length === 0 ? (
             <p className="font-sans text-base text-text-mute">
-              У этого автора пока нет публикаций
+              {dict.rubric.emptyMessage}
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
               {articles.map((a) => (
-                <ArticleCard key={a.id} article={a} />
+                <ArticleCard key={a.id} article={a} locale={locale} />
               ))}
             </div>
           )}

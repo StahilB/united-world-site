@@ -7,6 +7,8 @@ import { breadcrumbSchema } from "@/lib/schema";
 import { getStrapiUrl } from "@/lib/strapi-config";
 import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 import type { Article } from "@/lib/types";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export const revalidate = 300;
 
@@ -35,6 +37,8 @@ export async function generateMetadata({
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   const { slug } = params;
   const origin = getStrapiUrl();
 
@@ -45,8 +49,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   let articles: Article[] = [];
   try {
-    const res = await getArticlesByCategory(category.id, LIST_LIMIT);
-    articles = res.data.map((a) => mapStrapiArticleToArticle(a, origin));
+    const res = await getArticlesByCategory(category.id, LIST_LIMIT, locale);
+    articles = res.data.map((a) => mapStrapiArticleToArticle(a, origin, locale));
   } catch (e) {
     console.error("[CategoryPage] articles fetch failed:", e);
   }
@@ -63,7 +67,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <ArticleRubricGrid
         heading={category.name}
         articles={articles}
-        emptyMessage="Статьи не найдены"
+        emptyMessage={dict.rubric.emptyMessage}
+        locale={locale}
       />
     </>
   );
