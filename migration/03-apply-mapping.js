@@ -49,13 +49,31 @@ if (!existsSync(DUMP_FILE)) {
   process.exit(1);
 }
 
-/** Простой CSV-парсер с поддержкой кавычек. */
+/** Простой CSV-парсер с автодетектом разделителя и BOM. */
 function parseCsv(text) {
+  // 1. Удаляем UTF-8 BOM если есть (Excel его добавляет)
+  if (text.charCodeAt(0) === 0xfeff) {
+    text = text.slice(1);
+  }
+
+  // 2. Берём первую непустую строку как заголовок
   const lines = text.split(/\r?\n/).filter((l) => l.length > 0);
-  const headers = parseLine(lines[0]);
+  if (lines.length === 0) return [];
+
+  // 3. Автодетект разделителя по первой строке: что чаще, "," или ";"
+  const headerLine = lines[0];
+  const commaCount = (headerLine.match(/,/g) || []).length;
+  const semicolonCount = (headerLine.match(/;/g) || []).length;
+  const sep = semicolonCount > commaCount ? ";" : ",";
+
+  console.log(
+    `[CSV] detected separator: "${sep}" (commas=${commaCount}, semicolons=${semicolonCount})`,
+  );
+
+  const headers = parseLine(lines[0], sep);
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
-    const cells = parseLine(lines[i]);
+    const cells = parseLine(lines[i], sep);
     const obj = {};
     headers.forEach((h, idx) => (obj[h] = cells[idx] ?? ""));
     rows.push(obj);
@@ -63,7 +81,7 @@ function parseCsv(text) {
   return rows;
 }
 
-function parseLine(line) {
+function parseLine(line, sep = ",") {
   const out = [];
   let cur = "";
   let inQuotes = false;
@@ -79,7 +97,7 @@ function parseLine(line) {
         cur += ch;
       }
     } else {
-      if (ch === ",") {
+      if (ch === sep) {
         out.push(cur);
         cur = "";
       } else if (ch === '"') {
