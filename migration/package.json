@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "fetch": "node 01-fetch-en-articles.js",
-    "build-mapping": "node 02-build-mapping.js"
+    "build-mapping": "node 02-build-mapping.js",
+    "apply-dry": "node 03-apply-mapping.js --dry",
+    "apply": "node 03-apply-mapping.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5"
