@@ -1,14 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ThematicBlockItem } from "@/lib/types";
+import type { Locale } from "@/lib/i18n/types";
+import { localizeHref } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export type ThematicBlockProps = {
   items: ThematicBlockItem[];
+  locale?: Locale;
 };
 
-function ThematicCard({ item }: { item: ThematicBlockItem }) {
-  const articleHref = `/articles/${item.article.slug}`;
-  const categoryHref = `/category/${item.category.slug}`;
+function ThematicCard({ item, locale }: { item: ThematicBlockItem; locale: Locale }) {
+  const articleHref = localizeHref(`/articles/${item.article.slug}`, locale);
+  const categoryHref = localizeHref(`/category/${item.category.slug}`, locale);
 
   return (
     <article className="min-w-0">
@@ -38,16 +42,24 @@ function ThematicCard({ item }: { item: ThematicBlockItem }) {
   );
 }
 
-export function ThematicBlock({ items }: ThematicBlockProps) {
+export function ThematicBlock({ items, locale = "ru" }: ThematicBlockProps) {
+  const dict = getDictionary(locale);
   if (items.length === 0) return null;
 
   return (
     <section className="bg-paper section-home">
       <div className="container-site">
-        <h2 className="h-section">Тематика</h2>
+        <Link
+          href={localizeHref("/section/po-temam", locale)}
+          className="inline-block group"
+        >
+          <h2 className="h-section transition-colors group-hover:text-gold-deep">
+            {dict.home.thematicKicker}
+          </h2>
+        </Link>
         <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((item) => (
-            <ThematicCard key={item.category.slug} item={item} />
+            <ThematicCard key={item.category.slug} item={item} locale={locale} />
           ))}
         </div>
       </div>

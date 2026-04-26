@@ -1,10 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ExpertForumInterview, ExpertForumOpinion } from "@/lib/types";
+import type { Locale } from "@/lib/i18n/types";
+import { localizeHref } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export type ExpertForumBlockProps = {
   opinions: ExpertForumOpinion[];
   interviews: ExpertForumInterview[];
+  locale?: Locale;
 };
 
 function OpinionCard({ opinion }: { opinion: ExpertForumOpinion }) {
@@ -53,7 +57,12 @@ function InterviewCard({ interview }: { interview: ExpertForumInterview }) {
   );
 }
 
-export function ExpertForumBlock({ opinions, interviews }: ExpertForumBlockProps) {
+export function ExpertForumBlock({
+  opinions,
+  interviews,
+  locale = "ru",
+}: ExpertForumBlockProps) {
+  const dict = getDictionary(locale);
   const hasOpinions = opinions.length > 0;
   const hasInterviews = interviews.length > 0;
   if (!hasOpinions && !hasInterviews) return null;
@@ -61,11 +70,18 @@ export function ExpertForumBlock({ opinions, interviews }: ExpertForumBlockProps
   return (
     <section className="bg-paper section-home">
       <div className="container-site">
-        <h2 className="h-section">Экспертный форум</h2>
+        <Link
+          href={localizeHref("/section/ekspertiza", locale)}
+          className="inline-block group"
+        >
+          <h2 className="h-section transition-colors group-hover:text-gold-deep">
+            {dict.home.expertForumKicker}
+          </h2>
+        </Link>
 
         {hasOpinions && (
           <div className="mt-10">
-            <h3 className="h-sub">Мнения</h3>
+            <h3 className="h-sub">{dict.home.opinionsTitle}</h3>
             <div className="mt-6 -mx-6 flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:px-0 md:pb-0">
               {opinions.map((opinion) => (
                 <div
@@ -85,7 +101,7 @@ export function ExpertForumBlock({ opinions, interviews }: ExpertForumBlockProps
 
         {hasInterviews && (
           <div className="mt-12 md:mt-16">
-            <h3 className="h-sub">Интервью</h3>
+            <h3 className="h-sub">{dict.home.interviewsTitle}</h3>
             <div className="mt-6 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
               {interviews.map((interview) => (
                 <InterviewCard key={interview.href} interview={interview} />

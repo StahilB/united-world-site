@@ -4,13 +4,21 @@ import type {
   GlobalReviewsMainArticle,
   GlobalReviewsPopularArticle,
 } from "@/lib/types";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export type HeroTopBlockProps = {
   mainArticle: GlobalReviewsMainArticle;
   popularArticles: GlobalReviewsPopularArticle[];
+  locale?: Locale;
 };
 
-export function HeroTopBlock({ mainArticle, popularArticles }: HeroTopBlockProps) {
+export function HeroTopBlock({
+  mainArticle,
+  popularArticles,
+  locale = "ru",
+}: HeroTopBlockProps) {
+  const dict = getDictionary(locale);
   const top = popularArticles.slice(0, 5);
   const hasCover = Boolean(mainArticle.coverImage);
 
@@ -20,7 +28,7 @@ export function HeroTopBlock({ mainArticle, popularArticles }: HeroTopBlockProps
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
           {/* Левая колонка — текст статьи (занимает 7 из 12) */}
           <article className="flex min-w-0 flex-col lg:col-span-7">
-            <p className="kicker">Главное сегодня</p>
+            <p className="kicker">{dict.home.heroKicker}</p>
             <Link href={mainArticle.href} className="group mt-4 block">
               <h1 className="h-display transition-colors group-hover:text-gold-deep">
                 {mainArticle.title}

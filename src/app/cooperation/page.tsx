@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
 import { getServerLocale } from "@/lib/i18n/server-locale";
+import { AutoTranslateContent } from "@/components/static/AutoTranslateContent";
 
 export const metadata: Metadata = {
   title: "Сотрудничество",
@@ -11,13 +12,13 @@ export const metadata: Metadata = {
 
 export default async function CooperationPage() {
   const locale = await getServerLocale();
-  let html = "";
+  let ruHtml = "";
+  let enHtml = "";
   try {
     const res = await getStaticPages();
-    html =
-      locale === "en"
-        ? (res.data?.cooperation_html_en ?? res.data?.cooperation_html ?? "")
-        : (res.data?.cooperation_html ?? "");
+    const data = res.data ?? {};
+    ruHtml = data.cooperation_html ?? "";
+    enHtml = data.cooperation_html_en ?? "";
   } catch (err) {
     console.error("[CooperationPage] Failed to load static pages:", err);
   }
@@ -25,7 +26,15 @@ export default async function CooperationPage() {
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <StaticPageContent html={html} />
+        {locale === "en" ? (
+          <AutoTranslateContent
+            htmlEn={enHtml}
+            htmlRu={ruHtml}
+            field="cooperation_html_en"
+          />
+        ) : (
+          <StaticPageContent html={ruHtml} />
+        )}
       </div>
     </main>
   );

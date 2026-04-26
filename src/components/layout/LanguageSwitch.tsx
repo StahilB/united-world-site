@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n/types";
 import {
@@ -21,7 +20,7 @@ export function LanguageSwitch({
   const targetHref = localizeHref(baseHref, targetLocale);
 
   return (
-    <Link
+    <a
       href={targetHref}
       hrefLang={targetLocale}
       aria-label={
@@ -32,6 +31,6 @@ export function LanguageSwitch({
       className={className}
     >
       {targetLocale === "en" ? "EN" : "RU"}
-    </Link>
+    </a>
   );
 }

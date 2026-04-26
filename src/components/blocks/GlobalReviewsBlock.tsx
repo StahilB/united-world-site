@@ -3,6 +3,8 @@ import type {
   GlobalReviewsMainArticle,
   GlobalReviewsPopularArticle,
 } from "@/lib/types";
+import type { Locale } from "@/lib/i18n/types";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 const COL_BORDER = "border-[#E5E5E5]";
 const SECTION_BG = "bg-[#FFF8F0]";
@@ -10,6 +12,7 @@ const SECTION_BG = "bg-[#FFF8F0]";
 export type GlobalReviewsBlockProps = {
   mainArticle: GlobalReviewsMainArticle;
   popularArticles: GlobalReviewsPopularArticle[];
+  locale?: Locale;
 };
 
 function PopularList({
@@ -70,7 +73,9 @@ function MainArticleBlock({ article }: { article: GlobalReviewsMainArticle }) {
 export function GlobalReviewsBlock({
   mainArticle,
   popularArticles,
+  locale = "ru",
 }: GlobalReviewsBlockProps) {
+  const dict = getDictionary(locale);
   const mid = Math.ceil(popularArticles.length / 2);
   const leftPopular = popularArticles.slice(0, mid);
   const rightPopular = popularArticles.slice(mid);
@@ -79,7 +84,7 @@ export function GlobalReviewsBlock({
     <section className={`${SECTION_BG} py-10 md:py-12`}>
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <h2 className="border-l-4 border-gold pl-4 font-heading text-lg font-normal uppercase tracking-[0.14em] text-ink md:text-xl">
-          Самое читаемое
+          {dict.home.mostReadKicker}
         </h2>
 
         {/* Mobile: главная статья, затем весь список популярного */}
@@ -87,7 +92,7 @@ export function GlobalReviewsBlock({
           <MainArticleBlock article={mainArticle} />
           <div>
             <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-text-mute">
-              Самое читаемое
+              {dict.home.mostReadKicker}
             </p>
             <PopularList items={popularArticles} startIndex={1} />
           </div>
@@ -97,7 +102,7 @@ export function GlobalReviewsBlock({
         <div className="mt-10 hidden gap-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
           <div className={`border-r ${COL_BORDER} pr-6`}>
             <p className="mb-5 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-text-mute">
-              Самое читаемое
+              {dict.home.mostReadKicker}
             </p>
             <PopularList items={leftPopular} startIndex={1} />
           </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getStaticPages } from "@/lib/api";
 import { StaticPageContent } from "@/components/static/StaticPageContent";
 import { getServerLocale } from "@/lib/i18n/server-locale";
+import { AutoTranslateContent } from "@/components/static/AutoTranslateContent";
 
 export const metadata: Metadata = {
   title: "Поддержать",
@@ -10,13 +11,13 @@ export const metadata: Metadata = {
 
 export default async function SupportPage() {
   const locale = await getServerLocale();
-  let html = "";
+  let ruHtml = "";
+  let enHtml = "";
   try {
     const res = await getStaticPages();
-    html =
-      locale === "en"
-        ? (res.data?.support_html_en ?? res.data?.support_html ?? "")
-        : (res.data?.support_html ?? "");
+    const data = res.data ?? {};
+    ruHtml = data.support_html ?? "";
+    enHtml = data.support_html_en ?? "";
   } catch (err) {
     console.error("[SupportPage] Failed to load static pages:", err);
   }
@@ -24,7 +25,15 @@ export default async function SupportPage() {
   return (
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <StaticPageContent html={html} />
+        {locale === "en" ? (
+          <AutoTranslateContent
+            htmlEn={enHtml}
+            htmlRu={ruHtml}
+            field="support_html_en"
+          />
+        ) : (
+          <StaticPageContent html={ruHtml} />
+        )}
       </div>
     </main>
   );

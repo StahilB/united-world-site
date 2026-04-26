@@ -170,8 +170,8 @@ export default async function HomePage() {
     locale,
   );
 
-  const expertOpinions = toExpertOpinions(poolMapped);
-  const expertInterviews = toExpertInterviews(poolMapped);
+  const expertOpinions = toExpertOpinions(poolMapped, 6, locale);
+  const expertInterviews = toExpertInterviews(poolMapped, 3, locale);
   const hasLatest = latestArticles.length > 0;
   const hasRegional = regionsRes.data.length > 0 && regionalItems.length > 0;
   const hasThematic = thematicItems.length > 0;
@@ -189,19 +189,21 @@ export default async function HomePage() {
         <HeroTopBlock
           mainArticle={mainArticle}
           popularArticles={popularArticles}
+          locale={locale}
         />
       )}
 
-      {hasLatest && <LatestArticlesBlock articles={latestArticles} />}
+      {hasLatest && <LatestArticlesBlock articles={latestArticles} locale={locale} />}
 
-      {hasRegional && <RegionalReviewsBlock items={regionalItems} />}
+      {hasRegional && <RegionalReviewsBlock items={regionalItems} locale={locale} />}
 
-      {hasThematic && <ThematicBlock items={thematicItems} />}
+      {hasThematic && <ThematicBlock items={thematicItems} locale={locale} />}
 
       {hasExpert && (
         <ExpertForumBlock
           opinions={expertOpinions}
           interviews={expertInterviews}
+          locale={locale}
         />
       )}
     </main>

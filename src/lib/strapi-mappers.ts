@@ -7,6 +7,7 @@ import type {
   StrapiSection,
 } from "./strapi-types";
 import type { Locale } from "./i18n/types";
+import { localizeHref } from "./i18n/types";
 import type {
   Article,
   Author,
@@ -199,7 +200,7 @@ export function toGlobalReviewsMainArticle(
     excerpt: mapped.excerpt ?? "",
     date: formatDate(iso, locale),
     dateIso: iso.slice(0, 10),
-    href: `/articles/${mapped.slug}`,
+    href: localizeHref(`/articles/${mapped.slug}`, locale),
     ...(hasRealCover ? { coverImage: mapped.coverImage } : {}),
   };
 }
@@ -214,20 +215,21 @@ export function toGlobalReviewsPopularArticle(
       : a.title;
   return {
     title,
-    href: `/articles/${a.slug}`,
+    href: localizeHref(`/articles/${a.slug}`, locale),
   };
 }
 
 export function toExpertOpinions(
   articles: Article[],
   limit = 6,
+  locale: Locale = "ru",
 ): ExpertForumOpinion[] {
   return articles
     .filter((x) => /мнение/i.test(x.format))
     .slice(0, limit)
     .map((a) => ({
       title: a.title,
-      href: `/articles/${a.slug}`,
+      href: localizeHref(`/articles/${a.slug}`, locale),
       author: {
         name: a.author.name,
         avatarUrl: a.author.avatarUrl,
@@ -238,13 +240,14 @@ export function toExpertOpinions(
 export function toExpertInterviews(
   articles: Article[],
   limit = 3,
+  locale: Locale = "ru",
 ): ExpertForumInterview[] {
   return articles
     .filter((x) => /интервью/i.test(x.format))
     .slice(0, limit)
     .map((a) => ({
       title: a.title,
-      href: `/articles/${a.slug}`,
+      href: localizeHref(`/articles/${a.slug}`, locale),
       coverImage: a.coverImage,
     }));
 }
