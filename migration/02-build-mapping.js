@@ -1,21 +1,15 @@
 /**
  * 02-build-mapping.js
  *
- * Берёт en-articles-dump.json (сделанный 01-м скриптом) и
- * список русских статей из текущего Strapi. Выдаёт CSV
- * mapping_to_review.csv со столбцами:
+ * Берёт en-articles-dump.json и список русских статей из Strapi.
+ * Делает подсказки для ручного мэппинга в mapping_to_review.csv.
  *
- *   ru_documentId, ru_title, ru_publication_date, ru_slug,
- *   wp_id_suggested, wp_title_suggested, wp_date_suggested,
- *   confidence, match_action
+ * Логика confidence (новая версия):
+ *   - 0.55  ← дата ±1 день  (главный сигнал)
+ *   - 0.25  ← имя файла обложки совпадает (сильный сигнал)
+ *   - 0.20  ← общие 4+-буквенные слова в заголовках (слабый)
  *
- * confidence — оценка уверенности в матче (0..1).
- * match_action — пустая колонка, ты заполняешь сам:
- *   APPLY  — применить этот матч
- *   SKIP   — пропустить (нет английской версии)
- *   <wp_id> — переопределить wp_id вручную
- *
- * Никаких изменений в Strapi не вносит.
+ * Чем выше confidence, тем надёжнее предложение.
  *
  * Запуск: node 02-build-mapping.js
  */
@@ -34,7 +28,7 @@ if (!STRAPI_URL || !STRAPI_TOKEN) {
 
 const OUT_DIR = "output";
 
-/** Получить ВСЕ статьи из Strapi. */
+/** Скачать ВСЕ статьи из Strapi с populate cover_image. */
 async function fetchAllRuArticles() {
   const all = [];
   let page = 1;
@@ -42,7 +36,9 @@ async function fetchAllRuArticles() {
     const url =
       `${STRAPI_URL}/api/articles` +
       `?pagination[page]=${page}&pagination[pageSize]=100` +
-      `&fields[0]=title&fields[1]=slug&fields[2]=publication_date&fields[3]=is_translated_en` +
+      `&fields[0]=title&fields[1]=slug&fields[2]=publication_date` +
+      `&fields[3]=is_translated_en&fields[4]=title_en` +
+      `&populate[cover_image][fields][0]=name&populate[cover_image][fields][1]=url` +
       `&sort[0]=publication_date:desc`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${STRAPI_TOKEN}` },
@@ -52,53 +48,96 @@ async function fetchAllRuArticles() {
     const items = data.data || [];
     if (items.length === 0) break;
     all.push(...items);
-    const total = data.meta?.pagination?.pageCount ?? 1;
-    if (page >= total) break;
+    const totalPages = data.meta?.pagination?.pageCount ?? 1;
+    if (page >= totalPages) break;
     page++;
     if (page > 50) break;
   }
   return all;
 }
 
-/** Простая дистанция между двумя нормализованными заголовками. */
-function similarity(a, b) {
+/** Нормализованная дата без времени. */
+function dateOnly(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
+/** Дни между датами. */
+function daysDiff(isoA, isoB) {
+  if (!isoA || !isoB) return Infinity;
+  const a = new Date(isoA).getTime();
+  const b = new Date(isoB).getTime();
+  if (isNaN(a) || isNaN(b)) return Infinity;
+  return Math.abs(a - b) / 86400000;
+}
+
+/** Имя файла из URL обложки (без расширения, нижний регистр). */
+function imageBasename(url) {
+  if (!url) return "";
+  try {
+    // /wp-content/uploads/2026/04/Counsil-1.png → Counsil-1
+    // /uploads/Trump_Main_0ef202dd11.jpg → Trump_Main_0ef202dd11
+    const last = url.split("/").pop() || "";
+    return last
+      .replace(/\.(png|jpg|jpeg|webp|gif|avif)$/i, "")
+      .toLowerCase()
+      .replace(/[\-_]+\d+$/, "") // убираем -1, _2 в конце (WP добавляет при перезаливке)
+      .replace(/_[a-f0-9]{8,}$/, ""); // убираем хэш-суффикс Strapi
+  } catch {
+    return "";
+  }
+}
+
+/** Похожесть имён файлов обложек (0..1). */
+function imageNameSimilarity(ruImg, enImg) {
+  const a = imageBasename(ruImg);
+  const b = imageBasename(enImg);
   if (!a || !b) return 0;
-  const wordsA = new Set(a.split(" ").filter((w) => w.length > 3));
-  const wordsB = new Set(b.split(" ").filter((w) => w.length > 3));
+  if (a === b) return 1.0;
+  // Частичное совпадение: одно из имён — подстрока другого
+  if (a.length > 3 && b.length > 3 && (a.includes(b) || b.includes(a))) {
+    return 0.7;
+  }
+  // Общие 4+-граммы
+  const ngramsA = new Set();
+  const ngramsB = new Set();
+  for (let i = 0; i < a.length - 3; i++) ngramsA.add(a.slice(i, i + 4));
+  for (let i = 0; i < b.length - 3; i++) ngramsB.add(b.slice(i, i + 4));
+  if (ngramsA.size === 0 || ngramsB.size === 0) return 0;
+  let common = 0;
+  for (const g of ngramsA) if (ngramsB.has(g)) common++;
+  const score = common / Math.max(ngramsA.size, ngramsB.size);
+  return score > 0.4 ? score * 0.5 : 0; // слабый сигнал — половиним
+}
+
+/** Похожесть нормализованных текстов (0..1) по словам 4+ букв. */
+function textSimilarity(a, b) {
+  if (!a || !b) return 0;
+  const norm = (t) =>
+    t
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const wordsA = new Set(norm(a).split(" ").filter((w) => w.length > 3));
+  const wordsB = new Set(norm(b).split(" ").filter((w) => w.length > 3));
   if (wordsA.size === 0 || wordsB.size === 0) return 0;
   let common = 0;
   for (const w of wordsA) if (wordsB.has(w)) common++;
   return common / Math.max(wordsA.size, wordsB.size);
 }
 
-/** Эвристика: насколько даты близки (0..1). */
-function dateProximity(ruIso, wpIso) {
-  if (!ruIso || !wpIso) return 0;
-  const ru = new Date(ruIso).getTime();
-  const wp = new Date(wpIso).getTime();
-  if (isNaN(ru) || isNaN(wp)) return 0;
-  const diffDays = Math.abs(ru - wp) / 86400000;
-  if (diffDays < 1) return 1.0;
-  if (diffDays < 7) return 0.9;
-  if (diffDays < 30) return 0.6;
-  if (diffDays < 90) return 0.3;
-  return 0.1;
-}
-
-/** Транслит slug → латиница для слабого матча с EN-slug. */
-function slugSimilarity(ruSlug, enSlug) {
-  if (!ruSlug || !enSlug) return 0;
-  // Очень слабая эвристика: количество общих 3-граммов
-  const a = ruSlug.toLowerCase();
-  const b = enSlug.toLowerCase();
-  const ngramsA = new Set();
-  const ngramsB = new Set();
-  for (let i = 0; i < a.length - 2; i++) ngramsA.add(a.slice(i, i + 3));
-  for (let i = 0; i < b.length - 2; i++) ngramsB.add(b.slice(i, i + 3));
-  if (ngramsA.size === 0 || ngramsB.size === 0) return 0;
-  let common = 0;
-  for (const g of ngramsA) if (ngramsB.has(g)) common++;
-  return common / Math.max(ngramsA.size, ngramsB.size);
+function dateScore(dRu, dEn) {
+  const diff = daysDiff(dRu, dEn);
+  if (diff === Infinity) return 0;
+  if (diff < 1) return 1.0;
+  if (diff < 3) return 0.85;
+  if (diff < 7) return 0.6;
+  if (diff < 14) return 0.4;
+  if (diff < 30) return 0.2;
+  return 0;
 }
 
 function writeCsv(path, rows, columns) {
@@ -117,15 +156,6 @@ function writeCsv(path, rows, columns) {
   writeFileSync(path, lines.join("\n"), "utf-8");
 }
 
-function normalizeForMatch(text) {
-  if (!text) return "";
-  return text
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 async function main() {
   console.log("Loading EN dump...");
   const enDump = JSON.parse(
@@ -137,24 +167,22 @@ async function main() {
   const ruArticles = await fetchAllRuArticles();
   console.log(`  ${ruArticles.length} RU articles`);
 
-  // Для каждой RU-статьи найдём лучший кандидат среди EN
+  // Для каждой RU-статьи находим топ-3 кандидата
   const mapping = ruArticles.map((ru) => {
-    const ruTitleNorm = normalizeForMatch(ru.title || "");
-    let best = null;
-    let bestScore = 0;
+    const ruCoverUrl = ru.cover_image?.url || ru.cover_image?.name || "";
+    const candidates = enDump.map((en) => {
+      const dScore = dateScore(ru.publication_date, en.date_old);
+      const iScore = imageNameSimilarity(ruCoverUrl, en.featured_image_url);
+      const tScore = textSimilarity(ru.title || "", en.title_old_en);
+      const total = dScore * 0.55 + iScore * 0.25 + tScore * 0.2;
+      return { en, dScore, iScore, tScore, total };
+    });
 
-    for (const en of enDump) {
-      const titleScore = similarity(ruTitleNorm, en.title_normalized);
-      const dateScore = dateProximity(ru.publication_date, en.date_old);
-      const slugScore = slugSimilarity(ru.slug, en.wp_slug);
-      // Заголовок весит больше всего, дата помогает разрешить дубликаты,
-      // slug — слабый сигнал.
-      const score = titleScore * 0.5 + dateScore * 0.35 + slugScore * 0.15;
-      if (score > bestScore) {
-        bestScore = score;
-        best = en;
-      }
-    }
+    candidates.sort((a, b) => b.total - a.total);
+    const top = candidates.slice(0, 3);
+    const best = top[0] || null;
+    const second = top[1] || null;
+    const third = top[2] || null;
 
     return {
       ru_documentId: ru.documentId,
@@ -163,16 +191,29 @@ async function main() {
       ru_publication_date: ru.publication_date,
       ru_slug: ru.slug,
       already_translated: ru.is_translated_en ? "YES" : "",
-      wp_id_suggested: best?.wp_id ?? "",
-      wp_title_suggested: best?.title_old_en ?? "",
-      wp_date_suggested: best?.date_old ?? "",
-      wp_link_suggested: best?.wp_link ?? "",
-      confidence: bestScore.toFixed(2),
-      match_action: "", // ← заполняешь сам: APPLY / SKIP / <wp_id>
+      // Топ-1 предложение
+      wp_id_suggested: best?.en?.wp_id ?? "",
+      wp_title_suggested: best?.en?.title_old_en ?? "",
+      wp_date_suggested: best?.en?.date_old ?? "",
+      wp_link_suggested: best?.en?.wp_link ?? "",
+      confidence: best ? best.total.toFixed(2) : "0.00",
+      score_date: best ? best.dScore.toFixed(2) : "",
+      score_image: best ? best.iScore.toFixed(2) : "",
+      score_text: best ? best.tScore.toFixed(2) : "",
+      // Второй кандидат — на случай если первый ошибся
+      alt2_wp_id: second?.en?.wp_id ?? "",
+      alt2_title: second?.en?.title_old_en ?? "",
+      alt2_confidence: second ? second.total.toFixed(2) : "",
+      // Третий
+      alt3_wp_id: third?.en?.wp_id ?? "",
+      alt3_title: third?.en?.title_old_en ?? "",
+      alt3_confidence: third ? third.total.toFixed(2) : "",
+      // Колонка для твоего ввода
+      match_action: "",
     };
   });
 
-  // Сортируем: сначала с уже-переведёнными, потом по убыванию confidence
+  // Сортировка: уже-переведённые в начало, потом по убыванию confidence
   mapping.sort((a, b) => {
     if (a.already_translated && !b.already_translated) return -1;
     if (!a.already_translated && b.already_translated) return 1;
@@ -194,17 +235,27 @@ async function main() {
       "wp_date_suggested",
       "wp_link_suggested",
       "confidence",
+      "score_date",
+      "score_image",
+      "score_text",
+      "alt2_wp_id",
+      "alt2_title",
+      "alt2_confidence",
+      "alt3_wp_id",
+      "alt3_title",
+      "alt3_confidence",
       "match_action",
     ],
   );
 
-  console.log("\n✅ Done. Output:");
-  console.log(`   output/mapping_to_review.csv (${mapping.length} rows)`);
-  console.log("\nNext step: open the CSV in Excel/Google Sheets and fill in");
+  console.log("\n✅ Done. Output: output/mapping_to_review.csv");
+  console.log("\nNext step: open the CSV in Excel/Google Sheets, fill in");
   console.log("the 'match_action' column for each row:");
-  console.log("  APPLY     — apply the suggested match");
-  console.log("  SKIP      — no English version exists");
-  console.log("  <wp_id>   — use a different wp_id (find it in en-articles-dump.csv)");
+  console.log("  APPLY      — apply the top suggestion (wp_id_suggested)");
+  console.log("  ALT2       — actually it's the 2nd suggestion");
+  console.log("  ALT3       — actually it's the 3rd suggestion");
+  console.log("  <wp_id>    — use a different wp_id (lookup in en-articles-dump.csv)");
+  console.log("  SKIP       — no English version exists");
 
   // Статистика
   const high = mapping.filter((m) => parseFloat(m.confidence) >= 0.7).length;
@@ -212,7 +263,7 @@ async function main() {
     (m) => parseFloat(m.confidence) >= 0.4 && parseFloat(m.confidence) < 0.7,
   ).length;
   const low = mapping.filter((m) => parseFloat(m.confidence) < 0.4).length;
-  console.log("\nConfidence distribution:");
+  console.log(`\nConfidence distribution among ${mapping.length} RU articles:`);
   console.log(`  high  (≥0.70): ${high}  ← likely correct, just verify`);
   console.log(`  mid   (0.40-0.70): ${mid}  ← needs careful review`);
   console.log(`  low   (<0.40): ${low}  ← probably no EN version, or rename happened`);
