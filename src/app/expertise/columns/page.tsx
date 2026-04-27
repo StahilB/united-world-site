@@ -1,5 +1,8 @@
 import { getArticlesForColumnsSection } from "@/lib/api";
-import { getStrapiUrl, resolveStrapiAssetUrl } from "@/lib/strapi-config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { localizeHref, type Locale } from "@/lib/i18n/types";
+import { resolveStrapiAssetUrl } from "@/lib/strapi-config";
 import type { StrapiAuthor, StrapiArticle, StrapiMedia } from "@/lib/strapi-types";
 import Image from "next/image";
 import Link from "next/link";
@@ -29,8 +32,16 @@ function hueFromString(s: string): number {
   return h;
 }
 
-function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
-  const href = `/author/${a.slug}?from=columns`;
+function AuthorCard({
+  a,
+  locale,
+}: {
+  a: StrapiAuthor;
+  locale: Locale;
+}) {
+  const name = locale === "en" && a.name_en ? a.name_en : a.name;
+  const bio = locale === "en" && a.bio_en ? a.bio_en : a.bio;
+  const href = localizeHref(`/author/${a.slug}?from=columns`, locale);
   const photo = columnAuthorPhotoUrl(a.photo ?? undefined);
   const bgHue = hueFromString(a.slug || a.name || "");
   return (
@@ -43,7 +54,7 @@ function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full bg-paper-warm">
             <Image
               src={photo}
-              alt={a.name}
+              alt={name}
               fill
               className="object-cover"
               sizes="96px"
@@ -55,16 +66,16 @@ function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
             style={{ backgroundColor: `hsl(${bgHue} 45% 40%)` }}
             aria-hidden
           >
-            {initials(a.name)}
+            {initials(name)}
           </div>
         )}
 
         <div className="min-w-0 flex-1">
           <div className="font-sans text-[18px] font-bold leading-snug text-ink group-hover:text-gold-deep">
-            {a.name}
+            {name}
           </div>
           <p className="mt-2 overflow-hidden font-sans text-sm leading-relaxed text-text-mute [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
-            {a.bio || " "}
+            {bio || " "}
           </p>
         </div>
       </div>
@@ -73,7 +84,8 @@ function AuthorCard({ origin, a }: { origin: string; a: StrapiAuthor }) {
 }
 
 export default async function ExpertiseColumnsPage() {
-  const origin = getStrapiUrl();
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   let authors: StrapiAuthor[] = [];
 
   try {
@@ -97,17 +109,17 @@ export default async function ExpertiseColumnsPage() {
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl lg:text-[2.75rem]">
-          Авторские колонки
+          {dict.expertise.columns}
         </h1>
 
         {authors.length === 0 ? (
           <p className="mt-10 font-sans text-base text-text-mute">
-            Пока нет авторов с колонками
+            {dict.expertise.columnsEmpty}
           </p>
         ) : (
           <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {authors.map((a) => (
-              <AuthorCard key={a.id} origin={origin} a={a} />
+              <AuthorCard key={a.id} a={a} locale={locale} />
             ))}
           </div>
         )}

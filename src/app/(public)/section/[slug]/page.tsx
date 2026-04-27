@@ -149,16 +149,16 @@ export default async function SectionPage({
 
   const subsectionsBlock =
     current.children.length > 0 ? (
-      <section className="mt-10" aria-label="Подразделы">
-        <h2 className="h-section mb-4">Подразделы</h2>
+      <section className="mt-10" aria-label={dict.section.subsectionsHeading}>
+        <h2 className="h-section mb-4">{dict.section.subsectionsHeading}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {current.children.map((ch) => (
             <Link
               key={ch.id}
-              href={getSectionHref(ch.slug)}
+              href={localizeHref(getSectionHref(ch.slug), locale)}
               className="rounded border border-neutral-200 bg-paper-warm px-4 py-3 font-sans text-sm text-ink shadow-sm transition-colors hover:border-gold hover:text-gold-deep"
             >
-              {ch.name}
+              {locale === "en" ? (ch.name_en || ch.name) : ch.name}
             </Link>
           ))}
         </div>
@@ -167,7 +167,7 @@ export default async function SectionPage({
 
   const materialsBlock = (
     <>
-      <h2 className="h-section mt-16">Материалы</h2>
+      <h2 className="h-section mt-16">{dict.section.materialsHeading}</h2>
       <div className="mt-6">
         <ArticleRubricGrid
           embedded

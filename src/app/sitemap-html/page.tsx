@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { getArticles, getSections, type Section } from "@/lib/api";
+import { getServerLocale } from "@/lib/i18n/server-locale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { localizeHref } from "@/lib/i18n/types";
+import { mapStrapiArticleToArticle } from "@/lib/strapi-mappers";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +20,8 @@ function flattenSections(tree: Section[]): Section[] {
 }
 
 export default async function SitemapHtmlPage() {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   const sectionTree = await getSections(false).catch(() => []);
   const sections = flattenSections(sectionTree);
 
@@ -24,10 +30,16 @@ export default async function SitemapHtmlPage() {
     let page = 1;
     let hasMore = true;
     while (hasMore && page <= 50) {
-      const res = await getArticles({ page, pageSize: 100, sort: "publication_date:desc" });
+      const res = await getArticles({
+        page,
+        pageSize: 100,
+        sort: "publication_date:desc",
+        locale,
+      });
       const items = res.data ?? [];
       items.forEach((a) => {
-        articles.push({ slug: a.slug, title: a.title });
+        const mapped = mapStrapiArticleToArticle(a, undefined, locale);
+        articles.push({ slug: a.slug, title: mapped.title });
       });
       const total = res.meta?.pagination?.total ?? articles.length;
       hasMore = items.length > 0 && articles.length < total;
@@ -41,22 +53,22 @@ export default async function SitemapHtmlPage() {
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <h1 className="font-heading text-3xl font-normal text-ink md:text-4xl">
-          Карта сайта
+          {dict.sitemap.title}
         </h1>
 
         <section className="mt-10">
-          <h2 className="font-heading text-2xl font-normal text-ink">Разделы</h2>
+          <h2 className="font-heading text-2xl font-normal text-ink">{dict.sitemap.sectionsHeading}</h2>
           {sections.length === 0 ? (
-            <p className="mt-3 font-sans text-sm text-text-mute">Разделы пока не найдены.</p>
+            <p className="mt-3 font-sans text-sm text-text-mute">{dict.sitemap.sectionsEmpty}</p>
           ) : (
             <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {sections.map((s) => (
                 <li key={s.id}>
                   <Link
-                    href={`/section/${s.slug}`}
+                    href={localizeHref(`/section/${s.slug}`, locale)}
                     className="font-sans text-sm text-ink underline decoration-ink/20 underline-offset-2 hover:text-gold-deep"
                   >
-                    {s.name}
+                    {locale === "en" && s.name_en ? s.name_en : s.name}
                   </Link>
                 </li>
               ))}
@@ -65,15 +77,15 @@ export default async function SitemapHtmlPage() {
         </section>
 
         <section className="mt-12">
-          <h2 className="font-heading text-2xl font-normal text-ink">Статьи</h2>
+          <h2 className="font-heading text-2xl font-normal text-ink">{dict.sitemap.articlesHeading}</h2>
           {articles.length === 0 ? (
-            <p className="mt-3 font-sans text-sm text-text-mute">Статьи пока не найдены.</p>
+            <p className="mt-3 font-sans text-sm text-text-mute">{dict.sitemap.articlesEmpty}</p>
           ) : (
             <ul className="mt-4 space-y-2">
               {articles.map((a) => (
                 <li key={a.slug}>
                   <Link
-                    href={`/articles/${a.slug}`}
+                    href={localizeHref(`/articles/${a.slug}`, locale)}
                     className="font-sans text-sm text-ink underline decoration-ink/20 underline-offset-2 hover:text-gold-deep"
                   >
                     {a.title}

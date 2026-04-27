@@ -40,6 +40,7 @@ export type {
 const REVALIDATE = 300;
 const REVALIDATE_ARTICLE = 600;
 const REVALIDATE_AUTHORS = 3600;
+const REVALIDATE_CATEGORIES = 300;
 /** Кэш дерева разделов и списков по разделу */
 const REVALIDATE_SECTIONS = 300;
 
@@ -459,7 +460,11 @@ export async function getRegions(): Promise<
   StrapiCollectionResponse<StrapiRegion>
 > {
   const search = new URLSearchParams();
+  search.set("fields[0]", "name");
+  search.set("fields[1]", "name_en");
+  search.set("fields[2]", "slug");
   search.set("populate[0]", "cover_image");
+  search.set("pagination[pageSize]", "100");
   return strapiFetch<StrapiCollectionResponse<StrapiRegion>>(
     `/api/regions?${search.toString()}`,
   );
@@ -468,8 +473,15 @@ export async function getRegions(): Promise<
 export async function getCategories(): Promise<
   StrapiCollectionResponse<StrapiCategory>
 > {
+  const search = new URLSearchParams();
+  search.set("fields[0]", "name");
+  search.set("fields[1]", "name_en");
+  search.set("fields[2]", "slug");
+  search.set("fields[3]", "color");
+  search.set("pagination[pageSize]", "100");
   return strapiFetch<StrapiCollectionResponse<StrapiCategory>>(
-    `/api/categories`,
+    `/api/categories?${search.toString()}`,
+    { next: { revalidate: REVALIDATE_CATEGORIES } },
   );
 }
 
@@ -491,6 +503,11 @@ export async function getAuthorBySlug(
   const search = new URLSearchParams();
   search.set("filters[slug][$eq]", slug);
   search.set("pagination[pageSize]", "1");
+  search.set("fields[0]", "name");
+  search.set("fields[1]", "name_en");
+  search.set("fields[2]", "bio");
+  search.set("fields[3]", "bio_en");
+  search.set("fields[4]", "slug");
   search.set("populate[0]", "photo");
   const res = await strapiFetch<StrapiCollectionResponse<StrapiAuthor>>(
     `/api/authors?${search.toString()}`,
@@ -627,8 +644,10 @@ export async function getAuthorsForColumnsSection(
       search.set("pagination[page]", String(page));
       search.set("populate[author][fields][0]", "id");
       search.set("populate[author][fields][1]", "name");
-      search.set("populate[author][fields][2]", "slug");
-      search.set("populate[author][fields][3]", "bio");
+      search.set("populate[author][fields][2]", "name_en");
+      search.set("populate[author][fields][3]", "slug");
+      search.set("populate[author][fields][4]", "bio");
+      search.set("populate[author][fields][5]", "bio_en");
       search.set("populate[author][populate][photo][fields][0]", "url");
       const res = await strapiFetch<StrapiCollectionResponse<StrapiArticle>>(
         `/api/articles?${search.toString()}`,

@@ -73,19 +73,23 @@ type AuthorPageProps = {
 export async function generateMetadata({
   params,
 }: Pick<AuthorPageProps, "params">): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
   const author = await getAuthorBySlug(params.slug).catch(() => null);
   if (!author) {
     return {
-      title: "Автор не найден",
+      title: dict.author.notFound,
       robots: { index: false, follow: false },
     };
   }
+  const authorName = locale === "en" && author.name_en ? author.name_en : author.name;
+  const authorBio = locale === "en" && author.bio_en ? author.bio_en : (author.bio ?? "");
 
   return {
-    title: `Автор: ${author.name}`,
+    title: `${dict.author.pageTitlePrefix} ${authorName}`,
     description:
-      author.bio?.trim() ||
-      `Публикации автора ${author.name} на сайте аналитического центра «Единый Мир».`,
+      authorBio.trim() ||
+      `Публикации автора ${authorName} на сайте аналитического центра «Единый Мир».`,
     alternates: { canonical: `/author/${params.slug}` },
   };
 }
@@ -102,6 +106,12 @@ export default async function AuthorPage({
 
   const author = await getAuthorBySlug(slug).catch(() => null);
   if (!author) notFound();
+  const authorName = locale === "en" && author.name_en
+    ? author.name_en
+    : author.name;
+  const authorBio = locale === "en" && author.bio_en
+    ? author.bio_en
+    : (author.bio ?? "");
 
   let articles: Article[] = [];
   try {
@@ -121,26 +131,26 @@ export default async function AuthorPage({
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <JsonLd
           data={personSchema({
-            name: author.name,
+            name: authorName,
             slug: author.slug,
-            bio: author.bio || undefined,
+            bio: authorBio || undefined,
             photo: photo || undefined,
           })}
         />
         <section className="flex flex-col gap-5 border-b border-neutral-200 pb-10 md:flex-row md:items-center md:gap-8">
           <AuthorAvatar
-            name={author.name}
-            slug={author.slug || author.name || ""}
+            name={authorName}
+            slug={author.slug || authorName || ""}
             avatarUrl={avatarUrl}
             size={120}
           />
 
           <div className="min-w-0">
             <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl">
-              {author.name}
+              {authorName}
             </h1>
             <p className="mt-3 max-w-3xl font-sans text-base leading-relaxed text-text-mute">
-              {author.bio || ""}
+              {authorBio}
             </p>
           </div>
         </section>

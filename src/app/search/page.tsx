@@ -13,12 +13,17 @@ import type { Article } from "@/lib/types";
 import { SearchForm } from "./SearchForm";
 import { getServerLocale } from "@/lib/i18n/server-locale";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { localizeHref } from "@/lib/i18n/types";
 
-export const metadata: Metadata = {
-  title: "Поиск по сайту",
-  description: "Поиск материалов аналитического центра «Единый Мир».",
-  robots: { index: false, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  return {
+    title: dict.search.title,
+    description: dict.search.description,
+    robots: { index: false, follow: true },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -128,7 +133,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       >
         {page > 1 ? (
           <Link
-            href={`/search${buildQuery(searchParams, { page: page - 1 })}`}
+            href={`${localizeHref("/search", locale)}${buildQuery(searchParams, { page: page - 1 })}`}
             className="font-semibold text-ink transition-colors hover:text-gold-deep"
           >
             Назад
@@ -139,7 +144,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </span>
         {page < pageCount ? (
           <Link
-            href={`/search${buildQuery(searchParams, { page: page + 1 })}`}
+            href={`${localizeHref("/search", locale)}${buildQuery(searchParams, { page: page + 1 })}`}
             className="font-semibold text-ink transition-colors hover:text-gold-deep"
           >
             Вперёд
@@ -152,11 +157,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl">
-          Поиск
+          {dict.search.title}
         </h1>
         <p className="mt-2 max-w-2xl font-sans text-[15px] leading-relaxed text-text-mute">
-          Укажите запрос и при необходимости сузьте выборку фильтрами. Параметры
-          сохраняются в адресе страницы — ссылку можно передать коллегам.
+          {dict.search.description}
         </p>
 
         <div className="mt-8 rounded-sm border border-ink/10 bg-paper-warm/40 p-4 md:p-6">
@@ -170,6 +174,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               dateFrom,
               dateTo,
             }}
+            locale={locale}
+            dict={dict.search}
             regions={regions}
             categories={categories}
             authors={authors}
@@ -177,7 +183,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
 
         <h2 className="mt-12 font-heading text-2xl font-normal text-ink md:text-[1.65rem]">
-          Результаты
+          {dict.search.resultsTitle}
         </h2>
         <div className="mt-6">
           <ArticleRubricGrid

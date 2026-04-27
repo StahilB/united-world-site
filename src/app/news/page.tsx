@@ -144,7 +144,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         </nav>
 
         <h2 className="mt-12 font-heading text-2xl font-normal text-ink md:text-[1.65rem]">
-          Материалы
+          {dict.news.materialsHeading}
         </h2>
         <div className="mt-6">
           <ArticleRubricGrid

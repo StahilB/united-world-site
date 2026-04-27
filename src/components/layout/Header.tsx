@@ -16,6 +16,7 @@ import { CurrentDate } from "./CurrentDate";
 import { HeaderSearch } from "./HeaderSearch";
 import { MobileMenu } from "./MobileMenu";
 import { LanguageSwitch } from "./LanguageSwitch";
+import { MegaMenu, type MegaMenuItem } from "./MegaMenu";
 import type { Locale } from "@/lib/i18n/types";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localizeHref } from "@/lib/i18n/types";
@@ -165,9 +166,18 @@ function MegaLeavesRow({
 export type HeaderProps = {
   sections: Section[];
   locale?: Locale;
+  regions?: MegaMenuItem[];
+  categories?: MegaMenuItem[];
+  globalReviews?: MegaMenuItem[];
 };
 
-export function Header({ sections, locale = "ru" }: HeaderProps) {
+export function Header({
+  sections,
+  locale = "ru",
+  regions = [],
+  categories = [],
+  globalReviews = [],
+}: HeaderProps) {
   const dict = getDictionary(locale);
   const navSections = sections.filter((root) => root.slug !== "en");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -427,7 +437,7 @@ export function Header({ sections, locale = "ru" }: HeaderProps) {
             </nav>
 
             <div className="flex justify-self-end items-center gap-1 md:min-w-0 md:gap-2">
-              <HeaderSearch />
+              <HeaderSearch dict={dict.header} locale={locale} />
               <button
                 type="button"
                 className="flex h-10 w-10 shrink-0 items-center justify-center text-ink md:hidden"
@@ -441,12 +451,21 @@ export function Header({ sections, locale = "ru" }: HeaderProps) {
             </div>
           </div>
 
-          {activeRoot && activeRoot.children.length > 0 ? (
+          {activeRoot ? (
             <div
               className="absolute left-0 right-0 top-full z-[60] hidden w-full border-t-2 border-gold bg-white shadow-lg md:block"
               onMouseEnter={clearNavLeaveTimer}
             >
-              <SectionMegaPanel root={activeRoot} locale={locale} />
+              {activeRoot.slug === "analitika" ? (
+                <MegaMenu
+                  locale={locale}
+                  regions={regions}
+                  categories={categories}
+                  globalReviews={globalReviews}
+                />
+              ) : activeRoot.children.length > 0 ? (
+                <SectionMegaPanel root={activeRoot} locale={locale} />
+              ) : null}
             </div>
           ) : null}
         </div>

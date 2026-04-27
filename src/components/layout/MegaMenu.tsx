@@ -6,58 +6,46 @@ import { localizeHref } from "@/lib/i18n/types";
 const linkClass =
   "text-sm font-normal text-ink-soft transition-colors hover:text-ink hover:underline";
 
-const REGIONS: Array<{ label: string; href: string }> = [
-  { label: "Россия", href: "/region/rossiya" },
-  { label: "Европа", href: "/region/evropa" },
-  { label: "Ближний Восток", href: "/region/blizhnij-vostok" },
-  { label: "Африка", href: "/region/afrika" },
-  { label: "Латинская Америка", href: "/region/latinskaya-amerika" },
-  { label: "Кавказ", href: "/region/kavkaz" },
-  { label: "Центральная Азия", href: "/region/tsentralnaya-aziya" },
-  { label: "Южная Азия", href: "/region/yuzhnaya-aziya" },
-  { label: "Юго-Восточная Азия", href: "/region/yugo-vostochnaya-aziya" },
-  { label: "Восточная Азия и АТР", href: "/region/vostochnaya-aziya-i-atr" },
-  { label: "Северная Америка", href: "/region/severnaya-amerika" },
-  { label: "Австралия и Океания", href: "/region/avstraliya-i-okeaniya" },
-  { label: "Арктика", href: "/region/arktika" },
-];
+export type MegaMenuItem = {
+  /** Текст в текущей локали (готовый, уже выбранный от name/name_en) */
+  label: string;
+  /** Базовый путь без префикса локали, напр. /region/rossiya */
+  href: string;
+};
 
-const CATEGORIES: Array<{ label: string; href: string }> = [
-  {
-    label: "Международная безопасность",
-    href: "/category/mezhdunarodnaya-bezopasnost",
-  },
-  { label: "Политика и дипломатия", href: "/category/politika-i-diplomatiya" },
-  { label: "Экономика и развитие", href: "/category/ekonomika-i-razvitie" },
-  { label: "Энергетика и ресурсы", href: "/category/energetika-i-resursy" },
-  { label: "Экология и климат", href: "/category/ekologiya-i-klimat" },
-  { label: "Образование и культура", href: "/category/obrazovanie-i-kultura" },
-  {
-    label: "Международные организации",
-    href: "/category/mezhdunarodnye-organizatsii",
-  },
-  {
-    label: "Международные мероприятия",
-    href: "/category/mezhdunarodnye-meropriyatiya",
-  },
-];
+type Props = {
+  locale?: Locale;
+  /** Пункты для колонки Macroregions (регионы) */
+  regions?: MegaMenuItem[];
+  /** Пункты для колонки Subjects (категории) */
+  categories?: MegaMenuItem[];
+  /** Пункты для колонки Global Reviews (регионы для обзоров) */
+  globalReviews?: MegaMenuItem[];
+};
 
-export function MegaMenu({ locale = "ru" }: { locale?: Locale }) {
+export function MegaMenu({
+  locale = "ru",
+  regions = [],
+  categories = [],
+  globalReviews = [],
+}: Props) {
   const dict = getDictionary(locale);
-  const mid = Math.ceil(REGIONS.length / 2);
-  const colA = REGIONS.slice(0, mid);
-  const colB = REGIONS.slice(mid);
+
+  // Делим список регионов на 2 колонки если он длинный (как было раньше)
+  const mid = Math.ceil(regions.length / 2);
+  const regionsColA = regions.slice(0, mid);
+  const regionsColB = regions.slice(mid);
 
   return (
-    <div className="bg-white">
-      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-8 md:grid-cols-2">
+    <div className="bg-white border-t border-rule shadow-md">
+      <div className="container-site grid gap-8 py-6 md:grid-cols-3">
         <div>
-          <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-ink">
-            {dict.rubric.filterByRegion}
+          <p className="kicker mb-3">
+            {locale === "en" ? "Macroregions" : "По регионам"}
           </p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-2">
             <ul className="space-y-2">
-              {colA.map((r) => (
+              {regionsColA.map((r) => (
                 <li key={r.href}>
                   <Link href={localizeHref(r.href, locale)} className={linkClass}>
                     {r.label}
@@ -66,7 +54,7 @@ export function MegaMenu({ locale = "ru" }: { locale?: Locale }) {
               ))}
             </ul>
             <ul className="space-y-2">
-              {colB.map((r) => (
+              {regionsColB.map((r) => (
                 <li key={r.href}>
                   <Link href={localizeHref(r.href, locale)} className={linkClass}>
                     {r.label}
@@ -76,12 +64,13 @@ export function MegaMenu({ locale = "ru" }: { locale?: Locale }) {
             </ul>
           </div>
         </div>
+
         <div>
-          <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.12em] text-ink">
-            {dict.rubric.filterByTopic}
+          <p className="kicker mb-3">
+            {locale === "en" ? "Subjects" : "По темам"}
           </p>
           <ul className="space-y-2">
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <li key={c.href}>
                 <Link href={localizeHref(c.href, locale)} className={linkClass}>
                   {c.label}
@@ -90,21 +79,20 @@ export function MegaMenu({ locale = "ru" }: { locale?: Locale }) {
             ))}
           </ul>
         </div>
-      </div>
-      <div className="border-t border-neutral-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
-          <Link
-            href={localizeHref("/section/situativnyy-analiz", locale)}
-            className="text-xs font-semibold uppercase tracking-[0.06em] text-ink hover:underline"
-          >
-            Ситуативный анализ
-          </Link>
-          <Link
-            href={localizeHref("/section/globalnye-obzory", locale)}
-            className="text-xs font-semibold uppercase tracking-[0.06em] text-ink hover:underline"
-          >
-            Глобальные обзоры
-          </Link>
+
+        <div>
+          <p className="kicker mb-3">
+            {locale === "en" ? "Global Reviews" : "Глобальные обзоры"}
+          </p>
+          <ul className="space-y-2">
+            {globalReviews.map((r) => (
+              <li key={r.href}>
+                <Link href={localizeHref(r.href, locale)} className={linkClass}>
+                  {r.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Locale } from "@/lib/i18n/types";
+import { localizeHref } from "@/lib/i18n/types";
 import { formatDateRu } from "@/lib/strapi-mappers";
 import type { Article } from "@/lib/types";
 
@@ -24,7 +26,21 @@ function MagnifierIcon() {
   );
 }
 
-export function HeaderSearch() {
+type Props = {
+  locale?: Locale;
+  dict?: {
+    searchAria?: string;
+    searchPlaceholder?: string;
+    searchOpenAria?: string;
+    searchCloseAria?: string;
+    searchLoading?: string;
+    searchMinChars?: string;
+    searchNoResults?: string;
+    searchAdvancedLink?: string;
+  };
+};
+
+export function HeaderSearch({ locale = "ru", dict }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Article[]>([]);
@@ -82,13 +98,22 @@ export function HeaderSearch() {
     if (e.target === overlayRef.current) setOpen(false);
   }, []);
 
+  const openAria = dict?.searchOpenAria ?? "Открыть поиск";
+  const dialogAria = dict?.searchAria ?? "Поиск по статьям";
+  const closeAria = dict?.searchCloseAria ?? "Закрыть поиск";
+  const placeholder = dict?.searchPlaceholder ?? "Поиск по статьям...";
+  const loadingLabel = dict?.searchLoading ?? "Поиск...";
+  const minCharsLabel = dict?.searchMinChars ?? "Введите не менее 3 символов";
+  const noResultsLabel = dict?.searchNoResults ?? "Ничего не найдено";
+  const advancedSearchLabel = dict?.searchAdvancedLink ?? "Расширенный поиск и фильтры";
+
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
         className="flex h-10 w-10 shrink-0 items-center justify-center text-ink transition-colors hover:text-gold-deep"
-        aria-label="Открыть поиск"
+        aria-label={openAria}
       >
         <MagnifierIcon />
       </button>
@@ -98,7 +123,7 @@ export function HeaderSearch() {
           ref={overlayRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Поиск по статьям"
+          aria-label={dialogAria}
           className="fixed inset-0 z-[200] bg-black/60"
           onMouseDown={onBackdropClick}
         >
@@ -106,7 +131,7 @@ export function HeaderSearch() {
             type="button"
             onClick={() => setOpen(false)}
             className="absolute right-3 top-3 z-[1] flex h-11 w-11 items-center justify-center rounded-sm text-white/75 transition-colors hover:bg-white/10 hover:text-white md:right-5 md:top-5"
-            aria-label="Закрыть поиск"
+            aria-label={closeAria}
           >
             <svg
               width="24"
@@ -130,21 +155,21 @@ export function HeaderSearch() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Поиск по статьям..."
+              placeholder={placeholder}
               className="w-full shrink-0 border-0 border-b border-white/30 bg-transparent pb-3 font-heading text-2xl text-white outline-none placeholder:text-white/45 focus:border-white/55 md:text-[24px]"
               autoComplete="off"
             />
 
             <div className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain">
               {loading ? (
-                <p className="font-sans text-sm text-white/60">Поиск…</p>
+                <p className="font-sans text-sm text-white/60">{loadingLabel}</p>
               ) : query.trim().length > 0 && query.trim().length < 3 ? (
                 <p className="font-sans text-sm text-white/60">
-                  Введите не менее 3 символов
+                  {minCharsLabel}
                 </p>
               ) : results.length === 0 && query.trim().length >= 3 ? (
                 <p className="font-sans text-sm text-white/60">
-                  Ничего не найдено
+                  {noResultsLabel}
                 </p>
               ) : (
                 <ul className="space-y-1">
@@ -177,13 +202,13 @@ export function HeaderSearch() {
               <Link
                 href={
                   query.trim()
-                    ? `/search?q=${encodeURIComponent(query.trim())}`
-                    : "/search"
+                    ? `${localizeHref("/search", locale)}?q=${encodeURIComponent(query.trim())}`
+                    : localizeHref("/search", locale)
                 }
                 className="text-white/80 underline-offset-2 transition-colors hover:text-white hover:underline"
                 onClick={() => setOpen(false)}
               >
-                Расширенный поиск и фильтры
+                {advancedSearchLabel}
               </Link>
             </p>
           </div>
