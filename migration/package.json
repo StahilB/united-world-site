@@ -6,6 +6,7 @@
   "scripts": {
     "fetch": "node 01-fetch-en-articles.js",
     "build-mapping": "node 02-build-mapping.js",
+    "build-redirects": "node 04-build-redirect-index.js",
     "apply-dry": "node 03-apply-mapping.js --dry",
     "apply": "node 03-apply-mapping.js"
   },
