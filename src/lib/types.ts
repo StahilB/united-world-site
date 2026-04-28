@@ -84,7 +84,7 @@ export interface ThematicBlockItem {
 
 /** Карточка блока «Ежемесячные обзоры по регионам» */
 export interface RegionalReviewItem {
-  region: { name: string; slug: string };
+  region: { name: string; name_en?: string | null; slug: string };
   article: {
     title: string;
     slug: string;

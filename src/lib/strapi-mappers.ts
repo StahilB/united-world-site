@@ -24,7 +24,12 @@ import { getStrapiUrl, resolveStrapiAssetUrl } from "./strapi-config";
 
 const FALLBACK_COVER = "/images/placeholder-cover.svg";
 
-function mediaUrl(media: StrapiMedia | null | undefined): string {
+function mediaUrl(
+  originOrMedia: string | StrapiMedia | null | undefined,
+  maybeMedia?: StrapiMedia | null | undefined,
+): string {
+  const media =
+    typeof originOrMedia === "string" ? maybeMedia : originOrMedia;
   if (!media?.url) {
     return FALLBACK_COVER;
   }
@@ -259,22 +264,26 @@ export function buildRegionalReviewItems(
   origin: string = getStrapiUrl(),
   locale: Locale = "ru",
 ): RegionalReviewItem[] {
-  const mapped = articles.map((x) => mapStrapiArticleToArticle(x, origin, locale));
+  const mapped = articles.map((x) =>
+    mapStrapiArticleToArticle(x, origin, locale),
+  );
   return regions.map((region) => {
-    const article =
-      mapped.find((ar) => ar.region.slug === region.slug) ?? mapped[0];
+    const regionName =
+      locale === "en" && region.name_en ? region.name_en : region.name;
+    const article = mapped.find((ar) => ar.region.slug === region.slug);
+
     if (!article) {
       return {
-        region: { name: region.name, slug: region.slug },
+        region: { name: regionName, name_en: region.name_en, slug: region.slug },
         article: {
-          title: "Материалы скоро",
+          title: locale === "en" ? "Materials coming soon" : "Материалы скоро",
           slug: region.slug,
-          coverImage: mediaUrl(region.cover_image ?? undefined),
+          coverImage: mediaUrl(origin, region.cover_image ?? undefined),
         },
       };
     }
     return {
-      region: { name: region.name, slug: region.slug },
+      region: { name: regionName, name_en: region.name_en, slug: region.slug },
       article: {
         title: article.title,
         slug: article.slug,

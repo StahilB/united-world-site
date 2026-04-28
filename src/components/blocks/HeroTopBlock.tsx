@@ -79,7 +79,7 @@ export function HeroTopBlock({
             )}
 
             <div className={hasCover ? "mt-10" : ""}>
-              <p className="kicker">Сейчас читают</p>
+              <p className="kicker">{dict.home.popularKicker}</p>
               <ol className="mt-5 space-y-4">
                 {top.map((article, i) => (
                   <li key={article.href}>

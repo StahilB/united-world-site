@@ -10,14 +10,20 @@ export type RegionalReviewsBlockProps = {
 };
 
 function RegionRow({ item, locale }: { item: RegionalReviewItem; locale: Locale }) {
-  const href = localizeHref(`/articles/${item.article.slug}`, locale);
+  const articleHref = localizeHref(`/articles/${item.article.slug}`, locale);
+  const regionHref = localizeHref(
+    `/section/globalnye-obzory?region=${item.region.slug}`,
+    locale,
+  );
   return (
     <article className="py-5">
-      <p className="font-heading text-[20px] font-bold leading-tight text-ink md:text-[22px]">
-        {item.region.name}
-      </p>
+      <Link href={regionHref} className="group inline-block">
+        <p className="font-heading text-[20px] font-bold leading-tight text-ink transition-colors group-hover:text-gold-deep md:text-[22px]">
+          {item.region.name}
+        </p>
+      </Link>
       <Link
-        href={href}
+        href={articleHref}
         className="group mt-2 block font-sans text-[15px] leading-snug text-text-mute transition-colors hover:text-ink md:text-[16px]"
       >
         {item.article.title}

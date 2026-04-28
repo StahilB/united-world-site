@@ -56,6 +56,7 @@ export const dictionaries = {
     },
     home: {
       heroKicker: "Главное сегодня",
+      popularKicker: "Сейчас читают",
       mostReadKicker: "Самое читаемое",
       latestKicker: "Свежие материалы",
       regionalKicker: "Глобальные обзоры по регионам",
@@ -155,6 +156,9 @@ export const dictionaries = {
       pageTitle: "Новости",
       materialsHeading: "Материалы",
     },
+    regional: {
+      materialsTitle: "Материалы региона",
+    },
   },
 
   en: {
@@ -205,6 +209,7 @@ export const dictionaries = {
     },
     home: {
       heroKicker: "Top story today",
+      popularKicker: "Trending now",
       mostReadKicker: "Most read",
       latestKicker: "Latest materials",
       regionalKicker: "Global reviews by region",
@@ -302,6 +307,9 @@ export const dictionaries = {
     news: {
       pageTitle: "News",
       materialsHeading: "Materials",
+    },
+    regional: {
+      materialsTitle: "Articles in this region",
     },
   },
 } as const;
