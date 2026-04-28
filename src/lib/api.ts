@@ -688,8 +688,10 @@ export async function getArticlesForColumnsSection(
       search.set("pagination[page]", String(page));
       search.set("populate[author][fields][0]", "id");
       search.set("populate[author][fields][1]", "name");
-      search.set("populate[author][fields][2]", "slug");
-      search.set("populate[author][fields][3]", "bio");
+      search.set("populate[author][fields][2]", "name_en");
+      search.set("populate[author][fields][3]", "slug");
+      search.set("populate[author][fields][4]", "bio");
+      search.set("populate[author][fields][5]", "bio_en");
       search.set("populate[author][populate][photo][fields][0]", "url");
       search.set("populate[cover_image][fields][0]", "url");
       search.set("populate[cover_image][fields][1]", "width");
