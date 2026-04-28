@@ -41,6 +41,7 @@ const REVALIDATE = 300;
 const REVALIDATE_ARTICLE = 600;
 const REVALIDATE_AUTHORS = 3600;
 const REVALIDATE_CATEGORIES = 300;
+const REVALIDATE_REGIONS = 300;
 /** Кэш дерева разделов и списков по разделу */
 const REVALIDATE_SECTIONS = 300;
 
@@ -841,10 +842,14 @@ export async function getRegionBySlug(
 ): Promise<StrapiRegion | null> {
   const search = new URLSearchParams();
   search.set("filters[slug][$eq]", slug);
+  search.set("fields[0]", "name");
+  search.set("fields[1]", "name_en");
+  search.set("fields[2]", "slug");
   search.set("pagination[pageSize]", "1");
   search.set("populate[0]", "cover_image");
   const res = await strapiFetch<StrapiCollectionResponse<StrapiRegion>>(
     `/api/regions?${search.toString()}`,
+    { next: { revalidate: REVALIDATE_REGIONS } },
   );
   return res.data[0] ?? null;
 }
@@ -962,6 +967,10 @@ export async function getSectionBySlug(
 export type GetArticlesBySectionOptions = {
   /** Пересечение: статья должна быть и в текущей секции, и в этой (другая ветка рубрик). */
   filterSectionSlug?: string;
+  /** Фильтр по региону для раздела */
+  regionSlug?: string;
+  /** Только материалы с флагом global review */
+  isGlobalReview?: boolean;
   locale?: Locale;
 };
 
@@ -971,12 +980,12 @@ export type GetArticlesBySectionOptions = {
  */
 export async function getArticlesBySection(
   sectionSlug: string,
-  page: number,
-  pageSize: number,
-  options?: GetArticlesBySectionOptions,
+  page: number = 1,
+  pageSize: number = 12,
+  options: GetArticlesBySectionOptions = {},
 ): Promise<StrapiCollectionResponse<StrapiArticle>> {
   const search = new URLSearchParams();
-  const filterExtra = options?.filterSectionSlug?.trim();
+  const filterExtra = options.filterSectionSlug?.trim();
   if (filterExtra) {
     search.set("filters[$and][0][sections][slug][$eq]", sectionSlug);
     search.set("filters[$and][1][sections][slug][$eq]", filterExtra);
@@ -985,8 +994,14 @@ export async function getArticlesBySection(
   }
   search.set("pagination[page]", String(page));
   search.set("pagination[pageSize]", String(pageSize));
+  if (options.regionSlug) {
+    search.set("filters[region][slug][$eq]", options.regionSlug);
+  }
+  if (options.isGlobalReview === true) {
+    search.set("filters[is_global_review][$eq]", "true");
+  }
   appendArticleListPopulate(search);
-  appendLocaleFilter(search, options?.locale);
+  appendLocaleFilter(search, options.locale);
   search.set("sort[0]", "publication_date:desc");
 
   return strapiFetch<StrapiCollectionResponse<StrapiArticle>>(

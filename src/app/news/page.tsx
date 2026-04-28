@@ -19,10 +19,17 @@ const SLUG = "novosti";
 const PAGE_SIZE = 12;
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: "Новости",
-  description: "Новости и анонсы аналитического центра «Единый Мир».",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const dict = getDictionary(locale);
+  return {
+    title: dict.news.pageTitle,
+    description:
+      locale === "en"
+        ? "News and updates from United World analytical center."
+        : "Новости и анонсы аналитического центра «Единый Мир».",
+  };
+}
 
 type NewsPageProps = {
   searchParams: { page?: string };
@@ -39,7 +46,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
       <main className="min-h-screen bg-white py-10 md:py-14">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <h1 className="font-heading text-3xl font-normal text-ink md:text-4xl">
-            Новости
+            {dict.news.pageTitle}
           </h1>
           <p className="mt-4 max-w-xl font-sans text-[15px] text-text-mute">
             Раздел «Новости» не найден в Strapi. Выполните{" "}
@@ -59,7 +66,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
       <main className="min-h-screen bg-white py-10 md:py-14">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <h1 className="font-heading text-3xl font-normal text-ink md:text-4xl">
-            {strapiSection.name}
+            {locale === "en" && strapiSection.name_en ? strapiSection.name_en : strapiSection.name}
           </h1>
           <p className="mt-4 font-sans text-[15px] text-text-mute">
             Раздел не привязан к дереву навигации. Проверьте родителя «О центре» в Strapi.
@@ -112,7 +119,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     <main className="min-h-screen bg-white py-10 md:py-14">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <h1 className="font-heading text-3xl font-normal leading-tight tracking-tight text-ink md:text-4xl lg:text-[2.75rem]">
-          {current.name}
+          {locale === "en" && current.name_en ? current.name_en : current.name}
         </h1>
 
         <nav
@@ -128,10 +135,10 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 /
               </span>
               <Link
-                href={getSectionHref(s.slug)}
+                href={localizeHref(getSectionHref(s.slug), locale)}
                 className="transition-colors hover:text-gold-deep"
               >
-                {s.name}
+                {locale === "en" && s.name_en ? s.name_en : s.name}
               </Link>
             </span>
           ))}
@@ -139,7 +146,9 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
             <span aria-hidden className="text-neutral-400">
               /
             </span>
-            <span className="text-ink">{current.name}</span>
+            <span className="text-ink">
+              {locale === "en" && current.name_en ? current.name_en : current.name}
+            </span>
           </span>
         </nav>
 

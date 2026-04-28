@@ -7,6 +7,7 @@ import { SectionRubricFilters } from "@/components/rubric/SectionRubricFilters";
 import {
   findSectionPath,
   getArticlesBySection,
+  getRegionBySlug,
   getSections,
   getSectionBySlug,
 } from "@/lib/api";
@@ -30,33 +31,38 @@ import { localizeHref } from "@/lib/i18n/types";
 const PAGE_SIZE = 12;
 export const revalidate = 300;
 
-function articlesQuery(page: number, filter?: string): string {
+function articlesQuery(page: number, filter?: string, region?: string): string {
   const p = new URLSearchParams();
   if (page > 1) p.set("page", String(page));
   if (filter) p.set("filter", filter);
+  if (region) p.set("region", region);
   const s = p.toString();
   return s ? `?${s}` : "";
 }
 
 type SectionPageProps = {
   params: { slug: string };
-  searchParams: { page?: string; filter?: string };
+  searchParams: { page?: string; filter?: string; region?: string };
 };
 
 export async function generateMetadata({
   params,
 }: Pick<SectionPageProps, "params">): Promise<Metadata> {
+  const locale = await getServerLocale();
   const section = await getSectionBySlug(params.slug).catch(() => null);
   if (!section) {
     return {
-      title: "Рубрика не найдена",
+      title: locale === "en" ? "Section not found" : "Рубрика не найдена",
       robots: { index: false, follow: false },
     };
   }
-  const name = section.name;
+  const name = locale === "en" && section.name_en ? section.name_en : section.name;
   return {
     title: name,
-    description: `Статьи по теме «${name}» — аналитический центр «Единый Мир».`,
+    description:
+      locale === "en"
+        ? `Articles in "${name}" — United World analytical center.`
+        : `Статьи по теме «${name}» — аналитический центр «Единый Мир».`,
     alternates: { canonical: `/section/${params.slug}` },
   };
 }
@@ -75,6 +81,10 @@ export default async function SectionPage({
 
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const rawFilter = searchParams.filter?.trim();
+  const rawRegion = searchParams.region?.trim();
+  const isGlobalReviewsSection = slug === "globalnye-obzory";
+  const regionFilter =
+    isGlobalReviewsSection && rawRegion ? rawRegion : undefined;
 
   const strapiSection = await getSectionBySlug(slug);
   if (!strapiSection) {
@@ -92,7 +102,10 @@ export default async function SectionPage({
 
   const sidebarMode = getRubricSidebarMode(path);
   const filterItems = sidebarMode ? getRubricFilterItems(tree, sidebarMode) : [];
-  const filterLabel = sidebarMode === "filter-by-theme" ? "Тема" : "Регион";
+  const filterLabel =
+    sidebarMode === "filter-by-theme"
+      ? dict.search.topicLabel
+      : dict.search.regionLabel;
   const activeFilter =
     sidebarMode && rawFilter && isValidFilterSlug(rawFilter, filterItems)
       ? rawFilter
@@ -104,11 +117,13 @@ export default async function SectionPage({
     filterItems.length > 0 &&
     !isValidFilterSlug(rawFilter, filterItems)
   ) {
-    redirect(`/section/${slug}${articlesQuery(page, undefined)}`);
+    redirect(`/section/${slug}${articlesQuery(page, undefined, regionFilter)}`);
   }
 
   const articlesRes = await getArticlesBySection(slug, page, PAGE_SIZE, {
     filterSectionSlug: activeFilter,
+    regionSlug: regionFilter,
+    isGlobalReview: isGlobalReviewsSection,
     locale,
   }).catch(() => null);
 
@@ -119,6 +134,23 @@ export default async function SectionPage({
 
   const showSidebar = Boolean(sidebarMode && filterItems.length > 0);
 
+  let headingSuffix: string | null = null;
+  if (regionFilter) {
+    const regionRes = await getRegionBySlug(regionFilter).catch(() => null);
+    if (regionRes) {
+      headingSuffix =
+        locale === "en" && regionRes.name_en
+          ? regionRes.name_en
+          : regionRes.name;
+    }
+  }
+
+  const baseHeading =
+    locale === "en" && current.name_en ? current.name_en : current.name;
+  const finalHeading = headingSuffix
+    ? `${baseHeading}: ${headingSuffix}`
+    : baseHeading;
+
   const paginationNav =
     pageCount > 1 ? (
       <nav
@@ -127,7 +159,10 @@ export default async function SectionPage({
       >
         {page > 1 ? (
           <Link
-            href={`/section/${slug}${articlesQuery(page - 1, activeFilter)}`}
+            href={localizeHref(
+              `/section/${slug}${articlesQuery(page - 1, activeFilter, regionFilter)}`,
+              locale,
+            )}
             className="font-semibold text-ink transition-colors hover:text-gold-deep"
           >
             Назад
@@ -138,7 +173,10 @@ export default async function SectionPage({
         </span>
         {page < pageCount ? (
           <Link
-            href={`/section/${slug}${articlesQuery(page + 1, activeFilter)}`}
+            href={localizeHref(
+              `/section/${slug}${articlesQuery(page + 1, activeFilter, regionFilter)}`,
+              locale,
+            )}
             className="font-semibold text-ink transition-colors hover:text-gold-deep"
           >
             Вперёд
@@ -186,8 +224,11 @@ export default async function SectionPage({
       <div className="mx-auto max-w-6xl px-6 md:px-8">
         <JsonLd
           data={breadcrumbSchema([
-            { name: "Главная", url: "/" },
-            ...path.map((s) => ({ name: s.name, url: getSectionHref(s.slug) })),
+            { name: dict.common.breadcrumbHome, url: localizeHref("/", locale) },
+            ...path.map((s) => ({
+              name: locale === "en" && s.name_en ? s.name_en : s.name,
+              url: localizeHref(getSectionHref(s.slug), locale),
+            })),
           ])}
         />
 
@@ -207,10 +248,10 @@ export default async function SectionPage({
                 ›
               </span>
               <Link
-                href={getSectionHref(s.slug)}
+                href={localizeHref(getSectionHref(s.slug), locale)}
                 className="transition-colors hover:text-gold-deep"
               >
-                {s.name}
+                {locale === "en" && s.name_en ? s.name_en : s.name}
               </Link>
             </span>
           ))}
@@ -218,12 +259,12 @@ export default async function SectionPage({
             <span aria-hidden className="text-rule">
               ›
             </span>
-            <span className="text-ink/70">{current.name}</span>
+            <span className="text-ink/70">{baseHeading}</span>
           </span>
         </nav>
 
         <h1 className="mt-6 font-heading text-[32px] font-bold leading-tight tracking-tight text-ink md:text-[44px] lg:text-[52px]">
-          {current.name}
+          {finalHeading}
         </h1>
 
         {showSidebar && sidebarMode ? (

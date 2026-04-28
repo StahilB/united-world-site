@@ -13,6 +13,7 @@ export type ArticleRubricGridProps = {
   heading?: string;
   articles: Article[];
   emptyMessage?: string;
+  dict?: { empty?: string };
   embedded?: boolean;
   hideHeading?: boolean;
   locale?: Locale;
@@ -20,12 +21,19 @@ export type ArticleRubricGridProps = {
 
 export function ArticleRubricGrid({
   articles,
-  emptyMessage = "В этой рубрике пока нет материалов",
+  emptyMessage,
+  dict,
   embedded = false,
   hideHeading = false,
   heading = "",
   locale = "ru",
 }: ArticleRubricGridProps) {
+  const resolvedEmptyMessage =
+    emptyMessage ??
+    dict?.empty ??
+    (locale === "en"
+      ? "No materials in this section yet"
+      : "В этой рубрике пока нет материалов");
   const inner = (
     <div
       className={
@@ -44,7 +52,7 @@ export function ArticleRubricGrid({
             hideHeading ? "mt-0" : "mt-10"
           }`}
         >
-          {emptyMessage}
+          {resolvedEmptyMessage}
         </p>
       ) : (
         <div
