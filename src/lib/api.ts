@@ -831,6 +831,12 @@ export async function getCategoryBySlug(
 ): Promise<StrapiCategory | null> {
   const search = new URLSearchParams();
   search.set("filters[slug][$eq]", slug);
+  search.set("fields[0]", "name");
+  search.set("fields[1]", "name_en");
+  search.set("fields[2]", "slug");
+  search.set("fields[3]", "color");
+  search.set("fields[4]", "description");
+  search.set("fields[5]", "description_en");
   search.set("pagination[pageSize]", "1");
   const res = await strapiFetch<StrapiCollectionResponse<StrapiCategory>>(
     `/api/categories?${search.toString()}`,

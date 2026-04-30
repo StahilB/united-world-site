@@ -306,11 +306,12 @@ export function buildThematicBlockItems(
       mapped.find((ar) => ar.categories.some((c) => c.slug === cat.slug)) ??
       mapped[0];
     const color = cat.color ?? "#14213D";
+    const catName = pickLocalized(cat.name, cat.name_en, locale, cat.name);
     if (!article) {
       return {
-        category: { name: cat.name, slug: cat.slug, color },
+        category: { name: catName, slug: cat.slug, color },
         article: {
-          title: "Материалы скоро",
+          title: locale === "en" ? "Materials coming soon" : "Материалы скоро",
           slug: cat.slug,
           coverImage: FALLBACK_COVER,
           format: "—",
@@ -319,7 +320,7 @@ export function buildThematicBlockItems(
     }
     return {
       category: {
-        name: cat.name,
+        name: catName,
         slug: cat.slug,
         color,
       },

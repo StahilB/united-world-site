@@ -21,17 +21,25 @@ type RegionPageProps = {
 export async function generateMetadata({
   params,
 }: RegionPageProps): Promise<Metadata> {
+  const locale = await getServerLocale();
   const region = await getRegionBySlug(params.slug).catch(() => null);
   if (!region) {
     return {
-      title: "Регион не найден",
+      title: locale === "en" ? "Region not found" : "Регион не найден",
       robots: { index: false, follow: false },
     };
   }
+  const name =
+    locale === "en" && (region as any).name_en
+      ? (region as any).name_en
+      : region.name;
 
   return {
-    title: region.name,
-    description: `Статьи по региону «${region.name}» — аналитический центр «Единый Мир».`,
+    title: name,
+    description:
+      locale === "en"
+        ? `Articles for region "${name}" — United World analytical center.`
+        : `Статьи по региону «${name}» — аналитический центр «Единый Мир».`,
     alternates: { canonical: `/region/${params.slug}` },
   };
 }
@@ -46,6 +54,10 @@ export default async function RegionPage({ params }: RegionPageProps) {
   if (!region) {
     notFound();
   }
+  const regionName =
+    locale === "en" && (region as any).name_en
+      ? (region as any).name_en
+      : region.name;
 
   let articles: Article[] = [];
   try {
@@ -59,13 +71,12 @@ export default async function RegionPage({ params }: RegionPageProps) {
     <>
       <JsonLd
         data={breadcrumbSchema([
-          { name: "Главная", url: "/" },
-          { name: "Регионы", url: "/region" },
-          { name: region.name, url: `/region/${slug}` },
+          { name: dict.common.breadcrumbHome, url: locale === "en" ? "/en" : "/" },
+          { name: regionName, url: `/region/${slug}` },
         ])}
       />
       <ArticleRubricGrid
-        heading={region.name}
+        heading={regionName}
         articles={articles}
         emptyMessage={dict.rubric.emptyMessage}
         locale={locale}

@@ -21,17 +21,25 @@ type CategoryPageProps = {
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
+  const locale = await getServerLocale();
   const category = await getCategoryBySlug(params.slug).catch(() => null);
   if (!category) {
     return {
-      title: "Категория не найдена",
+      title: locale === "en" ? "Category not found" : "Категория не найдена",
       robots: { index: false, follow: false },
     };
   }
+  const name =
+    locale === "en" && (category as any).name_en
+      ? (category as any).name_en
+      : category.name;
 
   return {
-    title: category.name,
-    description: `Статьи по теме «${category.name}» — аналитический центр «Единый Мир».`,
+    title: name,
+    description:
+      locale === "en"
+        ? `Articles in "${name}" — United World analytical center.`
+        : `Статьи по теме «${name}» — аналитический центр «Единый Мир».`,
     alternates: { canonical: `/category/${params.slug}` },
   };
 }
@@ -46,6 +54,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   if (!category) {
     notFound();
   }
+  const categoryName =
+    locale === "en" && (category as any).name_en
+      ? (category as any).name_en
+      : category.name;
 
   let articles: Article[] = [];
   try {
@@ -59,13 +71,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     <>
       <JsonLd
         data={breadcrumbSchema([
-          { name: "Главная", url: "/" },
-          { name: "Категории", url: "/category" },
-          { name: category.name, url: `/category/${slug}` },
+          { name: dict.common.breadcrumbHome, url: locale === "en" ? "/en" : "/" },
+          { name: categoryName, url: `/category/${slug}` },
         ])}
       />
       <ArticleRubricGrid
-        heading={category.name}
+        heading={categoryName}
         articles={articles}
         emptyMessage={dict.rubric.emptyMessage}
         locale={locale}
