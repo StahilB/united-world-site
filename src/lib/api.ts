@@ -1002,11 +1002,21 @@ export async function getArticlesBySection(
   }
   search.set("pagination[page]", String(page));
   search.set("pagination[pageSize]", String(pageSize));
-  if (options.regionSlug) {
-    search.set("filters[region][slug][$eq]", options.regionSlug);
-  }
-  if (options.isGlobalReview === true) {
-    search.set("filters[is_global_review][$eq]", "true");
+  // Если активен фильтр по региону для глобальных обзоров —
+  // фильтруем по подсекции, т.к. у статей не привязан relation `region`,
+  // связь идёт через sections (slug "<region>-globalnye-obzory").
+  if (options.regionSlug && options.isGlobalReview) {
+    search.set(
+      "filters[sections][slug][$eq]",
+      `${options.regionSlug}-globalnye-obzory`,
+    );
+  } else {
+    if (options.regionSlug) {
+      search.set("filters[region][slug][$eq]", options.regionSlug);
+    }
+    if (options.isGlobalReview === true) {
+      search.set("filters[is_global_review][$eq]", "true");
+    }
   }
   appendArticleListPopulate(search);
   appendLocaleFilter(search, options.locale);
