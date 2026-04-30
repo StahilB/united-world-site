@@ -85,8 +85,6 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { source: "/category/:slug", destination: "/section/:slug", permanent: true },
-      { source: "/category/:slug/", destination: "/section/:slug", permanent: true },
       { source: "/tag/:slug", destination: "/search?q=:slug", permanent: true },
       { source: "/tag/:slug/", destination: "/search?q=:slug", permanent: true },
       // WordPress: страницы автора часто со слэшем; канон — без слэша (как в Next.js)
