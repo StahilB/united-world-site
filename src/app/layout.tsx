@@ -5,7 +5,6 @@ import { MascotWidget } from "@/components/mascot/MascotWidget";
 import { TextSelectionPopup } from "@/components/mascot/TextSelectionPopup";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/layout/Footer";
-import { MigrationBanner } from "@/components/layout/MigrationBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getServerLocale } from "@/lib/i18n/server-locale";
 import { organizationSchema, websiteSchema } from "@/lib/schema";
@@ -154,7 +153,6 @@ export default async function RootLayout({
       <body className={`${sourceSans3.className} min-h-full`}>
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
-        <MigrationBanner />
         <SiteHeader />
         {children}
         <Footer />
