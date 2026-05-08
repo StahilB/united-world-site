@@ -42,3 +42,5 @@ yarn-error.log*
 next-env.d.ts
 
 PROJECT_SPEC.md
+# Migration output (generated artifacts, not source)
+migration/output/
