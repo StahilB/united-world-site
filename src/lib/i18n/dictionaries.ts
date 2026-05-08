@@ -55,8 +55,8 @@ export const dictionaries = {
       navEnLink: "EN",
     },
     home: {
-      heroKicker: "Главное сегодня",
-      popularKicker: "Сейчас читают",
+      heroKicker: "Главное за месяц",
+      popularKicker: "Что почитать",
       mostReadKicker: "Самое читаемое",
       latestKicker: "Свежие материалы",
       regionalKicker: "Глобальные обзоры по регионам",
@@ -208,8 +208,8 @@ export const dictionaries = {
       navEnLink: "RU",
     },
     home: {
-      heroKicker: "Top story today",
-      popularKicker: "Trending now",
+      heroKicker: "Top of the month",
+      popularKicker: "Recommended reads",
       mostReadKicker: "Most read",
       latestKicker: "Latest materials",
       regionalKicker: "Global reviews by region",
