@@ -270,7 +270,18 @@ export function buildRegionalReviewItems(
   return regions.map((region) => {
     const regionName =
       locale === "en" && region.name_en ? region.name_en : region.name;
-    const article = mapped.find((ar) => ar.region.slug === region.slug);
+    // 1) Пытаемся найти статью с подсекцией <region>-globalnye-obzory
+    //    (это надёжнее всего: статьи привязаны через sections, не через region)
+    const subsectionSlug = `${region.slug}-globalnye-obzory`;
+    let article = mapped.find((ar) =>
+      ar.sections?.some((s) => s.slug === subsectionSlug),
+    );
+
+    // 2) Fallback: ищем по region.slug (старая логика, если у кого-то
+    //    в Strapi всё-таки привязан relation region)
+    if (!article) {
+      article = mapped.find((ar) => ar.region.slug === region.slug);
+    }
 
     if (!article) {
       return {

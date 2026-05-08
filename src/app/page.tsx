@@ -49,7 +49,7 @@ export default async function HomePage() {
     const results = await Promise.all([
       getLatestArticles(4, locale),
       getRecentPopularArticles(7, 90, locale),
-      getArticles({ pageSize: 100, page: 1, locale }),
+      getArticles({ pageSize: 200, page: 1, locale }),
       getRegions(),
     ]);
     latestRes = results[0];
