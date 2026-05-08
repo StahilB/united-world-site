@@ -45,7 +45,7 @@ function LogoMark({
   priority?: boolean;
   alt: string;
 }) {
-  const h = heightPx === 92 ? "h-[92px]" : "h-[28px]";
+  const h = heightPx === 92 ? "h-12 sm:h-16 md:h-[92px]" : "h-[28px]";
   return (
     <Image
       src={LOGO_SRC}
