@@ -67,7 +67,7 @@ export async function Footer() {
           </div>
 
           {/* Колонка 2 — навигация */}
-          <div>
+          <div className="md:mx-auto md:text-center">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
               {fdict.kickerNav}
             </p>
