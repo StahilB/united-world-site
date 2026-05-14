@@ -71,6 +71,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    volumes:
+      - strapi_uploads:/app/public/uploads
     environment:
       NODE_ENV: production
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}

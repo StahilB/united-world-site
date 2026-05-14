@@ -2,9 +2,10 @@ import HomePage from "@/app/page";
 
 /**
  * EN-локализация главной страницы.
- * Сейчас (после фазы 3b) — рендерит ту же главную, что и /,
- * но layout вокруг (Header, Footer) уже на английском.
- *
- * В фазе 3c будут заменены блоки на локализованные.
+ * Принудительно передаем locale="en", чтобы компонент 
+ * запрашивал данные на английском.
  */
-export default HomePage;
+export default function EnglishHomePage(props: any) {
+  // Мы берем оригинальную страницу и прокидываем в неё язык
+  return <HomePage {...props} params={{ ...props.params, locale: "en" }} />;
+}
