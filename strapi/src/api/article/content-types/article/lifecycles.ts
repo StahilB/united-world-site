@@ -1,5 +1,5 @@
+// src/api/article/content-types/article/lifecycles.ts
 import type { Core } from '@strapi/strapi';
-
 import {
   buildIndexes,
   computeAutomaticSectionIds,
@@ -9,6 +9,7 @@ const SECTION_UID = 'api::section.section';
 const ARTICLE_UID = 'api::article.article';
 const REGION_UID = 'api::region.region';
 const CATEGORY_UID = 'api::category.category';
+const AUTHOR_UID = 'api::author.author';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -261,6 +262,21 @@ async function resolveCategories(
   return rows;
 }
 
+async function resolveAuthor(strapi: Core.Strapi, ref: unknown): Promise<boolean> {
+  if (!ref) return false;
+  const target = extractFirstRelationTarget(ref);
+  if (!target) return false;
+  
+  try {
+    const row = await strapi.db.query(AUTHOR_UID).findOne({
+      where: typeof target === 'string' ? { documentId: target } : { id: target },
+    });
+    return row != null;
+  } catch {
+    return false;
+  }
+}
+
 function buildSectionDocumentIdMap(sections: SectionRow[]): Map<string, number> {
   const m = new Map<string, number>();
   for (const s of sections) {
@@ -269,7 +285,6 @@ function buildSectionDocumentIdMap(sections: SectionRow[]): Map<string, number> 
   return m;
 }
 
-/** Ручной выбор из дерева рубрик (JSON-массив id). */
 function parseSectionTree(raw: unknown): number[] {
   if (raw == null) return [];
   if (Array.isArray(raw)) {
@@ -302,12 +317,13 @@ async function applySectionUnion(
     categories?: unknown;
     sections?: unknown;
     section_tree?: unknown;
+    author?: unknown;
   } | null = null;
 
   if (opts.isUpdate && opts.where && Object.keys(opts.where).length > 0) {
     existing = (await strapi.db.query(ARTICLE_UID).findOne({
       where: opts.where as Record<string, unknown>,
-      populate: { region: true, categories: true, sections: true },
+      populate: { region: true, categories: true, sections: true, author: true },
     })) as typeof existing;
   }
 
@@ -320,13 +336,13 @@ async function applySectionUnion(
       ? Boolean(data.is_global_review)
       : Boolean(existing?.is_global_review);
 
-  const regionRef =
-    data.region !== undefined ? data.region : existing?.region;
-  const categoriesRef =
-    data.categories !== undefined ? data.categories : existing?.categories;
+  const regionRef = data.region !== undefined ? data.region : existing?.region;
+  const categoriesRef = data.categories !== undefined ? data.categories : existing?.categories;
+  const authorRef = data.author !== undefined ? data.author : existing?.author;
 
   const region = await resolveRegion(strapi, regionRef);
   const categories = await resolveCategories(strapi, categoriesRef);
+  const hasAuthor = await resolveAuthor(strapi, authorRef);
 
   const manualFromPayload =
     data.sections !== undefined
@@ -353,6 +369,7 @@ async function applySectionUnion(
     is_global_review,
     region,
     categories,
+    hasAuthor,
     indexes,
   });
 
@@ -367,7 +384,13 @@ async function applySectionUnion(
   } else {
     merged = [...new Set([...manual, ...automatic])];
   }
-  data.sections = merged;
+  
+  // 🔹 1. Обновляем many-to-many relation sections (Strapi v5 syntax)
+  (data as any).sections = { set: merged };
+
+  // 🔹 2. ОБНОВЛЯЕМ section_tree, чтобы верхние галочки тоже отметились!
+  // Это синхронизирует кастомное поле с рассчитанным списком
+  (data as any).section_tree = merged;
 }
 
 export default {
