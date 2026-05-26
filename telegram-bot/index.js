@@ -1,12 +1,11 @@
 /**
  * Telegram → Strapi: publish articles.
- * Production version: Multi-domain URLs + safe slug extraction + docx updates.
+ * Production version: Multi-domain URLs + safe slug extraction + docx updates + autopost.
  */
 require("dotenv").config();
 console.log("[boot] telegram-bot starting...");
 
 const path = require("path");
-const fs = require("fs");
 const http = require("http");
 const https = require("https");
 const { Telegraf, Input } = require("telegraf");
@@ -15,6 +14,8 @@ const { parseFirstMessage, telegramToHtml, resolveCategorySlug, resolveRegionSlu
 const { parseDocxArticle } = require("./docx-parser");
 const { createStrapiClient } = require("./strapi-client");
 const { slugFromTitle, readingTimeMinutes } = require("./utils");
+const { autoPostToTelegram } = require("./autopost");
+const { autoPostToFacebook } = require("./autopost-facebook");
 
 function requireEnv(name) {
   const v = process.env[name];
@@ -34,17 +35,15 @@ const strapi = createStrapiClient({ baseUrl: STRAPI_URL, token: STRAPI_TOKEN });
 const bot = new Telegraf(BOT_TOKEN);
 
 // ─────────────────────────────────────────────────────────────
-// STATE
+// STATE & HELPERS
 // ─────────────────────────────────────────────────────────────
 const pendingArticles = new Map();
 const PUBLISH_AFTER_MS = 5 * 60 * 1000;
-
 const pendingDocx = new Map();
 const DOCX_TIMEOUT_MS = 10 * 60 * 1000;
 
 function siteBase() { return SITE_URL.replace(/\/$/, ""); }
 
-// 🔹 Генерация ссылки с учётом языка и домена
 function articleUrl(slug, isEnglish = false) {
   const base = isEnglish ? SITE_URL_EN.replace(/\/$/, "") : siteBase();
   return `${base}/articles/${slug}`;
@@ -55,6 +54,16 @@ function detectArticleLanguage(title) {
   if (/[\u0400-\u04FF]/.test(title)) return "ru";
   if (/[A-Za-z]/.test(title)) return "en";
   return "ru";
+}
+
+// ✅ Безопасный сборщик публичного URL для обложки
+function resolvePublicCoverUrl(coverData) {
+  if (!coverData) return null;
+  let mediaPath = typeof coverData === 'object' ? coverData.url : coverData;
+  if (!mediaPath) return null;
+  if (mediaPath.startsWith('http')) return mediaPath;
+  const base = STRAPI_PUBLIC_URL || '';
+  return mediaPath.startsWith('/') ? `${base}${mediaPath}` : `${base}/${mediaPath}`;
 }
 
 async function ensureAuthorId(name) {
@@ -99,8 +108,7 @@ function cleanupDocx(chatId, reason = "timeout") {
   if (!p) return;
   if (p.timer) clearTimeout(p.timer);
   pendingDocx.delete(chatId);
-  if (reason === "timeout") bot.telegram.sendMessage(chatId, "⏳ Время ожидания истекло. Отправьте файл заново.").catch(()=>{});
-}
+  if (reason === "timeout") bot.telegram.sendMessage(chatId, "⏳ Время ожидания истекло. Отправьте файл заново.").catch(()=>{});}
 
 async function downloadTelegramPhoto(fileId) {
   if (!fileId) return { buffer: null, filename: null };
@@ -150,17 +158,31 @@ async function finalizePublish(chatId, { reason, replyToMessageId } = {}) {
       strapi.createArticle({ title: pending.title, slug, htmlBody, excerpt, format: pending.format || "анализ", publicationDate: new Date().toISOString(), readingTime, authorId, categoryId, regionId, coverImageId, isEnglish: false })
     );
     
-    // 🔹 Безопасное извлечение slug (поддерживает плоский ответ и Strapi v5)
     const slug = result?.slug || result?.data?.attributes?.slug || result?.id;
     if (!slug) throw new Error("Не удалось получить slug из ответа Strapi");
     
     const isEnglish = detectArticleLanguage(pending.title) === "en";
     const url = articleUrl(slug, isEnglish);
-    await bot.telegram.sendMessage(chatId, `✅ ${reason === "timeout" ? "Опубликовано (авто)" : "Опубликовано"}:\n📰 ${pending.title}\n ${url}`, { reply_to_message_id: replyToMessageId || pending.lastMessageId, disable_web_page_preview: false });
-  } catch (e) { await bot.telegram.sendMessage(chatId, `❌ Ошибка: ${e.message || String(e)}`, { reply_to_message_id: replyToMessageId || pending.lastMessageId }); }
+    const coverUrl = resolvePublicCoverUrl(coverImageId);
+    
+    await bot.telegram.sendMessage(chatId, `✅ ${reason === "timeout" ? "Опубликовано (авто)" : "Опубликовано"}:\n📰 ${pending.title}\n🔗 ${url}`, { reply_to_message_id: replyToMessageId || pending.lastMessageId, disable_web_page_preview: false });
+
+    const articleData = {
+      title: pending.title, author: pending.authorName, excerpt, slug,
+      category: pending.categorySlug, region: pending.regionSlug, format: pending.format,
+      htmlBody, question: pending.question || null, isEnglish, coverUrl, readingTime
+    };
+    if (!isEnglish) {
+      try { await autoPostToTelegram({ bot, article: articleData }); }
+      catch (e) { console.error('[autopost] Error:', e.message); }
+    } else {
+      try { await autoPostToFacebook({ article: articleData }); }
+      catch (e) { console.error('[autopost-fb] Error:', e.message); }
+    }
+  } catch (e) { await bot.telegram.sendMessage(chatId, ` Ошибка: ${e.message || String(e)}`, { reply_to_message_id: replyToMessageId || pending.lastMessageId }); }
 }
 
-// ─────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────
 // DOCX HANDLING
 // ────────────────────────────────────────────────────────────
 async function finalizeDocxAction(chatId) {
@@ -184,12 +206,11 @@ async function finalizeDocxAction(chatId) {
         continue;
       }
       
-      const imgUrl = uploaded.url.startsWith("http") ? uploaded.url : `${STRAPI_PUBLIC_URL}${uploaded.url}`;
-      
       if (img.index === 0) {
-        coverImageId = uploaded.id;
+        coverImageId = uploaded; // Strapi возвращает объект media
         htmlFinal = htmlFinal.replace(new RegExp(`<img[^>]*src=["']?__IMG_PLACEHOLDER_${img.index}__["']?[^>]*>`, "gi"), "");
       } else {
+        const imgUrl = uploaded.url.startsWith("http") ? uploaded.url : `${STRAPI_PUBLIC_URL}${uploaded.url}`;
         htmlFinal = htmlFinal.replace(new RegExp(`__IMG_PLACEHOLDER_${img.index}__`, "g"), imgUrl);
       }
     }
@@ -197,56 +218,57 @@ async function finalizeDocxAction(chatId) {
     if (isUpdate) {
       const updateData = {};
       if (isEnglish) {
-        updateData.title_en = parsed.meta.title;
-        updateData.excerpt_en = parsed.meta.excerpt;
-        updateData.content_html_en = htmlFinal;
-        updateData.is_translated_en = true;
+        updateData.title_en = parsed.meta.title; updateData.excerpt_en = parsed.meta.excerpt;
+        updateData.content_html_en = htmlFinal; updateData.is_translated_en = true;
       } else {
-        updateData.title = parsed.meta.title;
-        updateData.excerpt = parsed.meta.excerpt;
-        updateData.content_html = htmlFinal;
+        updateData.title = parsed.meta.title; updateData.excerpt = parsed.meta.excerpt; updateData.content_html = htmlFinal;
       }
       
       const result = await strapi.updateArticle(selectedId, updateData);
+      const finalSlug = result?.slug || result?.data?.attributes?.slug || parsed.meta.slug || selectedId;
+      if (!finalSlug) throw new Error("Не удалось получить slug при обновлении");
       
-      //  Безопасное извлечение slug
-      const slug = result?.slug || result?.data?.attributes?.slug || parsed.meta.slug || selectedId;
-      if (!slug) throw new Error("Не удалось получить slug при обновлении");
+      const url = articleUrl(finalSlug, isEnglish);
+      await bot.telegram.sendMessage(chatId, `✅ Статья обновлена!\n📰 ${parsed.meta.title}\n ${url}`, { reply_to_message_id: state.lastMessageId });
       
-      const url = articleUrl(slug, isEnglish);
-      await bot.telegram.sendMessage(chatId, `✅ Статья обновлена!\n📰 ${parsed.meta.title}\n🔗 ${url}`, { reply_to_message_id: state.lastMessageId });
+      const articleBase = {
+        title: parsed.meta.title, author: parsed.meta.author, excerpt: parsed.meta.excerpt,
+        category: parsed.meta.category, region: parsed.meta.region, format: parsed.meta.format,
+        htmlBody: htmlFinal, isEnglish, coverUrl: resolvePublicCoverUrl(coverImageId), slug: finalSlug
+      };
+      if (!isEnglish) { try { await autoPostToTelegram({ bot, article: articleBase }); } catch (e) { console.error('[autopost] Error on update:', e.message); } }
+      else { try { await autoPostToFacebook({ article: articleBase }); } catch (e) { console.error('[autopost-fb] Error on update:', e.message); } }
     } else {
       let authorId = null, categoryId = null, regionId = null;
       if (parsed.meta.author) authorId = await ensureAuthorId(parsed.meta.author);
       if (parsed.meta.category) { const c = await strapi.findCategoryBySlug(resolveCategorySlug(parsed.meta.category)); if (c) categoryId = c.id; }
-      if (parsed.meta.region) { 
-        const regionClean = parsed.meta.region.trim().replace(/\s+/g, "");
-        const r = await strapi.findRegionBySlug(resolveRegionSlug(regionClean)); 
-        if (r) regionId = r.id; 
-      }
+      if (parsed.meta.region) { const regionClean = parsed.meta.region.trim().replace(/\s+/g, ""); const r = await strapi.findRegionBySlug(resolveRegionSlug(regionClean)); if (r) regionId = r.id; }
 
       const plainText = htmlFinal.replace(/<[^>]+>/g, " ").trim();
       const readingTime = readingTimeMinutes(plainText);
       const format = parsed.meta.format ? normalizeFormatSlug(parsed.meta.format) : "анализ";
 
       const result = await createArticleWithUniqueSlug(parsed.meta.title, async (slug) =>
-        strapi.createArticle({
-          title: parsed.meta.title, slug, htmlBody: htmlFinal, excerpt: parsed.meta.excerpt, format,
-          authorId, categoryId, regionId, coverImageId, readingTime,
-          publicationDate: new Date().toISOString(), isEnglish
-        })
+        strapi.createArticle({ title: parsed.meta.title, slug, htmlBody: htmlFinal, excerpt: parsed.meta.excerpt, format, authorId, categoryId, regionId, coverImageId, readingTime, publicationDate: new Date().toISOString(), isEnglish })
       );
       
-      // 🔹 Безопасное извлечение slug
-      const slug = result?.slug || result?.data?.attributes?.slug || result?.id;
-      if (!slug) throw new Error("Не удалось получить slug из ответа Strapi");
+      const finalSlug = result?.slug || result?.data?.attributes?.slug || result?.id;
+      if (!finalSlug) throw new Error("Не удалось получить slug из ответа Strapi");
       
-      const url = articleUrl(slug, isEnglish);
-      await bot.telegram.sendMessage(chatId, `✅ ${isEnglish ? "🌐 EN" : "📰 RU"} статья опубликована!\n📰 ${parsed.meta.title}\n🔗 ${url}`, { reply_to_message_id: state.lastMessageId });
+      const url = articleUrl(finalSlug, isEnglish);
+      await bot.telegram.sendMessage(chatId, `✅ ${isEnglish ? "🌐 EN" : " RU"} статья опубликована!\n ${parsed.meta.title}\n🔗 ${url}`, { reply_to_message_id: state.lastMessageId });
+      
+      const articleBase = {
+        title: parsed.meta.title, author: parsed.meta.author, excerpt: parsed.meta.excerpt,
+        category: parsed.meta.category, region: parsed.meta.region, format: parsed.meta.format,
+        htmlBody: htmlFinal, isEnglish, coverUrl: resolvePublicCoverUrl(coverImageId), slug: finalSlug
+      };
+      if (!isEnglish) { try { await autoPostToTelegram({ bot, article: articleBase }); } catch (e) { console.error('[autopost] Error in finalizeDocxAction:', e.message); } }
+      else { try { await autoPostToFacebook({ article: articleBase }); } catch (e) { console.error('[autopost-fb] Error in finalizeDocxAction:', e.message); } }
     }
   } catch (e) {
     console.error("[docx/action] error:", e);
-    await bot.telegram.sendMessage(chatId, `❌ Ошибка: ${e.message || String(e)}`);
+    await bot.telegram.sendMessage(chatId, ` Ошибка: ${e.message || String(e)}`);
   }
 }
 
@@ -268,30 +290,18 @@ async function handleDocumentUpload(ctx) {
       try { buffer = await downloadFileFromUrl(fileLink.href); break; }
       catch (e) { lastError = e; if (attempt < 3) await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt - 1))); }
     }
-    if (!buffer) { await ctx.telegram.sendMessage(msg.chat.id, ` Не удалось скачать (${lastError?.message}).`, { reply_to_message_id: msg.message_id }); return; }
+    if (!buffer) { await ctx.telegram.sendMessage(msg.chat.id, `⚠️ Не удалось скачать (${lastError?.message}).`, { reply_to_message_id: msg.message_id }); return; }
     
     const parsed = await parseDocxArticle(buffer);
     if (!parsed.ok) { await ctx.telegram.sendMessage(msg.chat.id, `❌ ${parsed.error}`, { reply_to_message_id: msg.message_id }); return; }
     
     const isEnglish = detectArticleLanguage(parsed.meta.title) === "en";
-    
-    const state = {
-      parsed, chatId, lastMessageId: msg.message_id, isEnglish,
-      isUpdate: null, step: 'ask_type',
-      searchResults: [], selectedId: null, originalId: null,
-      timer: setTimeout(() => cleanupDocx(chatId), DOCX_TIMEOUT_MS)
-    };
+    const state = { parsed, chatId, lastMessageId: msg.message_id, isEnglish, isUpdate: null, step: 'ask_type', searchResults: [], selectedId: null, originalId: null, timer: setTimeout(() => cleanupDocx(chatId), DOCX_TIMEOUT_MS) };
     pendingDocx.set(chatId, state);
     
-    const kb = { inline_keyboard: [
-      [{ text: "🆕 Новая статья", callback_data: "docx_new" }],
-      [{ text: "🔄 Обновить существующую", callback_data: "docx_update" }]
-    ]};
-    
-    await ctx.telegram.sendMessage(chatId,
-      ` Файл принят: «${parsed.meta.title}»\n🌐 Язык: ${isEnglish ? "EN" : "RU"}\n\nЭто новая статья или обновление?`,
-      { reply_markup: JSON.stringify(kb) }
-    );
+    await ctx.telegram.sendMessage(chatId, `📄 Файл принят: «${parsed.meta.title}»\n🌐 Язык: ${isEnglish ? "EN" : "RU"}\n\nЭто новая статья или обновление?`, {
+      reply_markup: JSON.stringify({ inline_keyboard: [[{ text: "🆕 Новая статья", callback_data: "docx_new" }], [{ text: "🔄 Обновить существующую", callback_data: "docx_update" }]] })
+    });
   } catch (e) { console.error("[bot/docx] error:", e); }
 }
 
@@ -299,22 +309,13 @@ function registerBotActions(bot) {
   bot.action(/^docx_(new|update)$/, async (ctx) => {
     const chatId = String(ctx.callbackQuery?.message?.chat?.id || ctx.chat?.id);
     const state = pendingDocx.get(chatId);
-    if (!state || state.step !== 'ask_type') {
-        return ctx.answerCbQuery("️ Сессия не найдена").catch(() => {});
-    }
-
-    const action = ctx.match[1];
-    state.isUpdate = action === 'update';
+    if (!state || state.step !== 'ask_type') return ctx.answerCbQuery("⚠️ Сессия не найдена").catch(() => {});
+    state.isUpdate = ctx.match[1] === 'update';
     state.step = state.isUpdate ? 'ask_link' : 'processing';
-    
     await ctx.answerCbQuery().catch(() => {});
     await ctx.editMessageText(`✅ Выбрано: ${state.isUpdate ? "Обновление" : "Новая статья"}\n⏳ Начинаю обработку...`).catch(() => {});
-
-    if (!state.isUpdate) {
-      finalizeDocxAction(chatId).catch(console.error);
-    } else {
-      await ctx.telegram.sendMessage(chatId, "🔍 Введите часть заголовка для поиска:");
-    }
+    if (!state.isUpdate) finalizeDocxAction(chatId).catch(console.error);
+    else await ctx.telegram.sendMessage(chatId, "🔍 Введите часть заголовка для поиска:");
   });
 }
 
@@ -323,21 +324,18 @@ function handleDocxTextInteraction(ctx) {
   const chatId = String(msg?.chat?.id ?? "");
   const state = pendingDocx.get(chatId);
   if (!state || state.step === 'ask_type' || state.step === 'processing') return false;
-
   const text = (msg.caption || msg.text || "").trim();
   if (!text) return false;
-
   if (text === "/cancel" || text === "/skip") { cleanupDocx(chatId, "cancel"); ctx.telegram.sendMessage(chatId, "✅ Отменено."); return true; }
-
+  
   if (state.step === 'ask_link') {
     strapi.searchArticlesByTitle(text).then(results => {
       if (!results.length) { ctx.telegram.sendMessage(chatId, "❌ Ничего не найдено.", { reply_to_message_id: msg.message_id }); return; }
       state.searchResults = results; state.step = 'select_id';
-      ctx.telegram.sendMessage(chatId, `🔍 Найдено:\n${results.map((r,i)=>`${i+1}. ${r.title}`).join("\n")}\n\nОтправьте номер.`, { reply_to_message_id: msg.message_id });
+      ctx.telegram.sendMessage(chatId, ` Найдено:\n${results.map((r,i)=>`${i+1}. ${r.title}`).join("\n")}\n\nОтправьте номер.`, { reply_to_message_id: msg.message_id });
     }).catch(e => ctx.telegram.sendMessage(chatId, `❌ Ошибка поиска: ${e.message}`, { reply_to_message_id: msg.message_id }));
     return true;
   }
-
   if (state.step === 'select_id') {
     const idx = parseInt(text, 10) - 1;
     if (state.searchResults[idx]) {
@@ -365,9 +363,7 @@ async function handleChannelPost(ctx) {
   if (!msg) return;
   const chatId = msg.chat?.id;
   if (String(chatId) !== String(CHANNEL_ID)) return;
-  
   if (handleDocxTextInteraction(ctx)) return;
-
   const text = msg.caption || msg.text;
   if (!text?.trim()) {
     const pId = pickPhotoFileId(msg);

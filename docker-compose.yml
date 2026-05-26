@@ -96,6 +96,8 @@ services:
 
   telegram-bot:
     build: ./telegram-bot
+    env_file:
+      - .env
     restart: on-failure:5
     depends_on:
       strapi:
