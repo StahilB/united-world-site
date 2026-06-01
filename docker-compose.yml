@@ -54,6 +54,8 @@ services:
       start_period: 60s
 
   nextjs:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: frontend/Dockerfile

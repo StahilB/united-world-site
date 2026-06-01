@@ -34,26 +34,19 @@ export function MascotWidget() {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState<string | null>(null);
+  
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  useEffect(() => {
-    if (open) {
-      setHasUnread(false);
-      inputRef.current?.focus();
-    }
-  }, [open]);
-
+  // ✅ Сначала объявляем sendMessage — чтобы useEffect могли на него ссылаться
   const sendMessage = useCallback(
     async (text: string, context?: string) => {
       if (!text.trim() || isStreaming) return;
+
+      const currentSelection = pendingSelection;
+      if (currentSelection) setPendingSelection(null);
 
       const userMsg: Message = {
         id: `u-${Date.now()}`,
@@ -85,6 +78,7 @@ export function MascotWidget() {
             context,
             pageUrl: typeof window !== "undefined" ? window.location.pathname : "/",
             pageTitle: typeof document !== "undefined" ? document.title : undefined,
+            selectedText: currentSelection || undefined,
           }),
           signal: abortRef.current.signal,
         });
@@ -125,10 +119,7 @@ export function MascotWidget() {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
-                ? {
-                    ...m,
-                    content: uiMessage,
-                  }
+                ? { ...m, content: uiMessage }
                 : m,
             ),
           );
@@ -137,10 +128,12 @@ export function MascotWidget() {
         setIsStreaming(false);
       }
     },
-    [messages, isStreaming, open],
+    [messages, isStreaming, open, pendingSelection],
   );
 
-  // Слушатель события mascot:ask (из TextSelectionPopup)
+  // ✅ Теперь useEffect могут безопасно ссылаться на sendMessage
+
+  // Слушатель: быстрые действия (Объяснить/Перевести)
   useEffect(() => {
     const handler = (e: Event) => {
       const { detail } = e as CustomEvent<{ text: string; context?: string }>;
@@ -152,6 +145,41 @@ export function MascotWidget() {
     window.addEventListener("mascot:ask", handler);
     return () => window.removeEventListener("mascot:ask", handler);
   }, [sendMessage]);
+
+  // Слушатель: открытие чата с контекстом выделения
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ selectedText: string; pageUrl?: string; pageTitle?: string }>).detail;
+      setOpen(true);
+      setPendingSelection(detail.selectedText);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `hint-${Date.now()}`,
+          role: "assistant",
+          content: `🔍 Что вы хотите уточнить по поводу этого фрагмента?\n\n> "${detail.selectedText}"`,
+        },
+      ]);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    };
+    window.addEventListener("mascot:open-with-context", handler);
+    return () => window.removeEventListener("mascot:open-with-context", handler);
+  }, []); // ← не зависит от sendMessage, поэтому пустой массив
+
+  // Авто-скролл вниз при новых сообщениях
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Фокус на ввод при открытии чата
+  useEffect(() => {
+    if (open) {
+      setHasUnread(false);
+      inputRef.current?.focus();
+    }
+  }, [open]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -230,8 +258,7 @@ export function MascotWidget() {
                       : "bg-white text-text"
                   }`}
                 >
-                  {m.content ||
-                    (isStreaming && m.role === "assistant" ? "…" : "")}
+                  {m.content || (isStreaming && m.role === "assistant" ? "…" : "")}
                 </div>
               </div>
             ))}
