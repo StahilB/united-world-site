@@ -1,12 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import type { Locale } from "@/lib/i18n/types";
-import {
-  localizeHref,
-  stripLocaleFromPathname,
-  localeFromPathname,
-} from "@/lib/i18n/types";
+import { useEffect, useState } from "react";
 
 export function LanguageSwitch({
   className = "",
@@ -14,23 +9,37 @@ export function LanguageSwitch({
   className?: string;
 }) {
   const pathname = usePathname();
-  const currentLocale = localeFromPathname(pathname);
-  const targetLocale: Locale = currentLocale === "ru" ? "en" : "ru";
-  const baseHref = stripLocaleFromPathname(pathname);
-  const targetHref = localizeHref(baseHref, targetLocale);
+  const [isEnSubdomain, setIsEnSubdomain] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Проверяем, начинается ли хост с en.
+      setIsEnSubdomain(window.location.hostname.startsWith("en."));
+    }
+  }, []);
+
+  // Если мы на EN поддомене -> ведем на RU (основной)
+  // Если мы на RU (основном) -> ведем на EN (поддомен)
+  const targetHost = isEnSubdomain 
+    ? "https://anounitedworld.com" 
+    : "https://en.anounitedworld.com";
+
+  // Собираем полный URL: Домен + текущий путь (pathname)
+  // Это позволит юзеру остаться на той же статье при смене языка
+  const targetHref = `${targetHost}${pathname}`;
 
   return (
     <a
       href={targetHref}
-      hrefLang={targetLocale}
       aria-label={
-        targetLocale === "en"
-          ? "Switch to English version"
-          : "Переключить на русскую версию"
+        isEnSubdomain
+          ? "Переключить на русскую версию"
+          : "Switch to English version"
       }
-      className={className}
+      className={`${className} inline-flex items-center leading-none transition-opacity hover:opacity-70`}
+      style={{ verticalAlign: 'baseline' }} 
     >
-      {targetLocale === "en" ? "EN" : "RU"}
+      {isEnSubdomain ? "RU" : "EN"}
     </a>
   );
 }

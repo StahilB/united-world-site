@@ -22,30 +22,24 @@ const nextConfig = {
         pathname: "/uploads/**",
       },
       {
-        protocol: "http",
-        hostname: "85.239.42.204",
-        port: "1337",
-        pathname: "/uploads/**",
+        protocol: "https",
+        hostname: "anounitedworld.com",
+        pathname: "/**", // Разрешаем всё, включая wp-content
+      },
+      {
+        protocol: "https",
+        hostname: "**.anounitedworld.com",
+        pathname: "/**", // Разрешаем всё для поддоменов
+      },
+      {
+        protocol: "https",
+        hostname: "admin.anounitedworld.com",
+        pathname: "/**",
       },
       {
         protocol: "http",
         hostname: "strapi",
         port: "1337",
-        pathname: "/uploads/**",
-      },
-      {
-        protocol: "https",
-        hostname: "anounitedworld.com",
-        pathname: "/uploads/**",
-      },
-      {
-        protocol: "https",
-        hostname: "admin.anounitedworld.com",
-        pathname: "/uploads/**",
-      },
-      {
-        protocol: "https",
-        hostname: "**.anounitedworld.com",
         pathname: "/uploads/**",
       },
     ],

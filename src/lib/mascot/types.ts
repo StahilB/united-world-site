@@ -8,4 +8,6 @@ export type MascotRequest = {
   context?: string;
   pageUrl?: string;
   pageTitle?: string;
+  selectedText?: string;
+  preformattedList?: string;
 };

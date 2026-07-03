@@ -5,11 +5,7 @@ import { useEffect, useRef, useState } from "react";
 type Position = { top: number; left: number; visible: boolean };
 
 export function TextSelectionPopup() {
-  const [pos, setPos] = useState<Position>({
-    top: 0,
-    left: 0,
-    visible: false,
-  });
+  const [pos, setPos] = useState<Position>({ top: 0, left: 0, visible: false });
   const [selectedText, setSelectedText] = useState("");
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -88,6 +84,21 @@ export function TextSelectionPopup() {
     window.getSelection()?.removeAllRanges();
   };
 
+  // 🆕 Новая функция: открывает чат и передаёт контекст
+  const askInChat = () => {
+    window.dispatchEvent(
+      new CustomEvent("mascot:open-with-context", {
+        detail: {
+          selectedText: selectedText.slice(0, 800),
+          pageUrl: typeof window !== "undefined" ? window.location.href : "",
+          pageTitle: typeof document !== "undefined" ? document.title : "",
+        },
+      }),
+    );
+    setPos((p) => ({ ...p, visible: false }));
+    window.getSelection()?.removeAllRanges();
+  };
+
   if (!pos.visible) return null;
 
   return (
@@ -114,10 +125,10 @@ export function TextSelectionPopup() {
       <span className="w-px self-stretch bg-white/20" />
       <button
         type="button"
-        onClick={() => ask("У меня вопрос")}
+        onClick={askInChat}
         className="whitespace-nowrap bg-ink-deep px-2.5 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-wide text-white/85 transition-colors hover:bg-gold hover:text-ink-deep"
       >
-        ❓ Спросить
+        ❓ Спросить в чате
       </button>
     </div>
   );

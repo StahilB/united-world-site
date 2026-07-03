@@ -1,0 +1,135 @@
+/**
+ * Авто-обновление токена Facebook через Cloudflare Worker
+ * Запускать раз в 50 дней (токен живёт ~60 дней)
+ */
+const fs = require('fs');
+const https = require('https');
+const { execSync } = require('child_process');
+const path = require('path');
+
+// ─────────────────────────────────────────────────────────────
+// КОНФИГ
+// ─────────────────────────────────────────────────────────────
+const LOG_FILE = path.join(__dirname, 'fb-token-refresh.log');
+const log = (msg) => {
+  const line = `[${new Date().toISOString()}] ${msg}`;
+  console.log(line);
+  fs.appendFileSync(LOG_FILE, line + '\n');
+};
+
+// Читаем .env вручную (без dotenv)
+const envPath = path.join(__dirname, '.env');
+const envContent = fs.readFileSync(envPath, 'utf8');
+const getEnv = (key) => {
+  const match = envContent.match(new RegExp(`^${key}=(.*)$`, 'm'));
+  return match ? match[1].trim() : null;
+};
+
+const APP_ID = getEnv('FB_APP_ID');
+const APP_SECRET = getEnv('FB_APP_SECRET');
+const PAGE_ID = getEnv('FB_TARGET_ID');
+const CURRENT_TOKEN = getEnv('FB_PAGE_ACCESS_TOKEN') || getEnv('FB_USER_TOKEN');
+const CONTAINER_NAME = getEnv('BOT_CONTAINER_NAME') || 'united-world-site-telegram-bot-1';
+const WORKER_URL = getEnv('FB_WORKER_URL');
+const WORKER_TOKEN = getEnv('FB_WORKER_TOKEN');
+
+if (!APP_ID || !APP_SECRET || !PAGE_ID || !CURRENT_TOKEN) {
+  log('❌ Ошибка: Не хватает переменных в .env (FB_APP_ID, FB_APP_SECRET, FB_TARGET_ID, FB_PAGE_ACCESS_TOKEN)');
+  process.exit(1);
+}
+
+// ─────────────────────────────────────────────────────────────
+// HTTPS-запрос через Cloudflare Worker (если задан) или напрямую
+// ─────────────────────────────────────────────────────────────
+function httpsRequest(url, useWorker = true) {
+  return new Promise((resolve, reject) => {
+    const options = { timeout: 30000 };
+    
+    // Если есть воркер и он включён — проксируем через него
+    if (useWorker && WORKER_URL && WORKER_TOKEN) {
+      options.hostname = new URL(WORKER_URL).hostname;
+      options.path = new URL(WORKER_URL).pathname;
+      options.method = 'POST';
+      options.headers = {
+        'Content-Type': 'application/json',
+        'X-Target-Url': url,
+        'X-Proxy-Token': WORKER_TOKEN
+      };
+    } else {
+      // Прямой запрос (для тестов или если воркер не настроен)
+      const parsed = new URL(url);
+      options.hostname = parsed.hostname;
+      options.path = parsed.pathname + parsed.search;
+      options.method = 'GET';
+      options.headers = {};
+    }
+
+    const lib = options.hostname.includes('workers.dev') ? https : https;
+    const req = lib.request(options, (res) => {
+      let data = '';
+      res.setEncoding('utf8');
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          if (res.statusCode >= 400) {
+            reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`));
+            return;
+          }
+          const json = JSON.parse(data);
+          if (json.error) reject(new Error(json.error.message));
+          else resolve(json);
+        } catch (e) { reject(new Error(`Parse error: ${e.message}`)); }
+      });
+    });
+    
+    // Если проксируем через воркер — отправляем тело
+    if (useWorker && WORKER_URL && WORKER_TOKEN) {
+      req.write(JSON.stringify({ method: 'GET' }));
+    }
+    
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+    req.end();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ОСНОВНАЯ ЛОГИКА
+// ─────────────────────────────────────────────────────────────
+async function refresh() {
+  log('🔄 Начинаю обновление токена Facebook...');
+
+  try {
+    // 1️⃣ Long-lived user token (через воркер, если задан)
+    const userUrl = `https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${APP_ID}&client_secret=${APP_SECRET}&fb_exchange_token=${encodeURIComponent(CURRENT_TOKEN)}`;
+    log(`📤 Запрос user token...`);
+    const userRes = await httpsRequest(userUrl, true);
+    if (!userRes.access_token) throw new Error('Meta не вернула user token');
+    log(`✅ User token получен (истекает: ${userRes.expires_in || 'N/A'} сек)`);
+
+    // 2️⃣ Page token (тоже через воркер)
+    const pageUrl = `https://graph.facebook.com/v21.0/${PAGE_ID}?fields=access_token&access_token=${userRes.access_token}`;
+    log(`📤 Запрос page token...`);
+    const pageRes = await httpsRequest(pageUrl, true);
+    if (!pageRes.access_token) throw new Error('Meta не вернула page token');
+    log(`✅ Page token получен`);
+
+    // 3️⃣ Обновляем .env
+    const newToken = pageRes.access_token;
+    const updatedEnv = envContent.replace(/^FB_PAGE_ACCESS_TOKEN=.*/m, `FB_PAGE_ACCESS_TOKEN=${newToken}`);
+    fs.writeFileSync(envPath, updatedEnv);
+    log(`✅ Токен обновлён в .env`);
+
+    // 4️⃣ Перезапускаем контейнер
+    log(`🔄 Перезапускаю контейнер: ${CONTAINER_NAME}...`);
+    execSync(`docker restart ${CONTAINER_NAME}`, { stdio: 'pipe' });
+    log(`🎉 Готово! Бот работает с новым токеном.`);
+    
+  } catch (e) {
+    log(`❌ Ошибка: ${e.message}`);
+    log(`💡 Подсказка: Если ошибка "timeout" или "ECONNREFUSED" — проверь, что FB_WORKER_URL и FB_WORKER_TOKEN заданы верно`);
+    process.exit(1);
+  }
+}
+
+refresh();

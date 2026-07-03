@@ -96,10 +96,10 @@ export function ArticlePageView({
   const breadcrumbSectionLabel =
     firstSection?.name ?? primaryCategory?.name ?? article.format;
   const breadcrumbSectionHref = firstSection
-      ? localizeHref(`/section/${firstSection.slug}`, locale)
+    ? localizeHref(`/section/${firstSection.slug}`, locale)
     : primaryCategory
-      ? localizeHref(`/category/${primaryCategory.slug}`, locale)
-      : localizeHref("/news", locale);
+    ? localizeHref(`/category/${primaryCategory.slug}`, locale)
+    : localizeHref("/news", locale);
   const articleChunks = replaceImgWithNextImage(html);
 
   return (
@@ -184,7 +184,7 @@ export function ArticlePageView({
           <span>{dict.common.readingMin(article.readingTime)}</span>
         </div>
 
-        {/* Обложка */}
+        {/* Обложка (Главная фотография) */}
         {article.coverImage && !article.coverImage.includes("picsum") && (
           <div className="relative mt-10 aspect-video w-full overflow-hidden bg-paper-mute">
             <Image
@@ -198,12 +198,15 @@ export function ArticlePageView({
           </div>
         )}
 
+        {/* Мобильное оглавление: рендерится строго после главной фотографии, скрывается на экранах lg и выше */}
+        <div className="mt-8 block lg:hidden">
+          <ArticleTableOfContents headings={toc} />
+        </div>
+
         {/* Двухколоночный layout */}
         <div className="mt-10 grid grid-cols-1 gap-12 lg:mt-12 lg:grid-cols-[minmax(0,65fr)_minmax(0,30fr)] lg:gap-10 xl:gap-14">
           <div className="min-w-0">
-            <article
-              className="article-body"
-            >
+            <article className="article-body">
               {articleChunks.map((chunk, idx) =>
                 chunk.type === "html" ? (
                   <div
@@ -279,9 +282,9 @@ export function ArticlePageView({
               </div>
             )}
 
-            {/* Похожие */}
+            {/* Похожие — ДОБАВЛЕНО: hidden lg:block (скрыто на мобилках) */}
             {similar.length > 0 && (
-              <section className="mt-14 max-w-[700px]" aria-labelledby="similar">
+              <section className="mt-14 max-w-[700px] hidden lg:block" aria-labelledby="similar">
                 <h2
                   id="similar"
                   className="font-heading text-xl text-ink md:text-2xl"
@@ -296,8 +299,9 @@ export function ArticlePageView({
               </section>
             )}
 
+            {/* Текст рекомендации внизу — ДОБАВЛЕНО: hidden lg:block (скрыто на мобилках) */}
             {related.length > 0 && (
-              <section className="mt-14 max-w-[900px]" aria-labelledby="read-more-bottom">
+              <section className="mt-14 max-w-[900px] hidden lg:block" aria-labelledby="read-more-bottom">
                 <h2
                   id="read-more-bottom"
                   className="font-heading text-xl text-ink md:text-2xl"
@@ -316,7 +320,10 @@ export function ArticlePageView({
           {/* Sidebar */}
           <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
             <div className="space-y-8">
-              <ArticleTableOfContents headings={toc} />
+              {/* Десктопное оглавление: скрывается на мобильных устройствах, показывается от брейкпоинта lg */}
+              <div className="hidden lg:block">
+                <ArticleTableOfContents headings={toc} />
+              </div>
 
               {readAlso.length > 0 && (
                 <div>

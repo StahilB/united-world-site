@@ -54,6 +54,8 @@ services:
       start_period: 60s
 
   nextjs:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: frontend/Dockerfile
@@ -71,6 +73,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    volumes:
+      - strapi_uploads:/app/public/uploads
     environment:
       NODE_ENV: production
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}
@@ -94,11 +98,16 @@ services:
 
   telegram-bot:
     build: ./telegram-bot
+    env_file:
+      - .env
     restart: on-failure:5
     depends_on:
       strapi:
         condition: service_healthy
+    extra_hosts:
+      - "api.telegram.org:149.154.167.220" # Жестко привязываем к рабочему IPv4 сервера Телеграма, минуя кривые DNS-резолвы докера
     environment:
+      NODE_OPTIONS: "--dns-result-order=ipv4first"
       BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN}
       CHANNEL_ID: ${CHANNEL_ID:?set CHANNEL_ID}
       STRAPI_URL: ${STRAPI_URL:-http://strapi:1337}

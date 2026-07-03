@@ -1,19 +1,11 @@
 /**
  * Parse Telegram channel messages.
- *
- * New flow (long articles):
- * - First message:
- *   Title
- *   #category #region #format
- *   Автор: Имя Фамилия
- *
- *   Body...
- * - Continuations are plain text; bot concatenates them.
+ * Production version: Full English/Russian aliases support.
  */
-
 const FORMAT_ENUM = new Set(["анализ", "мнение", "интервью", "колонка", "обзор"]);
 
 const CATEGORY_ALIASES = {
+  // Russian
   безопасность: "mezhdunarodnaya-bezopasnost",
   политика: "politika-i-diplomatiya",
   экономика: "ekonomika-i-razvitie",
@@ -24,9 +16,19 @@ const CATEGORY_ALIASES = {
   мероприятия: "mezhdunarodnye-meropriyatiya",
   мнения: "mneniya",
   интервью: "intervyu",
+  // English
+  organizations: "mezhdunarodnye-organizatsii",
+  security: "mezhdunarodnaya-bezopasnost",
+  politics: "politika-i-diplomatiya",
+  economy: "ekonomika-i-razvitie",
+  energy: "energetika-i-resursy",
+  ecology: "ekologiya-i-klimat",
+  education: "obrazovanie-i-kultura",
+  events: "mezhdunarodnye-meropriyatiya",
 };
 
 const REGION_ALIASES = {
+  // Russian
   россия: "rossiya",
   европа: "evropa",
   ближний_восток: "blizhniy-vostok",
@@ -43,107 +45,81 @@ const REGION_ALIASES = {
   северная_америка: "severnaya-amerika",
   океания: "avstraliya-i-okeaniya",
   арктика: "arktika",
+  // English
+  russia: "rossiya",
+  europe: "evropa",
+  middle_east: "blizhniy-vostok",
+  africa: "afrika",
+  latam: "latinskaya-amerika",
+  latin_america: "latinskaya-amerika",
+  caucasus: "kavkaz",
+  central_asia: "tsentralnaya-aziya",
+  south_asia: "yuzhnaya-aziya",
+  sea: "yugo-vostochnaya-aziya",
+  ea_apr: "vostochnaya-aziya-i-atr",
+  east_asia: "vostochnaya-aziya-i-atr",
+  north_america: "severnaya-amerika",
+  oceania: "avstraliya-i-okeaniya",
+  arctic: "arktika",
+};
+
+const FORMAT_MAP = {
+  // Russian
+  анализ: "анализ", мнение: "мнение", интервью: "интервью", колонка: "колонка", обзор: "обзор",
+  // English
+  analysis: "анализ", opinion: "мнение", interview: "интервью", column: "колонка", review: "обзор",
 };
 
 function resolveCategorySlug(tag) {
   if (!tag) return null;
-  const lower = tag.toLowerCase();
+  const lower = tag.toLowerCase().trim();
   return CATEGORY_ALIASES[lower] || lower;
 }
 
 function resolveRegionSlug(tag) {
   if (!tag) return null;
-  const lower = tag.toLowerCase();
+  const lower = tag.toLowerCase().trim();
   return REGION_ALIASES[lower] || lower;
 }
 
-/**
- * Extract #hashtags from a line (Telegram-style, no space inside tag).
- * @param {string} line
- * @returns {string[]}
- */
-function extractHashtags(line) {
-  const re = /#([\w\u0400-\u04FF_]+)/gu;
-  const out = [];
-  let m;
-  while ((m = re.exec(line)) !== null) {
-    out.push(m[1].toLowerCase());
-  }
-  return out;
-}
-
-/**
- * Map hashtag slug to Strapi format enum (aliases → canonical).
- * @param {string} slug
- * @returns {string | null}
- */
 function normalizeFormatSlug(slug) {
-  const s = slug.toLowerCase();
-  const map = {
-    анализ: "анализ",
-    мнение: "мнение",
-    интервью: "интервью",
-    колонка: "колонка",
-    обзор: "обзор",
-  };
-  if (map[s]) return map[s];
+  if (!slug) return null;
+  const s = slug.toLowerCase().trim();
+  if (FORMAT_MAP[s]) return FORMAT_MAP[s];
   if (FORMAT_ENUM.has(s)) return s;
   return null;
 }
 
-/**
- * Parse the first message of an article chain.
- * @param {string} raw
- * @returns {{
- *   ok: true,
- *   title: string,
- *   categorySlug: string | null,
- *   regionSlug: string | null,
- *   format: string | null,
- *   authorName: string | null,
- *   excerpt: string | null,
- *   bodyText: string,
- * } | { ok: false, error: string }}
- */
+function extractHashtags(line) {
+  const re = /#([\w\u0400-\u04FF_]+)/gu;
+  const out = []; let m;
+  while ((m = re.exec(line)) !== null) out.push(m[1].toLowerCase());
+  return out;
+}
+
 function parseFirstMessage(raw) {
   const text = typeof raw === "string" ? raw.trim() : "";
   if (!text) return { ok: false, error: "Пустое сообщение" };
-
   const lines = text.split(/\r?\n/);
   const title = (lines[0] || "").trim();
   if (!title) return { ok: false, error: "Первая строка (заголовок) пуста" };
 
-  // Find the line with hashtags (usually line 2).
   const tagLineIdx = lines.findIndex((l, i) => i > 0 && /#/.test(l));
   const tagLine = tagLineIdx >= 0 ? lines[tagLineIdx] : "";
   const tags = extractHashtags(tagLine);
-  const categorySlug = tags[0] ?? null;
-  const regionSlug = tags[1] ?? null;
-  const formatSlug = tags[2] ?? null;
+  
+  const categorySlug = tags[0] ? resolveCategorySlug(tags[0]) : null;
+  const regionSlug = tags[1] ? resolveRegionSlug(tags[1]) : null;
+  const formatSlug = tags[2] ? normalizeFormatSlug(tags[2]) : null;
+  
+  if (tags[2] && !formatSlug) return { ok: false, error: `Неизвестный формат «${tags[2]}». Допустимо: анализ, мнение, интервью, колонка, обзор` };
 
-  const format = formatSlug ? normalizeFormatSlug(formatSlug) : null;
-  if (formatSlug && !format) {
-    return {
-      ok: false,
-      error: `Неизвестный формат «${formatSlug}». Допустимо: анализ, мнение, интервью, колонка, обзор`,
-    };
-  }
-
-  // Find author line.
   const authorIdx = lines.findIndex((l) => /^автор\s*:/i.test(l.trim()));
-  const authorName =
-    authorIdx >= 0
-      ? lines[authorIdx].replace(/^автор\s*:\s*/i, "").trim() || null
-      : null;
+  const authorName = authorIdx >= 0 ? lines[authorIdx].replace(/^автор\s*:\s*/i, "").trim() || null : null;
 
-  // Starting cursor for body extraction (after author or hashtags).
   let cursorIdx = authorIdx >= 0 ? authorIdx + 1 : Math.max(tagLineIdx + 1, 1);
-  // Skip empty lines
-  while (cursorIdx < lines.length && !lines[cursorIdx].trim()) {
-    cursorIdx += 1;
-  }
+  while (cursorIdx < lines.length && !lines[cursorIdx].trim()) cursorIdx += 1;
 
-  // Optional "Аннотация:" / "Excerpt:" block — multi-line until blank line.
   let excerpt = null;
   const excerptMarker = /^(аннотация|excerpt|описание)\s*:\s*(.*)$/i;
   if (cursorIdx < lines.length && excerptMarker.test(lines[cursorIdx].trim())) {
@@ -151,74 +127,36 @@ function parseFirstMessage(raw) {
     const firstLineTail = firstMatch && firstMatch[2] ? firstMatch[2].trim() : "";
     const excerptLines = firstLineTail ? [firstLineTail] : [];
     cursorIdx += 1;
-    // Collect subsequent non-empty lines into excerpt.
-    while (cursorIdx < lines.length && lines[cursorIdx].trim()) {
-      excerptLines.push(lines[cursorIdx].trim());
-      cursorIdx += 1;
-    }
+    while (cursorIdx < lines.length && lines[cursorIdx].trim()) { excerptLines.push(lines[cursorIdx].trim()); cursorIdx += 1; }
     excerpt = excerptLines.join(" ").trim() || null;
-    // Skip blank lines after excerpt before body starts.
-    while (cursorIdx < lines.length && !lines[cursorIdx].trim()) {
-      cursorIdx += 1;
-    }
+    while (cursorIdx < lines.length && !lines[cursorIdx].trim()) cursorIdx += 1;
   }
 
   const bodyText = lines.slice(cursorIdx).join("\n").trim();
-
-  if (!bodyText) {
-    return {
-      ok: false,
-      error:
-        "Текст статьи пуст. После строки «Автор: ...» добавьте пустую строку и первый абзац.",
-    };
-  }
-
-  return {
-    ok: true,
-    title,
-    categorySlug,
-    regionSlug,
-    format,
-    authorName,
-    excerpt,
-    bodyText,
-  };
+  if (!bodyText) return { ok: false, error: "Текст статьи пуст." };
+  return { ok: true, title, categorySlug, regionSlug, format: formatSlug, authorName, excerpt, bodyText };
 }
 
-// v1: plain text + markdown-style headings/paragraphs. Entities will be supported later.
 function telegramToHtml(text, _entities) {
   let html = String(text || "");
-  // Markdown-style headings (allow leading spaces)
   html = html.replace(/(^|\n)\s*###\s+(.+?)(?=\n|$)/g, "$1<h3>$2</h3>");
   html = html.replace(/(^|\n)\s*##\s+(.+?)(?=\n|$)/g, "$1<h2>$2</h2>");
-  const paragraphs = html.split(/\n\n+/);
-  html = paragraphs
-    .map((p) => {
-      p = p.trim();
-      if (!p) return "";
-      if (p.startsWith("<h2>") || p.startsWith("<h3>")) {
-        const nl = p.indexOf("\n");
-        if (nl === -1) return p;
-        const heading = p.slice(0, nl).trim();
-        const rest = p.slice(nl + 1).trim();
-        if (!rest) return heading;
-        const restWithBr = rest.replace(/\n/g, "<br>");
-        return `${heading}\n<p>${restWithBr}</p>`;
-      }
-      p = p.replace(/\n/g, "<br>");
-      return `<p>${p}</p>`;
-    })
-    .filter(Boolean)
-    .join("\n");
+  const paragraphs = html.split(/\n+/);
+  html = paragraphs.map((p) => {
+    p = p.trim(); if (!p) return "";
+    if (p.startsWith("<h2>") || p.startsWith("<h3>")) {
+      const nl = p.indexOf("\n");
+      if (nl === -1) return p;
+      const heading = p.slice(0, nl).trim();
+      const rest = p.slice(nl + 1).trim();
+      return rest ? `${heading}\n<p>${rest.replace(/\n/g, "<br>")}</p>` : heading;
+    }
+    return `<p>${p.replace(/\n/g, "<br>")}</p>`;
+  }).filter(Boolean).join("\n");
   return html;
 }
 
 module.exports = {
-  parseFirstMessage,
-  extractHashtags,
-  normalizeFormatSlug,
-  FORMAT_ENUM,
-  telegramToHtml,
-  resolveCategorySlug,
-  resolveRegionSlug,
+  parseFirstMessage, extractHashtags, normalizeFormatSlug, FORMAT_ENUM,
+  telegramToHtml, resolveCategorySlug, resolveRegionSlug,
 };
